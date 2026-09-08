@@ -1,0 +1,109 @@
+# cgd-dev200 — the minimal CGD evaluation loop
+
+A fixed 200-image canny benchmark for iterating on **Conditional Generative Decoding (CGD)**: the same conditioned FLUX latent, decoded by different decoders, scored on how well the decoded pixels honor the condition.
+
+This is the **dev** setting (fast method selection), not the paper benchmark. Numbers here are never reported in the paper; they exist so everyone iterates on the same images, the same latents, and the same scorers. The full protocol lives in the paper repo's `docs/BENCHMARK_v1.md`; this repo implements its `DEV_SETTING.md`.
+
+## What the comparison is
+
+Every row decodes the **same cached latent** (FLUX.1-dev + OminiControl canny LoRA, 512×512, 28 steps, guidance 3.5, seed 0). Only the decoder changes, so any difference is the decoder's doing:
+
+| Decoder | condition-aware? | generative? | output |
+|---|---|---|---|
+| VAE decode (FLUX's own) | no | no (deterministic) | 512 |
+| vanilla PiD (final latent) | no | yes (pixel diffusion, 4 steps) | 2048 |
+| vanilla PiD, early-terminated (latent at step 24/28) | no | yes | 2048 |
+| **CGD (your method)** | **yes** | yes | 2048 |
+
+The two PiD rows are the baselines a CGD variant must beat. Vanilla PiD on the final latent is the paired ablation ("CGD minus the condition"); the early-terminated row is PiD's own recommended operating point (it consumes a partially-denoised latent, σ≈0.24, via its sigma-aware adapter).
+
+## Results (dev-200, OminiControl canny, seed 0)
+
+<!-- RESULTS:BEGIN -->
+_Pending: filled by `scripts/03_score.py` → `results/dev200_summary.md`._
+<!-- RESULTS:END -->
+
+How to read it:
+- **Canny F1 @512 (matched)** is the number to optimize. Outputs are compared at the VAE's native 512 (PiD/CGD outputs are downsampled from 2048 with `cv2.INTER_AREA`), so a gain cannot come from having more pixels. Strict pixel-wise F1 between `cv2.Canny(gray(output), 100, 200)` and the input condition; harsh, but identical for every method.
+- **Canny F1 @2048 (native)** is the target: scored at PiD's native output against the condition resampled to 2048 (nearest). The drop from @512 to @2048 within a method is the *resolution gap*: whether the native-resolution detail stayed condition-consistent.
+- **LPIPS / PSNR / SSIM** vs the real source image (at 512): did the decoder stay faithful to the photo or hallucinate.
+- **MUSIQ** (no-reference, at native res): did adherence cost image quality.
+- **decode s/img, peak mem** on one H200; generation cost is shared by every row.
+
+**The gate for a CGD variant** (from `DEV_SETTING.md`): on these same 200 latents, matched-512 F1 > vanilla PiD's, native-2048 F1 ≥ vanilla PiD's, MUSIQ not lower and LPIPS not worse than vanilla PiD. Beating VAE decode is necessary but not sufficient.
+
+## The fixed set
+
+- Source: HF dataset [`limingcv/MultiGen-20M_canny_eval`](https://huggingface.co/datasets/limingcv/MultiGen-20M_canny_eval), the **5000-image validation split** (the ControlNet++ canny evaluation set; 512×512 LAION-Aesthetics images with captions).
+- Selection: `numpy.random.default_rng(0).choice(5000, 200, replace=False)` over the 5 validation shards concatenated in filename order. Frozen in **`dev200/manifest.csv`** (`dev_idx, val_row, sha256 of the image bytes, caption`). Never regenerate it with a different seed under this name; a different set is a different name.
+- Condition: `cv2.Canny(grayscale, 100, 200)`, replicated to RGB (the ControlNet annotator defaults; OminiControl's own canny LoRA was trained with the same 100/200 thresholds).
+- Prompt: the dataset caption.
+- Images and conditions are **not committed** (LAION-derived); `scripts/00_select_dev200.py` rebuilds them bit-exactly from the HF dataset, and the `sha256` column lets you verify you have the same 200. On the group server they are already at `/data/wookiekim/cgd/cgd-dev200/dev200/`.
+
+## Environment
+
+Everything runs inside the group container (`wookiekim_tfso`, 4× H200). Paths below are the container paths (`/data/wookiekim` and `/home/wookiekim` are mounted identically inside and outside).
+
+Already present in the container: PyTorch 2.5.1+cu121, diffusers, transformers, peft, pyiqa, opencv, pyarrow, pandas.
+
+External code (cloned, not vendored):
+```
+/data/wookiekim/cgd/OminiControl   git clone --depth 1 https://github.com/Yuanshi9815/OminiControl.git   (clean; provides `omini`)
+/data/wookiekim/cgd/PiD            git clone --depth 1 https://github.com/nv-tlabs/PiD.git
+```
+PiD needs its own deps once (`pip install -r <PiD>/pyproject deps` minus torch; see `scripts/env_pid.sh`). Note: PiD pins `diffusers==0.37.1`, `transformers==4.57.1`, `numpy==1.26.4`; installing them changes the container's versions (see "Caveats").
+
+Weights (downloaded once; not redistributed):
+```
+hf download black-forest-labs/FLUX.1-dev                                  # generator (cached in HF_HOME)
+hf download Yuanshi/OminiControl --include "experimental/canny.safetensors" # OminiControl canny LoRA (512)
+cd /data/wookiekim/cgd/PiD
+hf download nvidia/PiD --local-dir . --include "checkpoints/PiD_res2k_sr4x_official_flux_distill_4step/*"   # 512->2048, 4-step distilled
+hf download nvidia/PiD --local-dir . --include "checkpoints/ae.safetensors"                                  # FLUX VAE used by PiD
+hf download nvidia/PiD --local-dir . --include "config.json"
+```
+Run one `--include` pattern per `hf download` call; passing several patterns in one call silently kept only the last one for us.
+PiD weights are under the NVIDIA NSCLv1 license (non-commercial research); the PiD **code** is Apache-2.0.
+
+## Run it
+
+```bash
+# inside the container
+cd /data/wookiekim/cgd/cgd-dev200
+bash scripts/run_all.sh            # 00 select -> 01 generate (GPU0) -> 02 PiD decode (GPU1) -> 03 score
+```
+or step by step:
+```bash
+python scripts/00_select_dev200.py                                    # ~1 min, CPU: dev200/{manifest.csv,images,canny,captions.json}
+CUDA_VISIBLE_DEVICES=0 python scripts/01_generate_latents_omini.py    # ~3-4 s/img: latents/omini_canny/*.pt + outputs/omini_vae/*.png
+CUDA_VISIBLE_DEVICES=1 python scripts/02_decode_pid.py                # ~1 s/img: outputs/omini_pid{,_512,_et24,_et24_512}/*.png
+CUDA_VISIBLE_DEVICES=1 python scripts/03_score.py                     # results/dev200_summary.{md,csv}, results/dev200_per_image.csv
+```
+Every step skips outputs that already exist; add `--overwrite` to redo, `--limit N` to smoke-test on N images.
+
+### What is cached, and why it matters
+`latents/omini_canny/{idx}.pt` holds, per image: the **final clean latent** `x_0` (1×16×64×64, fp16, in diffusers' scaled latent space, i.e. exactly what PiD's `extract_latent` produces), its `sigma` (0.0), the **early-terminated latent** `xt24` after 24 of 28 steps with its `sigma24`, and the caption/seed/steps. Generation (28 FLUX steps) is the slow part; decoding is fast. **Every decoder variant must read these files and never regenerate latents**, otherwise the comparison is no longer paired.
+
+## Adding your CGD variant
+
+1. Write `scripts/02_decode_<name>.py` that loads `latents/omini_canny/*.pt`, decodes each `latent` (and optionally `xt24`) to 2048, and writes `outputs/<name>/{idx}.png` plus the INTER_AREA 512 view to `outputs/<name>_512/{idx}.png`. Copy `02_decode_pid.py`; the condition image for CGD is `dev200/canny/{idx}.png`.
+2. `python scripts/03_score.py --variants omini_vae,omini_pid,omini_pid_et24,<name>`.
+3. Log one line per run somewhere shared: `variant, F1@512, F1@2048, LPIPS, PSNR, MUSIQ, s/img, notes`.
+4. Promote only if it passes the gate above. Then L2: add depth (the other released OminiControl spatial LoRA) and the other controllers per `DEV_SETTING.md`.
+
+## Caveats (read once)
+
+- **Dependency downgrade:** installing PiD's pinned deps set the container to `diffusers 0.37.1 / transformers 4.57.1 / numpy 1.26.4`. Generation and scoring were verified under these versions. If another project in the container needs newer versions, use a separate venv for PiD.
+- **Strict F1** has no pixel tolerance, so absolute values look low; only relative comparisons between rows matter.
+- **Same seed (0) for every image**: the initial noise is identical across images; this is deliberate for reproducibility and is fine for a paired decoder comparison.
+- **Early-terminated PiD** decodes a *different* latent (σ≈0.24) than the VAE row, so it is a reference point for PiD's headline operating mode, not part of the paired swap. The paired swap is VAE vs PiD(final) vs CGD(final).
+- The 4-step distilled PiD ignores `shift`/`cfg` (it uses its student timestep list); `--ckpt-type 2kto4k_v1pt5` switches to the multi-resolution v1.5 checkpoint if needed.
+
+## Layout
+```
+dev200/            manifest.csv, captions.json (committed); images/, canny/ (rebuilt by 00, not committed)
+scripts/           00_select_dev200.py  01_generate_latents_omini.py  02_decode_pid.py  03_score.py  run_all.sh  env_pid.sh
+latents/           cached latents (not committed; shared on the server)
+outputs/           decoded images per variant (not committed)
+results/           dev200_summary.md / .csv (committed), per-image csv + run logs (not committed)
+```

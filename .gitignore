@@ -1,0 +1,11 @@
+# Data and heavy artifacts are NOT committed. Reproduce them with the scripts (see README).
+# Colleagues on the same server can use the shared copies at /data/wookiekim/cgd/cgd-dev200/.
+dev200/images/
+dev200/canny/
+latents/
+outputs/
+results/log_*.jsonl
+results/dev200_per_image.csv
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
