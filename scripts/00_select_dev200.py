@@ -14,12 +14,14 @@ Outputs (under --out):
   captions.json               dev_idx -> caption (the prompt)
 """
 import argparse, csv, glob, hashlib, io, json, os
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CGD_ROOT = os.environ.get("CGD_ROOT", os.path.dirname(REPO))   # parent dir holding cgd-dev200/, OminiControl/, PiD/, data/
 import numpy as np, cv2, pyarrow.parquet as pq
 from PIL import Image
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--data", default="/data/wookiekim/cgd/data/multigen_canny_eval/data")
-ap.add_argument("--out", default="/data/wookiekim/cgd/cgd-dev200/dev200")
+ap.add_argument("--data", default=os.environ.get("MULTIGEN_DIR", os.path.join(CGD_ROOT, "data", "multigen_canny_eval", "data")))
+ap.add_argument("--out", default=os.path.join(REPO, "dev200"))
 ap.add_argument("--n", type=int, default=200)
 ap.add_argument("--seed", type=int, default=0)
 ap.add_argument("--canny-low", type=int, default=100)

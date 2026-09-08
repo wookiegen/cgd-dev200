@@ -22,12 +22,14 @@ Usage (inside the container, GPU 0):
   CUDA_VISIBLE_DEVICES=0 python scripts/01_generate_latents_omini.py
 """
 import argparse, json, os, sys, time
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CGD_ROOT = os.environ.get("CGD_ROOT", os.path.dirname(REPO))
 import torch
 from PIL import Image
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--repo", default="/data/wookiekim/cgd/cgd-dev200")
-ap.add_argument("--omini", default="/data/wookiekim/cgd/OminiControl", help="clean OminiControl clone (provides `omini`)")
+ap.add_argument("--repo", default=REPO)
+ap.add_argument("--omini", default=os.environ.get("OMINI_ROOT", os.path.join(CGD_ROOT, "OminiControl")), help="clean OminiControl clone (provides `omini`)")
 ap.add_argument("--steps", type=int, default=28)
 ap.add_argument("--guidance", type=float, default=3.5)
 ap.add_argument("--seed", type=int, default=0)

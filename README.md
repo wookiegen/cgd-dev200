@@ -38,26 +38,35 @@ How to read it:
 - Selection: `numpy.random.default_rng(0).choice(5000, 200, replace=False)` over the 5 validation shards concatenated in filename order. Frozen in **`dev200/manifest.csv`** (`dev_idx, val_row, sha256 of the image bytes, caption`). Never regenerate it with a different seed under this name; a different set is a different name.
 - Condition: `cv2.Canny(grayscale, 100, 200)`, replicated to RGB (the ControlNet annotator defaults; OminiControl's own canny LoRA was trained with the same 100/200 thresholds).
 - Prompt: the dataset caption.
-- Images and conditions are **not committed** (LAION-derived); `scripts/00_select_dev200.py` rebuilds them bit-exactly from the HF dataset, and the `sha256` column lets you verify you have the same 200. On the group server they are already at `/data/wookiekim/cgd/cgd-dev200/dev200/`.
+- Images and conditions are **not committed** (LAION-derived); `scripts/00_select_dev200.py` rebuilds them bit-exactly from the HF dataset, and the `sha256` column lets you verify you have the same 200. On the group server they are already materialized next to the repo (ask the maintainer for the shared path).
 
 ## Environment
 
-Everything runs inside the group container (`wookiekim_tfso`, 4× H200). Paths below are the container paths (`/data/wookiekim` and `/home/wookiekim` are mounted identically inside and outside).
+Tested inside the group GPU container (4× H200, PyTorch 2.5.1+cu121). Any CUDA environment with `torch`, `diffusers`, `transformers`, `peft`, `pyiqa`, `opencv-python`, `pyarrow`, `pandas` works.
 
-Already present in the container: PyTorch 2.5.1+cu121, diffusers, transformers, peft, pyiqa, opencv, pyarrow, pandas.
+**Layout.** Scripts locate everything relative to one root directory, `$CGD_ROOT` (default: the parent of this repo), overridable per component with `OMINI_ROOT`, `PID_ROOT`, `MULTIGEN_DIR`:
+```
+$CGD_ROOT/
+  cgd-dev200/        this repo
+  OminiControl/      clean clone (provides `omini`)
+  PiD/               clone + checkpoints/
+  data/multigen_canny_eval/   the HF dataset
+```
 
 External code (cloned, not vendored):
+```bash
+cd $CGD_ROOT
+git clone --depth 1 https://github.com/Yuanshi9815/OminiControl.git
+git clone --depth 1 https://github.com/nv-tlabs/PiD.git
+bash cgd-dev200/scripts/env_pid.sh      # PiD's python deps (once)
 ```
-/data/wookiekim/cgd/OminiControl   git clone --depth 1 https://github.com/Yuanshi9815/OminiControl.git   (clean; provides `omini`)
-/data/wookiekim/cgd/PiD            git clone --depth 1 https://github.com/nv-tlabs/PiD.git
-```
-PiD needs its own deps once (`pip install -r <PiD>/pyproject deps` minus torch; see `scripts/env_pid.sh`). Note: PiD pins `diffusers==0.37.1`, `transformers==4.57.1`, `numpy==1.26.4`; installing them changes the container's versions (see "Caveats").
+Note: PiD pins `diffusers==0.37.1`, `transformers==4.57.1`, `numpy==1.26.4`; `env_pid.sh` installs them and therefore changes your environment's versions (see "Caveats"). Generation and scoring are verified under these versions.
 
 Weights (downloaded once; not redistributed):
 ```
-hf download black-forest-labs/FLUX.1-dev                                  # generator (cached in HF_HOME)
+hf download black-forest-labs/FLUX.1-dev                                  # generator (gated: accept the license on HF first)
 hf download Yuanshi/OminiControl --include "experimental/canny.safetensors" # OminiControl canny LoRA (512)
-cd /data/wookiekim/cgd/PiD
+cd $CGD_ROOT/PiD
 hf download nvidia/PiD --local-dir . --include "checkpoints/PiD_res2k_sr4x_official_flux_distill_4step/*"   # 512->2048, 4-step distilled
 hf download nvidia/PiD --local-dir . --include "checkpoints/ae.safetensors"                                  # FLUX VAE used by PiD
 hf download nvidia/PiD --local-dir . --include "config.json"
@@ -68,8 +77,7 @@ PiD weights are under the NVIDIA NSCLv1 license (non-commercial research); the P
 ## Run it
 
 ```bash
-# inside the container
-cd /data/wookiekim/cgd/cgd-dev200
+cd $CGD_ROOT/cgd-dev200
 bash scripts/run_all.sh            # 00 select -> 01 generate (GPU0) -> 02 PiD decode (GPU1) -> 03 score
 ```
 or step by step:
@@ -93,7 +101,7 @@ Every step skips outputs that already exist; add `--overwrite` to redo, `--limit
 
 ## Caveats (read once)
 
-- **Dependency downgrade:** installing PiD's pinned deps set the container to `diffusers 0.37.1 / transformers 4.57.1 / numpy 1.26.4`. Generation and scoring were verified under these versions. If another project in the container needs newer versions, use a separate venv for PiD.
+- **Dependency pins:** `env_pid.sh` installs PiD's pinned `diffusers 0.37.1 / transformers 4.57.1 / numpy 1.26.4`. Generation and scoring were verified under these versions. If another project in the same environment needs newer versions, give PiD its own venv.
 - **Strict F1** has no pixel tolerance, so absolute values look low; only relative comparisons between rows matter.
 - **Same seed (0) for every image**: the initial noise is identical across images; this is deliberate for reproducibility and is fine for a paired decoder comparison.
 - **Early-terminated PiD** decodes a *different* latent (σ≈0.24) than the VAE row, so it is a reference point for PiD's headline operating mode, not part of the paired swap. The paired swap is VAE vs PiD(final) vs CGD(final).
@@ -103,7 +111,7 @@ Every step skips outputs that already exist; add `--overwrite` to redo, `--limit
 ```
 dev200/            manifest.csv, captions.json (committed); images/, canny/ (rebuilt by 00, not committed)
 scripts/           00_select_dev200.py  01_generate_latents_omini.py  02_decode_pid.py  03_score.py  run_all.sh  env_pid.sh
-latents/           cached latents (not committed; shared on the server)
+latents/           cached latents (not committed; shared on the group server)
 outputs/           decoded images per variant (not committed)
 results/           dev200_summary.md / .csv (committed), per-image csv + run logs (not committed)
 ```

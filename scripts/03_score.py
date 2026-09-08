@@ -12,11 +12,12 @@ Cost: per-image generation / decode latency and peak memory from the run logs.
 Variants scored (dir under outputs/): omini_vae (512), omini_pid_512 + omini_pid (2048), omini_pid_et24_512 + omini_pid_et24.
 """
 import argparse, glob, json, os
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 import numpy as np, cv2, torch, pandas as pd
 from PIL import Image
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--repo", default="/data/wookiekim/cgd/cgd-dev200")
+ap.add_argument("--repo", default=REPO)
 ap.add_argument("--variants", default="omini_vae,omini_pid,omini_pid_et24")
 a = ap.parse_args()
 dev = os.path.join(a.repo, "dev200"); outs = os.path.join(a.repo, "outputs"); res = os.path.join(a.repo, "results")

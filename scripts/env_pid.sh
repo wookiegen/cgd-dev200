@@ -3,7 +3,7 @@
 # that the container already provides. PiD pins diffusers==0.37.1, transformers==4.57.1, numpy==1.26.4;
 # running this CHANGES those versions in the shared container (see README "Caveats"). Use a venv if that matters.
 set -euo pipefail
-PID="${PID:-/data/wookiekim/cgd/PiD}"
+PID="${PID:-${PID_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)/PiD}}"
 python - <<EOF
 import re, tomllib
 deps = tomllib.load(open("$PID/pyproject.toml", "rb"))["project"]["dependencies"]

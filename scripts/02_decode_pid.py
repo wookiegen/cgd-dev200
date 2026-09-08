@@ -17,11 +17,13 @@ Usage (inside the container, from anywhere):
   CUDA_VISIBLE_DEVICES=1 python scripts/02_decode_pid.py
 """
 import argparse, glob, json, os, sys, time
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CGD_ROOT = os.environ.get("CGD_ROOT", os.path.dirname(REPO))
 import numpy as np, cv2, torch
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--repo", default="/data/wookiekim/cgd/cgd-dev200")
-ap.add_argument("--pid", default="/data/wookiekim/cgd/PiD")
+ap.add_argument("--repo", default=REPO)
+ap.add_argument("--pid", default=os.environ.get("PID_ROOT", os.path.join(CGD_ROOT, "PiD")))
 ap.add_argument("--ckpt-type", default="2k", choices=["2k", "2kto4k_v1pt5"])
 ap.add_argument("--steps", type=int, default=4)
 ap.add_argument("--cfg", type=float, default=1.0)

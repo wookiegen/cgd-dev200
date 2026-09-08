@@ -2,7 +2,7 @@
 # End-to-end dev-200 pipeline. Run inside the container (see README "Environment").
 # Steps are idempotent: each skips work whose outputs already exist (pass --overwrite to redo).
 set -euo pipefail
-REPO="${REPO:-/data/wookiekim/cgd/cgd-dev200}"
+REPO="${REPO:-$(cd "$(dirname "$0")/.." && pwd)}"
 GPU_GEN="${GPU_GEN:-0}"
 GPU_DEC="${GPU_DEC:-1}"
 cd "$REPO"
