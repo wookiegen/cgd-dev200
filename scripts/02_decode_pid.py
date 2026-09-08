@@ -4,6 +4,7 @@
 Two variants per image, both consuming the SAME cached latent file as the VAE row:
   final : x_0 (sigma 0)          -> the paired decoder-swap row (same latent as the VAE decode)
   et24  : x_t after 24/28 steps  -> PiD's own recommended early-termination operating point (extra row)
+  et16  : x_t after 16/28 steps  -> a more aggressive truncation (extra row); any etK works if 01 captured step K
 
 PiD: nvidia/PiD `PiD_res2k_sr4x_official_flux_distill_4step` (512-latent -> 2048, 4-step distilled).
 The latent is fed as `LQ_latent` exactly as saved (diffusers scaled space; PiD handles VAE normalization),
@@ -30,7 +31,7 @@ ap.add_argument("--cfg", type=float, default=1.0)
 ap.add_argument("--seed", type=int, default=0)
 ap.add_argument("--scale", type=int, default=4)
 ap.add_argument("--load-ema-to-reg", action="store_true")
-ap.add_argument("--variants", default="final,et24")
+ap.add_argument("--variants", default="final,et24,et16", help="final, or etK = the latent captured after K steps")
 ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--overwrite", action="store_true")
 a = ap.parse_args()
@@ -66,7 +67,10 @@ for n, pt in enumerate(files):
         png = os.path.join(outs[v], f"{idx}.png")
         if os.path.exists(png) and not a.overwrite:
             continue
-        lat, sig = (d["latent"], d["sigma"]) if v == "final" else (d["xt24"], d["sigma24"])
+        if v == "final":
+            lat, sig = d["latent"], d["sigma"]
+        else:
+            K = int(v[2:]); lat, sig = d[f"xt{K}"], d[f"sigma{K}"]
         batch = {cap_key: [d["caption"]],
                  "LQ_latent": lat.to(torch.bfloat16).cuda(),
                  "degrade_sigma": torch.tensor([float(sig)], device="cuda", dtype=torch.float32)}

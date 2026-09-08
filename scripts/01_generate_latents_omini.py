@@ -12,8 +12,9 @@ For every image we save ONE cached latent file that every decoder consumes (pair
     latent   (1,16,64,64) fp16  final clean latent x_0, in diffusers' scaled latent space
                                 (this is exactly what PiD's `extract_latent` produces; PiD handles VAE scaling)
     sigma    float               scheduler sigma for x_0 (0.0)
-    xt24     (1,16,64,64) fp16  the partially-denoised latent after --capture-step steps (PiD's early-termination point)
-    sigma24  float               its sigma (residual noise level), consumed by PiD's sigma-aware adapter
+    xt{K}    (1,16,64,64) fp16  the partially-denoised latent after K of 28 steps, for each K in --capture-steps (default 16,24;
+                                PiD's early-termination points)
+    sigma{K} float               its sigma (residual noise level), consumed by PiD's sigma-aware adapter
     caption, seed, steps, guidance, t_gen_s
 and the standard condition-blind deterministic baseline:
   outputs/omini_vae/{idx}.png     VAE decode of the final latent, 512x512
@@ -33,7 +34,7 @@ ap.add_argument("--omini", default=os.environ.get("OMINI_ROOT", os.path.join(CGD
 ap.add_argument("--steps", type=int, default=28)
 ap.add_argument("--guidance", type=float, default=3.5)
 ap.add_argument("--seed", type=int, default=0)
-ap.add_argument("--capture-step", type=int, default=24, help="save x_t after this many steps (PiD early-termination point)")
+ap.add_argument("--capture-steps", default="16,24", help="comma list: save x_t after these many steps (PiD early-termination points)")
 ap.add_argument("--limit", type=int, default=0, help="debug: only the first N images")
 ap.add_argument("--overwrite", action="store_true")
 a = ap.parse_args()
@@ -58,6 +59,7 @@ pipe.set_progress_bar_config(disable=True)
 print(f"loaded FLUX.1-dev + OminiControl canny LoRA; {len(ids)} images; steps={a.steps} guidance={a.guidance} seed={a.seed}", flush=True)
 
 H = W = 512
+steps_cap = [int(x) for x in a.capture_steps.split(",")]
 for n, idx in enumerate(ids):
     pt = os.path.join(out_lat, f"{idx}.pt")
     if os.path.exists(pt) and not a.overwrite:
@@ -68,9 +70,8 @@ for n, idx in enumerate(ids):
     captured = {}
 
     def cb(pipeline, i, t, kw):
-        if i + 1 == a.capture_step:
-            captured["xt"] = kw["latents"].detach().clone()
-            captured["sigma"] = float(pipeline.scheduler.sigmas[i + 1].item())
+        if (i + 1) in steps_cap:
+            captured[i + 1] = (kw["latents"].detach().clone(), float(pipeline.scheduler.sigmas[i + 1].item()))
         return kw
 
     torch.cuda.reset_peak_memory_stats()
@@ -82,7 +83,7 @@ for n, idx in enumerate(ids):
     torch.cuda.synchronize(); t_gen = time.time() - t0
     packed = out.images                                                   # (1, 1024, 64) packed
     lat = FluxPipeline._unpack_latents(packed, H, W, pipe.vae_scale_factor)   # (1, 16, 64, 64)
-    xt = FluxPipeline._unpack_latents(captured["xt"], H, W, pipe.vae_scale_factor)
+    xts = {K: FluxPipeline._unpack_latents(x, H, W, pipe.vae_scale_factor).half().cpu() for K, (x, _) in captured.items()}
     final_sigma = float(pipe.scheduler.sigmas[-1].item())
     mem_gen = torch.cuda.max_memory_allocated() / 1e9
 
@@ -97,12 +98,15 @@ for n, idx in enumerate(ids):
     mem_vae = torch.cuda.max_memory_allocated() / 1e9
     img.save(os.path.join(out_vae, f"{idx}.png"))
 
-    torch.save({"latent": lat.half().cpu(), "sigma": final_sigma,
-                "xt24": xt.half().cpu(), "sigma24": captured["sigma"], "capture_step": a.capture_step,
-                "caption": cap, "seed": a.seed, "steps": a.steps, "guidance": a.guidance, "t_gen_s": t_gen}, pt)
+    rec = {"latent": lat.half().cpu(), "sigma": final_sigma, "capture_steps": steps_cap,
+           "caption": cap, "seed": a.seed, "steps": a.steps, "guidance": a.guidance, "t_gen_s": t_gen}
+    sigmas = {}
+    for K, (_, sg) in captured.items():
+        rec[f"xt{K}"] = xts[K]; rec[f"sigma{K}"] = sg; sigmas[K] = sg
+    torch.save(rec, pt)
     with open(log_path, "a") as f:
         f.write(json.dumps({"idx": idx, "t_gen_s": t_gen, "t_vae_s": t_vae, "peak_mem_gen_gb": mem_gen,
-                            "peak_mem_vae_gb": mem_vae, "sigma24": captured["sigma"]}) + "\n")
+                            "peak_mem_vae_gb": mem_vae, "sigmas": sigmas}) + "\n")
     if n % 10 == 0:
-        print(f"[{n+1}/{len(ids)}] {idx} gen {t_gen:.2f}s vae {t_vae:.3f}s sigma24={captured['sigma']:.3f} mem {mem_gen:.1f}GB", flush=True)
+        print(f"[{n+1}/{len(ids)}] {idx} gen {t_gen:.2f}s vae {t_vae:.3f}s sigmas={ {k: round(v, 3) for k, v in sigmas.items()} } mem {mem_gen:.1f}GB", flush=True)
 print("done:", out_lat, out_vae)

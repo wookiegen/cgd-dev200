@@ -13,29 +13,31 @@ Every row decodes the **same cached latent** (FLUX.1-dev + OminiControl canny Lo
 | VAE decode (FLUX's own) | no | no (deterministic) | 512 |
 | vanilla PiD (final latent) | no | yes (pixel diffusion, 4 steps) | 2048 |
 | vanilla PiD, early-terminated (latent at step 24/28) | no | yes | 2048 |
+| vanilla PiD, early-terminated (latent at step 16/28) | no | yes | 2048 |
 | **CGD (your method)** | **yes** | yes | 2048 |
 
-The two PiD rows are the baselines a CGD variant must beat. Vanilla PiD on the final latent is the paired ablation ("CGD minus the condition"); the early-terminated row is PiD's own recommended operating point (it consumes a partially-denoised latent, σ≈0.24, via its sigma-aware adapter).
+The PiD rows are the baselines a CGD variant must beat. Vanilla PiD on the final latent is the paired ablation ("CGD minus the condition"); the early-terminated rows feed PiD a partially-denoised latent through its sigma-aware adapter: 24/28 (σ≈0.24) is PiD's own recommended operating point, 16/28 is a more aggressive truncation.
 
 ## Results (dev-200, OminiControl canny, seed 0)
 
 <!-- RESULTS:BEGIN -->
 _Last run: 2026-09-08. Regenerate with `bash scripts/run_all.sh`; this block is written by `scripts/04_fill_readme.py`._
 
-| Decoder | n | Canny F1 @512 (matched) | Canny F1 @2048 (native) | LPIPS | PSNR | SSIM | MUSIQ @512 (matched) | MUSIQ (native) | decode s/img | peak mem GB |
+| Decoder | n | Canny F1 @512 (matched) ↑ | Canny F1 @2048 (native; VAE row via bilinear x4) ↑ | LPIPS ↓ | PSNR ↑ | SSIM ↑ | MUSIQ @512 (matched) ↑ | MUSIQ (native) ↑ | decode s/img ↓ | peak mem GB ↓ |
 |---|---|---|---|---|---|---|---|---|---|---|
-| OminiControl + VAE decode (512, native) | 200 | 0.3649 | n/a (512 native) | 0.5143 | 11.90 | 0.4394 | 70.41 | 70.41 | 0.033 | 34.5 |
-| OminiControl + vanilla PiD (final latent, 2048) | 200 | 0.3625 | 0.2217 | 0.5092 | 11.81 | 0.4284 | 71.58 | 61.05 | 0.962 | 23.6 |
-| OminiControl + vanilla PiD, early-terminated at 24/28 (2048) | 200 | 0.3003 | 0.2033 | 0.5266 | 11.76 | 0.3999 | 72.44 | 61.96 | 0.953 | 23.6 |
+| OminiControl + VAE decode (512, native) | 200 | 0.3647 | 0.0263 (bilinear x4) | 0.5142 | 11.90 | 0.4394 | 70.40 | 70.40 | 0.033 | 34.5 |
+| OminiControl + vanilla PiD (final latent, 2048) | 200 | 0.3624 | 0.2217 | 0.5092 | 11.81 | 0.4284 | 71.57 | 61.05 | 0.959 | 23.6 |
+| OminiControl + vanilla PiD, early-terminated at 24/28 (2048) | 200 | 0.3005 | 0.2033 | 0.5265 | 11.76 | 0.3999 | 72.42 | 61.95 | 0.953 | 23.6 |
+| OminiControl + vanilla PiD, early-terminated at 16/28 (2048) | 200 | 0.1916 | 0.1622 | 0.6002 | 11.67 | 0.3480 | 74.79 | 66.92 | 0.961 | 23.6 |
 
-Generation (FLUX.1-dev + OminiControl canny LoRA, 28 steps @512, seed 0): 5.15 s/img, shared by every row.
+Generation (FLUX.1-dev + OminiControl canny LoRA, 28 steps @512, seed 0): 5.11 s/img, shared by every row.
 <!-- RESULTS:END -->
 
 How to read it:
 - **Canny F1 @512 (matched)** is the number to optimize. Outputs are compared at the VAE's native 512 (PiD/CGD outputs are downsampled from 2048 with `cv2.INTER_AREA`), so a gain cannot come from having more pixels. Strict pixel-wise F1 between `cv2.Canny(gray(output), 100, 200)` and the input condition; harsh, but identical for every method.
-- **Canny F1 @2048 (native)** is the target: scored at PiD's native output against the condition resampled to 2048 (nearest). The drop from @512 to @2048 within a method is the *resolution gap*: whether the native-resolution detail stayed condition-consistent.
-- **LPIPS / PSNR / SSIM** vs the real source image (at 512). Indicative only: this is *generation from an edge map*, not reconstruction, so colors and textures legitimately differ from the source and PSNR sits around 12 for every method. Use them to catch a decoder that drifts *relative to the others*, not as absolute fidelity.
-- **MUSIQ** (no-reference): **@512 (matched)** is the comparable number across rows; the native-resolution value is also reported but VAE (512) vs PiD (2048) native scores are not directly comparable.
+- **Canny F1 @2048 (native)** is the target: scored at PiD's native output against the condition resampled to 2048 (nearest). The drop from @512 to @2048 within a method is the *resolution gap*: whether the native-resolution detail stayed condition-consistent. For the VAE row, which is 512-native, the @2048 value is a **reference** computed on a bilinear ×4 upsample of its output (marked "bilinear x4"); the benchmark's never-upsample rule applies to claims, not to this reference.
+- **LPIPS ↓ / PSNR ↑ / SSIM ↑** vs the real source image (at 512), computed on the whole RGB image, not on edges. Indicative only: this is *generation from an edge map*, not reconstruction, so colors and textures legitimately differ from the source and PSNR sits around 12 for every method. Use them to catch a decoder that drifts *relative to the others*, not as absolute fidelity.
+- **MUSIQ ↑** (no-reference, ~0-100, higher is better): **@512 (matched)** is the comparable number across rows; the native-resolution value is also reported but VAE (512) vs PiD (2048) native scores are not directly comparable.
 - **decode s/img, peak mem** on one H200; generation cost is shared by every row.
 
 **The gate for a CGD variant** (from `DEV_SETTING.md`): on these same 200 latents, matched-512 F1 > vanilla PiD's, native-2048 F1 ≥ vanilla PiD's, MUSIQ not lower and LPIPS not worse than vanilla PiD. Beating VAE decode is necessary but not sufficient.
@@ -92,13 +94,13 @@ or step by step:
 ```bash
 python scripts/00_select_dev200.py                                    # ~1 min, CPU: dev200/{manifest.csv,images,canny,captions.json}
 CUDA_VISIBLE_DEVICES=0 python scripts/01_generate_latents_omini.py    # ~3-4 s/img: latents/omini_canny/*.pt + outputs/omini_vae/*.png
-CUDA_VISIBLE_DEVICES=1 python scripts/02_decode_pid.py                # ~1 s/img: outputs/omini_pid{,_512,_et24,_et24_512}/*.png
+CUDA_VISIBLE_DEVICES=1 python scripts/02_decode_pid.py                # ~1 s/img/variant: outputs/omini_pid{,_et24,_et16}{,_512}/*.png
 CUDA_VISIBLE_DEVICES=1 python scripts/03_score.py                     # results/dev200_summary.{md,csv}, results/dev200_per_image.csv
 ```
 Every step skips outputs that already exist; add `--overwrite` to redo, `--limit N` to smoke-test on N images.
 
 ### What is cached, and why it matters
-`latents/omini_canny/{idx}.pt` holds, per image: the **final clean latent** `x_0` (1×16×64×64, fp16, in diffusers' scaled latent space, i.e. exactly what PiD's `extract_latent` produces), its `sigma` (0.0), the **early-terminated latent** `xt24` after 24 of 28 steps with its `sigma24`, and the caption/seed/steps. Generation (28 FLUX steps) is the slow part; decoding is fast. **Every decoder variant must read these files and never regenerate latents**, otherwise the comparison is no longer paired.
+`latents/omini_canny/{idx}.pt` holds, per image: the **final clean latent** `x_0` (1×16×64×64, fp16, in diffusers' scaled latent space, i.e. exactly what PiD's `extract_latent` produces), its `sigma` (0.0), the **early-terminated latents** `xt16` / `xt24` after 16 and 24 of 28 steps with their `sigma16` / `sigma24`, and the caption/seed/steps. Generation (28 FLUX steps) is the slow part; decoding is fast. **Every decoder variant must read these files and never regenerate latents**, otherwise the comparison is no longer paired.
 
 ## Adding your CGD variant
 
@@ -110,9 +112,10 @@ Every step skips outputs that already exist; add `--overwrite` to redo, `--limit
 ## Caveats (read once)
 
 - **Dependency pins:** `env_pid.sh` installs PiD's pinned `diffusers 0.37.1 / transformers 4.57.1 / numpy 1.26.4`. Generation and scoring were verified under these versions. If another project in the same environment needs newer versions, give PiD its own venv.
+- **Latents are not bit-reproducible across runs** (GPU nondeterminism, and sensitivity to the diffusers/transformers versions): regenerating shifts a latent slightly (in our check, max |Δ| ≈ 0.4 on a std-0.69 latent). This is exactly why the cached latents are shared and every decoder must read them rather than regenerate; all rows in the results table come from a single generation run.
 - **Strict F1** has no pixel tolerance, so absolute values look low; only relative comparisons between rows matter.
 - **Same seed (0) for every image**: the initial noise is identical across images; this is deliberate for reproducibility and is fine for a paired decoder comparison.
-- **Early-terminated PiD** decodes a *different* latent (σ≈0.24) than the VAE row, so it is a reference point for PiD's headline operating mode, not part of the paired swap. The paired swap is VAE vs PiD(final) vs CGD(final).
+- **Early-terminated PiD** rows decode a *different* latent (σ≈0.24 at 24/28, larger at 16/28) than the VAE row, so they are reference points for PiD's early-termination mode, not part of the paired swap. The paired swap is VAE vs PiD(final) vs CGD(final).
 - The 4-step distilled PiD ignores `shift`/`cfg` (it uses its student timestep list); `--ckpt-type 2kto4k_v1pt5` switches to the multi-resolution v1.5 checkpoint if needed.
 
 ## Layout
