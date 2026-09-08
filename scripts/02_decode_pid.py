@@ -61,6 +61,7 @@ def to_uint8(img):                       # img: (3,H,W) in [-1,1]
 for n, pt in enumerate(files):
     idx = os.path.splitext(os.path.basename(pt))[0]
     d = torch.load(pt, map_location="cpu")
+    did = False
     for v in variants:
         png = os.path.join(outs[v], f"{idx}.png")
         if os.path.exists(png) and not a.overwrite:
@@ -86,6 +87,7 @@ for n, pt in enumerate(files):
         with open(log_path, "a") as f:
             f.write(json.dumps({"idx": idx, "variant": v, "sigma": float(sig), "t_dec_s": dt, "peak_mem_gb": mem,
                                 "out_hw": list(arr.shape[:2])}) + "\n")
-    if n % 10 == 0:
+        did = True
+    if did and n % 10 == 0:
         print(f"[{n+1}/{len(files)}] {idx} {v} {dt:.2f}s mem {mem:.1f}GB out {arr.shape[:2]}", flush=True)
 print("done:", outs)

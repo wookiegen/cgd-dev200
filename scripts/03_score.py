@@ -6,7 +6,7 @@ Adherence (the signal):  Canny F1 between cv2.Canny(gray(output), 100, 200) and 
    - native 2048      : 2048 output vs the condition resampled to 2048 with NEAREST (BENCHMARK v1.1 rule)
    Strict pixel-wise F1 (no tolerance); harsh but identical for every method.
 Fidelity vs the real source image (512): LPIPS (alex), PSNR, SSIM   [pyiqa]
-No-reference quality at native resolution: MUSIQ                      [pyiqa]
+No-reference quality: MUSIQ on the matched 512 view (comparable across rows) and at native resolution [pyiqa]
 Cost: per-image generation / decode latency and peak memory from the run logs.
 
 Variants scored (dir under outputs/): omini_vae (512), omini_pid_512 + omini_pid (2048), omini_pid_et24_512 + omini_pid_et24.
@@ -67,6 +67,7 @@ for idx in ids:
             r["psnr"] = float(M["psnr"](tens(view512), tens(src)))
             r["ssim"] = float(M["ssim"](tens(view512), tens(src)))
             r["musiq_native"] = float(M["musiq"](tens(nat)))
+            r["musiq_512"] = float(M["musiq"](tens(view512)))
         rows.append(r)
 
 df = pd.DataFrame(rows); df.to_csv(os.path.join(res, "dev200_per_image.csv"), index=False)
@@ -84,7 +85,7 @@ if os.path.exists(os.path.join(res, "log_02_pid.jsonl")):
 agg = df.groupby("variant").agg(n=("idx", "count"), native_res=("native_res", "first"),
                                 canny_f1_512=("canny_f1_512", "mean"), canny_f1_native=("canny_f1_native", "mean"),
                                 lpips=("lpips", "mean"), psnr=("psnr", "mean"), ssim=("ssim", "mean"),
-                                musiq_native=("musiq_native", "mean")).reset_index()
+                                musiq_native=("musiq_native", "mean"), musiq_512=("musiq_512", "mean")).reset_index()
 agg["decode_s"] = agg.variant.map(lambda v: round(lat.get(v, (np.nan, np.nan))[0], 3))
 agg["peak_mem_gb"] = agg.variant.map(lambda v: round(lat.get(v, (np.nan, np.nan))[1], 1))
 order = {"omini_vae": 0, "omini_pid": 1, "omini_pid_et24": 2}
@@ -94,11 +95,11 @@ agg.to_csv(os.path.join(res, "dev200_summary.csv"), index=False)
 names = {"omini_vae": "OminiControl + VAE decode (512, native)",
          "omini_pid": "OminiControl + vanilla PiD (final latent, 2048)",
          "omini_pid_et24": "OminiControl + vanilla PiD, early-terminated at 24/28 (2048)"}
-lines = ["| Decoder | n | Canny F1 @512 (matched) | Canny F1 @2048 (native) | LPIPS | PSNR | SSIM | MUSIQ (native) | decode s/img | peak mem GB |",
-         "|---|---|---|---|---|---|---|---|---|---|"]
+lines = ["| Decoder | n | Canny F1 @512 (matched) | Canny F1 @2048 (native) | LPIPS | PSNR | SSIM | MUSIQ @512 (matched) | MUSIQ (native) | decode s/img | peak mem GB |",
+         "|---|---|---|---|---|---|---|---|---|---|---|"]
 for _, r in agg.iterrows():
     f1n = "n/a (512 native)" if r.native_res == 512 else f"{r.canny_f1_native:.4f}"
-    lines.append(f"| {names.get(r.variant, r.variant)} | {int(r.n)} | {r.canny_f1_512:.4f} | {f1n} | {r.lpips:.4f} | {r.psnr:.2f} | {r.ssim:.4f} | {r.musiq_native:.2f} | {r.decode_s} | {r.peak_mem_gb} |")
+    lines.append(f"| {names.get(r.variant, r.variant)} | {int(r.n)} | {r.canny_f1_512:.4f} | {f1n} | {r.lpips:.4f} | {r.psnr:.2f} | {r.ssim:.4f} | {r.musiq_512:.2f} | {r.musiq_native:.2f} | {r.decode_s} | {r.peak_mem_gb} |")
 gen_line = f"\nGeneration (FLUX.1-dev + OminiControl canny LoRA, 28 steps @512, seed 0): {lat.get('gen_s', float('nan')):.2f} s/img, shared by every row.\n" if "gen_s" in lat else ""
 open(os.path.join(res, "dev200_summary.md"), "w").write("\n".join(lines) + "\n" + gen_line)
 print("\n".join(lines)); print(gen_line)

@@ -20,14 +20,22 @@ The two PiD rows are the baselines a CGD variant must beat. Vanilla PiD on the f
 ## Results (dev-200, OminiControl canny, seed 0)
 
 <!-- RESULTS:BEGIN -->
-_Pending: filled by `scripts/03_score.py` → `results/dev200_summary.md`._
+_Last run: 2026-09-08. Regenerate with `bash scripts/run_all.sh`; this block is written by `scripts/04_fill_readme.py`._
+
+| Decoder | n | Canny F1 @512 (matched) | Canny F1 @2048 (native) | LPIPS | PSNR | SSIM | MUSIQ @512 (matched) | MUSIQ (native) | decode s/img | peak mem GB |
+|---|---|---|---|---|---|---|---|---|---|---|
+| OminiControl + VAE decode (512, native) | 200 | 0.3649 | n/a (512 native) | 0.5143 | 11.90 | 0.4394 | 70.41 | 70.41 | 0.033 | 34.5 |
+| OminiControl + vanilla PiD (final latent, 2048) | 200 | 0.3625 | 0.2217 | 0.5092 | 11.81 | 0.4284 | 71.58 | 61.05 | 0.962 | 23.6 |
+| OminiControl + vanilla PiD, early-terminated at 24/28 (2048) | 200 | 0.3003 | 0.2033 | 0.5266 | 11.76 | 0.3999 | 72.44 | 61.96 | 0.953 | 23.6 |
+
+Generation (FLUX.1-dev + OminiControl canny LoRA, 28 steps @512, seed 0): 5.15 s/img, shared by every row.
 <!-- RESULTS:END -->
 
 How to read it:
 - **Canny F1 @512 (matched)** is the number to optimize. Outputs are compared at the VAE's native 512 (PiD/CGD outputs are downsampled from 2048 with `cv2.INTER_AREA`), so a gain cannot come from having more pixels. Strict pixel-wise F1 between `cv2.Canny(gray(output), 100, 200)` and the input condition; harsh, but identical for every method.
 - **Canny F1 @2048 (native)** is the target: scored at PiD's native output against the condition resampled to 2048 (nearest). The drop from @512 to @2048 within a method is the *resolution gap*: whether the native-resolution detail stayed condition-consistent.
-- **LPIPS / PSNR / SSIM** vs the real source image (at 512): did the decoder stay faithful to the photo or hallucinate.
-- **MUSIQ** (no-reference, at native res): did adherence cost image quality.
+- **LPIPS / PSNR / SSIM** vs the real source image (at 512). Indicative only: this is *generation from an edge map*, not reconstruction, so colors and textures legitimately differ from the source and PSNR sits around 12 for every method. Use them to catch a decoder that drifts *relative to the others*, not as absolute fidelity.
+- **MUSIQ** (no-reference): **@512 (matched)** is the comparable number across rows; the native-resolution value is also reported but VAE (512) vs PiD (2048) native scores are not directly comparable.
 - **decode s/img, peak mem** on one H200; generation cost is shared by every row.
 
 **The gate for a CGD variant** (from `DEV_SETTING.md`): on these same 200 latents, matched-512 F1 > vanilla PiD's, native-2048 F1 ≥ vanilla PiD's, MUSIQ not lower and LPIPS not worse than vanilla PiD. Beating VAE decode is necessary but not sufficient.
