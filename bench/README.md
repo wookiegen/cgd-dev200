@@ -42,6 +42,10 @@ python finalize_bench.py          # BENCH.json
 
 Materialized layout per eval set: `images/<id>.png`, `conditions/<cond>/<id>.png` (depth also `conditions/depth_raw/<id>.npy`, float16, the scorer's reference), `labels/<id>.png` (ADE20K), `refs/<subject>.jpg` (DreamBench).
 
+## Training triplets (`make_targets.py`)
+
+The CGD adapter is trained per condition on its own training set (paper Method, "Training the Conditioned Decoder"). `make_targets.py --set <multigen_train30|ade20k_train|coco_train>` reads the training manifest, drops `blocked` rows, and writes under `$CGD_BENCH_ROOT/train/<set>/`: the 512 source crop (`images512/`), the clean FLUX latent (`latents/<id>.pt`, diffusers scaled space), the **2048 target** = vanilla PiD's four-step decode of that clean latent (`targets/<id>.jpg`, q95), and the conditions at 512: canny and depth extracted from the target's area-downsampled view (consistent with the target by construction), plus the GT-rendered seg (ADE20K) or bbox (COCO) condition after the same crop. The re-noised input latent is sampled in the training loop. Shard across GPUs with `--shard k --nshards n`; `--dry-run` validates parsing and GT rendering without models. Roughly 1 s per image on one H200 for the PiD decode.
+
 ## Versioning
 
 `bench_v1` is frozen with the paper's BENCHMARK v1.7. Any change to a set (rows, order, crop rule, annotator version, palette, color map) is a new version with a changelog line in `BENCH.json` and in the paper's `BENCHMARK_v1.md`; never edit a frozen manifest in place.
