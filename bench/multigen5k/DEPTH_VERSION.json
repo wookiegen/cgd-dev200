@@ -1,0 +1,18 @@
+{
+  "annotator": "Intel/dpt-large",
+  "device_used": "cpu",
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "output": "predicted_depth resized bicubic to 512x512",
+  "png": "3-channel 8-bit, per-image min-max normalization of the raw prediction (brighter = closer, DPT inverse-depth convention)",
+  "processor": "DPTImageProcessor defaults (384x384 input)",
+  "raw": "float16 .npy, 512x512, unnormalized; scorer aligns scale+shift per image before MSE/RMSE (BENCHMARK Section 5)"
+}

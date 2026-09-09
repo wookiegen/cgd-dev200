@@ -1,0 +1,31 @@
+{
+  "caption": "ControlNet++ 'prompt' column (BENCHMARK v1.6)",
+  "conditions": {
+    "seg": "palette.json render of the cropped label map, 0 -> black"
+  },
+  "crop": "shorter side -> 512 (image bicubic, label nearest), center crop 512x512; crop_box = x0,y0,x1,y1 in resized coords (BENCHMARK v1.7)",
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "labels": "uint8 PNG, 0 = other/ignore (excluded from mIoU), 1..150 = ADE20K classes; Mask2Former ADE semantic id = label - 1",
+  "n": 2000,
+  "scorer": "facebook/mask2former-swin-large-ade-semantic",
+  "set": "ade20k_val2k",
+  "source": {
+    "hf_dataset": "limingcv/Captioned_ADE20K",
+    "shards": [
+      "validation-00000-of-00003.parquet",
+      "validation-00001-of-00003.parquet",
+      "validation-00002-of-00003.parquet"
+    ],
+    "split": "validation"
+  },
+  "subset500": "numpy.random.default_rng(500).choice(n, 500, replace=False)"
+}

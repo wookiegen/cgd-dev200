@@ -1,0 +1,25 @@
+{
+  "caption": "lowest caption annotation id",
+  "crop": "same square-crop rule as coco_val5k; boxes transformed at train time with common.crop_boxes; condition rendered with coco_val5k/class_colors.json",
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "n": 118287,
+  "n_blocked": 0,
+  "n_val": 500,
+  "order": "ascending COCO image id",
+  "rule": "drop rows with blocked = 1",
+  "set": "coco_train",
+  "source": {
+    "annotations": "instances_train2017, captions_train2017",
+    "images": "COCO 2017 train2017.zip"
+  },
+  "val_split": "500 non-blocked rows, numpy.random.default_rng(1000)"
+}

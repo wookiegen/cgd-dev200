@@ -1,0 +1,30 @@
+{
+  "boxes": "iscrowd dropped; boxes.jsonl lists kept boxes in crop coords and original coords",
+  "caption": "lowest caption annotation id per image",
+  "conditions": {
+    "bbox": "class_colors.json filled boxes on black, no text, larger first"
+  },
+  "crop": "shorter side -> 512 bicubic, center crop 512x512; boxes: center outside crop -> dropped, else clipped (BENCHMARK v1.7)",
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "n": 5000,
+  "n_boxes_dropped_by_crop": 6957,
+  "n_with_boxes": 4925,
+  "order": "ascending COCO image id",
+  "scorer": "IDEA-Research/grounding-dino-base, MIGC protocol (SR @ IoU 0.5, mIoU)",
+  "set": "coco_val5k",
+  "source": {
+    "annotations": "annotations_trainval2017.zip (instances_val2017, captions_val2017)",
+    "images": "COCO 2017 val2017.zip",
+    "url": "https://cocodataset.org"
+  },
+  "subset500": "numpy.random.default_rng(500).choice(n, 500, replace=False)"
+}

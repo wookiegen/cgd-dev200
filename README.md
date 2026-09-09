@@ -4,6 +4,10 @@ A fixed 200-image canny benchmark for iterating on **Conditional Generative Deco
 
 This is the **dev** setting (fast method selection), not the paper benchmark. Numbers here are never reported in the paper; they exist so everyone iterates on the same images, the same latents, and the same scorers. The full protocol lives in the paper repo's `docs/BENCHMARK_v1.md`; this repo implements its `DEV_SETTING.md`.
 
+## Paper benchmark manifests (`bench/`)
+
+`bench/` holds the **frozen manifests of the full paper benchmark** (bench_v1 = BENCHMARK v1.7): `multigen5k` (canny + depth), `ade20k_val2k`, `coco_val5k`, `dreambench750`, the training manifests with a leakage `blocked` column, and the eval-sha blocklist. Images, conditions, and latents are rebuilt with the scripts there (`bench/README.md`); nothing heavy is committed. The dev-200 set below is a subset of `multigen5k` (`dev200_idx` column).
+
 ## What the comparison is
 
 Every row decodes the **same cached latent** (FLUX.1-dev + OminiControl canny LoRA, 512×512, 28 steps, guidance 3.5, seed 0). Only the decoder changes, so any difference is the decoder's doing:

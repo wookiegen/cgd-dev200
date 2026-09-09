@@ -1,0 +1,43 @@
+{
+  "caption": "dataset 'text' column",
+  "conditions": {
+    "canny": {
+      "annotator": "cv2.Canny(grayscale, 100, 200)",
+      "format": "3-channel PNG, edges = 255",
+      "grayscale": "cv2.COLOR_RGB2GRAY"
+    },
+    "depth": "see depth_dpt.py / DEPTH_VERSION.json"
+  },
+  "dev200_idx": "row index in dev200/manifest.csv when the image is in the dev-200 set (matched by sha256)",
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "image": "512x512, no crop; PNG sources are written as their original bytes, other formats (see source_format, e.g. TIFF) are losslessly re-encoded to PNG; sha256 is always of the SOURCE bytes",
+  "n": 5000,
+  "n_dup_groups": 14,
+  "n_reencoded_by_format": {
+    "TIFF": 25
+  },
+  "n_unique_images": 4975,
+  "set": "multigen5k",
+  "source": {
+    "hf_dataset": "limingcv/MultiGen-20M_canny_eval",
+    "note": "identical images/order to limingcv/MultiGen-20M_depth_eval validation (sha256 check 2026-09-09)",
+    "shards": [
+      "validation-00000-of-00005.parquet",
+      "validation-00001-of-00005.parquet",
+      "validation-00002-of-00005.parquet",
+      "validation-00003-of-00005.parquet",
+      "validation-00004-of-00005.parquet"
+    ],
+    "split": "validation"
+  },
+  "subset500": "numpy.random.default_rng(500).choice(n, 500, replace=False)"
+}

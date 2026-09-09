@@ -1,0 +1,90 @@
+{
+  "bench_version": "bench_v1",
+  "blocklist": {
+    "file": "blocklist/eval_sha256.txt",
+    "n": 12005,
+    "rule": "every training loader drops rows whose sha is listed"
+  },
+  "built": "2026-09-09",
+  "crop": "shorter side -> 512, center crop 512x512 (non-square sources only); crop_box in manifests",
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "materialized_root": "/data/wookiekim/cgd/data/bench",
+  "sample_id": "five-digit, source order (file, then row); latents/outputs key on it",
+  "sets": {
+    "ade20k_val2k": {
+      "VERSION.json": "e701989c88a438cef4beb11f9fe3960dc8bdfb20aa01906e678ac59b96b71d27",
+      "manifest_sha256": "5ec1a41d2b5f2831963fe70b69b19003a4e1fb419d27951fb82e5a81a56c4225",
+      "materialized": {
+        "conditions/seg": 2000,
+        "images": 2000,
+        "labels": 2000
+      },
+      "n": 2000,
+      "palette.json": "d9afdf79be3581c472603581906e54b12d4f7dfad93e6a9ee76bc9cd67be1206"
+    },
+    "coco_val5k": {
+      "VERSION.json": "80840a95d84b18ef788128b7c400646fbd7b4eec1ef26c866f250689eb3049e8",
+      "boxes.jsonl": "2dc0dc3b138475575b8b6207672833924935fbede99b15f42b880737e2febe4f",
+      "class_colors.json": "b2d314d81826a718a563e925fe73e338b0114d49763330c5f426466fbafa9b9f",
+      "manifest_sha256": "abfd6eb643a1328ae060de20e1b8288080af8857d7a3de02a99dd00c375312c7",
+      "materialized": {
+        "conditions/bbox": 5000,
+        "images": 5000
+      },
+      "n": 5000
+    },
+    "dreambench750": {
+      "VERSION.json": "62b6ee69f9eed15c3f058aa19d426bf45d0d1a780876fe17d3a674cb93a13f5a",
+      "manifest_sha256": "99afc6755eb543ebead64fb5088ca56a383fa59e6870810815228669e461b6bb",
+      "materialized": {
+        "refs": 30
+      },
+      "n": 750
+    },
+    "multigen5k": {
+      "DEPTH_VERSION.json": "0d4ef4a0b2daf8c7a1c3a7c32f0409211e1987d3953ed004be8324d9b4127b65",
+      "VERSION.json": "4d7efcf0f496e6c6939af82ec67688bfeb3b2f2c98d1dc4cff08a61ff8edbb76",
+      "manifest_sha256": "9348baa7076aa40ddb49bab33e9270777c26c04bc5bdefa8a97c2fc3ab2ea38d",
+      "materialized": {
+        "conditions/canny": 5000,
+        "conditions/depth": 5000,
+        "conditions/depth_raw": 5000,
+        "images": 5000
+      },
+      "n": 5000
+    },
+    "train/ade20k_train": {
+      "VERSION.json": "cf022ff6fad993d6536909c0c49f4126456c47f72b06a6e3d3905c3558a8aa2c",
+      "manifest_sha256": "bbaf5eb239828e2401858014499ac450a719c12dc432f9f571c1ff9aca2134ec",
+      "n": 20210
+    },
+    "train/coco_train": {
+      "VERSION.json": "05bd4eb27a62d95ca992bc619fa3e3f6b3529e173c857cbeae8e1afaf4acf5a0",
+      "manifest_sha256": "3393e10b6927f57f5af0b847542cb571dd510b252781eb2a6fd2ffc9bb1110ac",
+      "n": 118287
+    },
+    "train/multigen_train30": {
+      "VERSION.json": "61de270fe844ef42cc24ccbb4bcdb794bf2eef0862c2bcb6ca362b43e63c1d59",
+      "manifest_sha256": "bd8420bb907e9f11ae7b4962cbe5fc3d1c1d4dc7105d562e21396b1b5a338e96",
+      "n": 36810
+    }
+  },
+  "sha256": "of the ORIGINAL image bytes",
+  "source_revisions_at_build": {
+    "google/dreambooth": "dc09c9867a20ecaa1f1f6f079a4e6515cce40cc6",
+    "limingcv/Captioned_ADE20K": "1406fc53a4749e505126bd385035cd7968e76dba",
+    "limingcv/MultiGen-20M_canny_eval": "fc7c74095493544ae947f4ed48133cd1d4a86045",
+    "limingcv/MultiGen-20M_depth_eval": "5ef53bdcf042cd7c7beb442852768c13e6b0f8a9",
+    "limingcv/MultiGen-20M_train": "451da2ad0acf73c23c8c2b933107fe4cb35ee0a9"
+  },
+  "spec": "paper repo docs/BENCHMARK_v1.md v1.7, Section 5c"
+}

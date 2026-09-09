@@ -1,0 +1,25 @@
+{
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "n": 750,
+  "prompt": "'{0} {1}' -> the class name, no unique token; live classes (cat, dog) use the live list",
+  "reference": "first image (sorted filename) of each subject; the other subject images are not used",
+  "scorers": {
+    "CLIP-I/CLIP-T": "openai/clip-vit-large-patch14",
+    "DINO": "facebook/dino-vits16"
+  },
+  "set": "dreambench750",
+  "source": {
+    "github": "https://github.com/google/dreambooth",
+    "hf_dataset": "google/dreambooth",
+    "prompts": "dataset/prompts_and_classes.txt"
+  }
+}

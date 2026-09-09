@@ -1,0 +1,725 @@
+{
+  "classes": [
+    {
+      "category_id": 1,
+      "name": "person",
+      "rgb": [
+        12,
+        79,
+        242
+      ]
+    },
+    {
+      "category_id": 2,
+      "name": "bicycle",
+      "rgb": [
+        158,
+        216,
+        75
+      ]
+    },
+    {
+      "category_id": 3,
+      "name": "car",
+      "rgb": [
+        242,
+        12,
+        213
+      ]
+    },
+    {
+      "category_id": 4,
+      "name": "motorcycle",
+      "rgb": [
+        75,
+        216,
+        193
+      ]
+    },
+    {
+      "category_id": 5,
+      "name": "airplane",
+      "rgb": [
+        242,
+        136,
+        12
+      ]
+    },
+    {
+      "category_id": 6,
+      "name": "bus",
+      "rgb": [
+        110,
+        75,
+        216
+      ]
+    },
+    {
+      "category_id": 7,
+      "name": "train",
+      "rgb": [
+        21,
+        242,
+        12
+      ]
+    },
+    {
+      "category_id": 8,
+      "name": "truck",
+      "rgb": [
+        216,
+        75,
+        122
+      ]
+    },
+    {
+      "category_id": 9,
+      "name": "boat",
+      "rgb": [
+        12,
+        156,
+        242
+      ]
+    },
+    {
+      "category_id": 10,
+      "name": "traffic light",
+      "rgb": [
+        205,
+        216,
+        75
+      ]
+    },
+    {
+      "category_id": 11,
+      "name": "fire hydrant",
+      "rgb": [
+        193,
+        12,
+        242
+      ]
+    },
+    {
+      "category_id": 13,
+      "name": "stop sign",
+      "rgb": [
+        75,
+        216,
+        146
+      ]
+    },
+    {
+      "category_id": 14,
+      "name": "parking meter",
+      "rgb": [
+        242,
+        59,
+        12
+      ]
+    },
+    {
+      "category_id": 15,
+      "name": "bench",
+      "rgb": [
+        75,
+        87,
+        216
+      ]
+    },
+    {
+      "category_id": 16,
+      "name": "bird",
+      "rgb": [
+        98,
+        242,
+        12
+      ]
+    },
+    {
+      "category_id": 17,
+      "name": "cat",
+      "rgb": [
+        216,
+        75,
+        170
+      ]
+    },
+    {
+      "category_id": 18,
+      "name": "dog",
+      "rgb": [
+        12,
+        233,
+        242
+      ]
+    },
+    {
+      "category_id": 19,
+      "name": "horse",
+      "rgb": [
+        216,
+        181,
+        75
+      ]
+    },
+    {
+      "category_id": 20,
+      "name": "sheep",
+      "rgb": [
+        117,
+        12,
+        242
+      ]
+    },
+    {
+      "category_id": 21,
+      "name": "cow",
+      "rgb": [
+        75,
+        216,
+        98
+      ]
+    },
+    {
+      "category_id": 22,
+      "name": "elephant",
+      "rgb": [
+        242,
+        12,
+        41
+      ]
+    },
+    {
+      "category_id": 23,
+      "name": "bear",
+      "rgb": [
+        75,
+        134,
+        216
+      ]
+    },
+    {
+      "category_id": 24,
+      "name": "zebra",
+      "rgb": [
+        175,
+        242,
+        12
+      ]
+    },
+    {
+      "category_id": 25,
+      "name": "giraffe",
+      "rgb": [
+        216,
+        75,
+        216
+      ]
+    },
+    {
+      "category_id": 27,
+      "name": "backpack",
+      "rgb": [
+        12,
+        242,
+        174
+      ]
+    },
+    {
+      "category_id": 28,
+      "name": "umbrella",
+      "rgb": [
+        216,
+        134,
+        75
+      ]
+    },
+    {
+      "category_id": 31,
+      "name": "handbag",
+      "rgb": [
+        40,
+        12,
+        242
+      ]
+    },
+    {
+      "category_id": 32,
+      "name": "tie",
+      "rgb": [
+        99,
+        216,
+        75
+      ]
+    },
+    {
+      "category_id": 33,
+      "name": "suitcase",
+      "rgb": [
+        242,
+        12,
+        118
+      ]
+    },
+    {
+      "category_id": 34,
+      "name": "frisbee",
+      "rgb": [
+        75,
+        182,
+        216
+      ]
+    },
+    {
+      "category_id": 35,
+      "name": "skis",
+      "rgb": [
+        242,
+        231,
+        12
+      ]
+    },
+    {
+      "category_id": 36,
+      "name": "snowboard",
+      "rgb": [
+        169,
+        75,
+        216
+      ]
+    },
+    {
+      "category_id": 37,
+      "name": "sports ball",
+      "rgb": [
+        12,
+        242,
+        97
+      ]
+    },
+    {
+      "category_id": 38,
+      "name": "kite",
+      "rgb": [
+        216,
+        86,
+        75
+      ]
+    },
+    {
+      "category_id": 39,
+      "name": "baseball bat",
+      "rgb": [
+        12,
+        61,
+        242
+      ]
+    },
+    {
+      "category_id": 40,
+      "name": "baseball glove",
+      "rgb": [
+        146,
+        216,
+        75
+      ]
+    },
+    {
+      "category_id": 41,
+      "name": "skateboard",
+      "rgb": [
+        242,
+        12,
+        195
+      ]
+    },
+    {
+      "category_id": 42,
+      "name": "surfboard",
+      "rgb": [
+        75,
+        216,
+        204
+      ]
+    },
+    {
+      "category_id": 43,
+      "name": "tennis racket",
+      "rgb": [
+        242,
+        154,
+        12
+      ]
+    },
+    {
+      "category_id": 44,
+      "name": "bottle",
+      "rgb": [
+        122,
+        75,
+        216
+      ]
+    },
+    {
+      "category_id": 46,
+      "name": "wine glass",
+      "rgb": [
+        12,
+        242,
+        20
+      ]
+    },
+    {
+      "category_id": 47,
+      "name": "cup",
+      "rgb": [
+        216,
+        75,
+        111
+      ]
+    },
+    {
+      "category_id": 48,
+      "name": "fork",
+      "rgb": [
+        12,
+        138,
+        242
+      ]
+    },
+    {
+      "category_id": 49,
+      "name": "knife",
+      "rgb": [
+        194,
+        216,
+        75
+      ]
+    },
+    {
+      "category_id": 50,
+      "name": "spoon",
+      "rgb": [
+        212,
+        12,
+        242
+      ]
+    },
+    {
+      "category_id": 51,
+      "name": "bowl",
+      "rgb": [
+        75,
+        216,
+        157
+      ]
+    },
+    {
+      "category_id": 52,
+      "name": "banana",
+      "rgb": [
+        242,
+        77,
+        12
+      ]
+    },
+    {
+      "category_id": 53,
+      "name": "apple",
+      "rgb": [
+        75,
+        76,
+        216
+      ]
+    },
+    {
+      "category_id": 54,
+      "name": "sandwich",
+      "rgb": [
+        80,
+        242,
+        12
+      ]
+    },
+    {
+      "category_id": 55,
+      "name": "orange",
+      "rgb": [
+        216,
+        75,
+        158
+      ]
+    },
+    {
+      "category_id": 56,
+      "name": "broccoli",
+      "rgb": [
+        12,
+        215,
+        242
+      ]
+    },
+    {
+      "category_id": 57,
+      "name": "carrot",
+      "rgb": [
+        216,
+        192,
+        75
+      ]
+    },
+    {
+      "category_id": 58,
+      "name": "hot dog",
+      "rgb": [
+        135,
+        12,
+        242
+      ]
+    },
+    {
+      "category_id": 59,
+      "name": "pizza",
+      "rgb": [
+        75,
+        216,
+        110
+      ]
+    },
+    {
+      "category_id": 60,
+      "name": "donut",
+      "rgb": [
+        242,
+        12,
+        23
+      ]
+    },
+    {
+      "category_id": 61,
+      "name": "cake",
+      "rgb": [
+        75,
+        123,
+        216
+      ]
+    },
+    {
+      "category_id": 62,
+      "name": "chair",
+      "rgb": [
+        157,
+        242,
+        12
+      ]
+    },
+    {
+      "category_id": 63,
+      "name": "couch",
+      "rgb": [
+        216,
+        75,
+        206
+      ]
+    },
+    {
+      "category_id": 64,
+      "name": "potted plant",
+      "rgb": [
+        12,
+        242,
+        192
+      ]
+    },
+    {
+      "category_id": 65,
+      "name": "bed",
+      "rgb": [
+        216,
+        145,
+        75
+      ]
+    },
+    {
+      "category_id": 67,
+      "name": "dining table",
+      "rgb": [
+        58,
+        12,
+        242
+      ]
+    },
+    {
+      "category_id": 70,
+      "name": "toilet",
+      "rgb": [
+        88,
+        216,
+        75
+      ]
+    },
+    {
+      "category_id": 72,
+      "name": "tv",
+      "rgb": [
+        242,
+        12,
+        100
+      ]
+    },
+    {
+      "category_id": 73,
+      "name": "laptop",
+      "rgb": [
+        75,
+        170,
+        216
+      ]
+    },
+    {
+      "category_id": 74,
+      "name": "mouse",
+      "rgb": [
+        234,
+        242,
+        12
+      ]
+    },
+    {
+      "category_id": 75,
+      "name": "remote",
+      "rgb": [
+        180,
+        75,
+        216
+      ]
+    },
+    {
+      "category_id": 76,
+      "name": "keyboard",
+      "rgb": [
+        12,
+        242,
+        115
+      ]
+    },
+    {
+      "category_id": 77,
+      "name": "cell phone",
+      "rgb": [
+        216,
+        98,
+        75
+      ]
+    },
+    {
+      "category_id": 78,
+      "name": "microwave",
+      "rgb": [
+        12,
+        42,
+        242
+      ]
+    },
+    {
+      "category_id": 79,
+      "name": "oven",
+      "rgb": [
+        135,
+        216,
+        75
+      ]
+    },
+    {
+      "category_id": 80,
+      "name": "toaster",
+      "rgb": [
+        242,
+        12,
+        177
+      ]
+    },
+    {
+      "category_id": 81,
+      "name": "sink",
+      "rgb": [
+        75,
+        216,
+        215
+      ]
+    },
+    {
+      "category_id": 82,
+      "name": "refrigerator",
+      "rgb": [
+        242,
+        172,
+        12
+      ]
+    },
+    {
+      "category_id": 84,
+      "name": "book",
+      "rgb": [
+        133,
+        75,
+        216
+      ]
+    },
+    {
+      "category_id": 85,
+      "name": "clock",
+      "rgb": [
+        12,
+        242,
+        38
+      ]
+    },
+    {
+      "category_id": 86,
+      "name": "vase",
+      "rgb": [
+        216,
+        75,
+        100
+      ]
+    },
+    {
+      "category_id": 87,
+      "name": "scissors",
+      "rgb": [
+        12,
+        119,
+        242
+      ]
+    },
+    {
+      "category_id": 88,
+      "name": "teddy bear",
+      "rgb": [
+        182,
+        216,
+        75
+      ]
+    },
+    {
+      "category_id": 89,
+      "name": "hair drier",
+      "rgb": [
+        230,
+        12,
+        242
+      ]
+    },
+    {
+      "category_id": 90,
+      "name": "toothbrush",
+      "rgb": [
+        75,
+        216,
+        168
+      ]
+    }
+  ],
+  "note": "COCO category_id -> RGB used to render the bbox condition (filled boxes on black, larger boxes drawn first)"
+}
