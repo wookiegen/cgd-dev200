@@ -51,6 +51,7 @@ Not downloaded on purpose: MultiAspect-4K-1M (PiD's training corpus; the adapter
 | `coco_val5k` | `/data/wookiekim/cgd/data/bench/coco_val5k/` | 2.1 GB | `images/` 5000 (cropped), `conditions/bbox/` 5000 |
 | `dreambench750` | `/data/wookiekim/cgd/data/bench/dreambench750/` | 22 MB | `refs/` 30 |
 | `train/<set>/` | `/data/wookiekim/cgd/data/bench/train/<set>/` | pending | the CGD training triplets (`make_targets.py`), NOT built yet: waits for a GPU slot (~12 h on 4 H200s for ~174k images) |
+| generated benchmark data (reference round trips, controller latent caches, PiD decodes) and results | `/data/wookiekim/cgd/data/bench/{latents,outputs}/`, `results/bench/` in this repo | see `STATUS.md` | paths, completion markers, findings, and the remaining-work list |
 
 Manifests for all of these are in this directory (`<set>/manifest.csv`, checksums in `BENCH.json`). The dev-200 set (`../dev200/`) is a subset of `multigen5k` (`dev200_idx`).
 

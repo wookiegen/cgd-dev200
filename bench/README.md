@@ -14,7 +14,7 @@ The paper benchmark is specified in the paper repo's `docs/BENCHMARK_v1.md` (v1.
 | `train/ade20k_train` | 20210 | HF `limingcv/Captioned_ADE20K`, train | seg at train time | `blocked` column |
 | `train/coco_train` | 118287 | COCO 2017 train | bbox at train time | `blocked` column |
 
-Exact counts, manifest checksums, and the source revisions at build time are in `BENCH.json`. Where the raw data, materialized sets, and model weights live on the group server, and which dataset serves which condition: `DATA.md`.
+Exact counts, manifest checksums, and the source revisions at build time are in `BENCH.json`. Where the raw data, materialized sets, and model weights live on the group server, and which dataset serves which condition: `DATA.md`. What has been generated and scored, what is running, and what remains: `STATUS.md`.
 
 ## Conventions
 

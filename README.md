@@ -6,7 +6,7 @@ This is the **dev** setting (fast method selection), not the paper benchmark. Nu
 
 ## Paper benchmark manifests (`bench/`)
 
-`bench/` holds the **frozen manifests of the full paper benchmark** (bench_v1 = BENCHMARK v1.7): `multigen5k` (canny + depth), `ade20k_val2k`, `coco_val5k`, `dreambench750`, the training manifests with a leakage `blocked` column, and the eval-sha blocklist. Images, conditions, and latents are rebuilt with the scripts there (`bench/README.md`); nothing heavy is committed. The dev-200 set below is a subset of `multigen5k` (`dev200_idx` column). **Group-server users: every dataset and scorer is already downloaded; paths, sizes, revisions, and which dataset serves which condition are in `bench/DATA.md`.**
+`bench/` holds the **frozen manifests of the full paper benchmark** (bench_v1 = BENCHMARK v1.7): `multigen5k` (canny + depth), `ade20k_val2k`, `coco_val5k`, `dreambench750`, the training manifests with a leakage `blocked` column, and the eval-sha blocklist. Images, conditions, and latents are rebuilt with the scripts there (`bench/README.md`); nothing heavy is committed. The dev-200 set below is a subset of `multigen5k` (`dev200_idx` column). **Group-server users: every dataset and scorer is already downloaded; paths, sizes, revisions, and which dataset serves which condition are in `bench/DATA.md`.** **Current state of the benchmark runs, generated-data paths, results, and the remaining-work list: `bench/STATUS.md`.**
 
 ## What the comparison is
 
