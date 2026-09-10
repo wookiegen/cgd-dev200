@@ -6,7 +6,7 @@ Everything the CGD benchmark and the adapter training need was downloaded on 202
 
 | What | Value |
 |---|---|
-| Container | `wookiekim_tfso` (diffusers 0.37.1, transformers 4.57.1, numpy 1.26.4 = PiD's pins; pyiqa, clean-fid installed) |
+| Container | `wookiekim_tfso` (diffusers 0.37.1, transformers 4.57.1, numpy 1.26.4 = PiD's pins; pyiqa, clean-fid, icecream, torchmetrics + lightning-utilities installed with `--no-deps`; no flash_attn, so the harness falls back to SDPA for VisualQuality-R1) |
 | HF cache (models + datasets) | `/data/wookiekim/.cache/huggingface/hub` (the container sets `HF_HOME=/data/wookiekim/.cache/huggingface`) |
 | Raw datasets | `/data/wookiekim/cgd/data/<name>/` (`$CGD_RAW_ROOT`, default in `bench/common.py`) |
 | Materialized benchmark sets | `/data/wookiekim/cgd/data/bench/<set>/` (`$CGD_BENCH_ROOT`) |
@@ -65,6 +65,7 @@ Manifests for all of these are in this directory (`<set>/manifest.csv`, checksum
 | Controller: FLUX ControlNet Union-Pro-2.0 | `Shakker-Labs/FLUX.1-dev-ControlNet-Union-Pro-2.0` | `5d700aa` | 4.0 GB | canny, depth |
 | Decoder: PiD distilled (baseline rows) | `nvidia/PiD` `checkpoints/PiD_res2k_sr4x_official_flux_distill_4step/` | `1b9b087` | 2.6 GB | NOT in the HF cache: `/data/wookiekim/cgd/PiD/checkpoints/` |
 | Decoder: PiD undistilled v1.5 (adapter training / training-free variant) | `nvidia/PiD` `checkpoints/PiD_v1pt5_res2kto4k_sr4x_official_flux_undistilled/` | `1b9b087` | 2.7 GB | same location; `checkpoints/ae.safetensors` = FLUX VAE for PiD |
+| Decoder: PiD v1.5 2K-to-4K distilled (the 1024 -> 4096 efficiency row) | `nvidia/PiD` `checkpoints/PiD_v1pt5_res2kto4k_sr4x_official_flux_distill_4step/` | `1b9b087` | 2.8 GB | same location; downloaded 2026-09-10 |
 | PiD text encoder | `Efficient-Large-Model/gemma-2-2b-it` | `569d980` | 4.9 GB | |
 | Seg scorer | `facebook/mask2former-swin-large-ade-semantic` | `aa25c92` | 1.7 GB | |
 | Depth scorer and annotator | `Intel/dpt-large` | `bc15f29` | 2.6 GB | |
