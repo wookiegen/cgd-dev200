@@ -1,0 +1,27 @@
+[
+ {
+  "method": "vae_roundtrip",
+  "controller": "",
+  "condition": "bbox",
+  "split": "coco_val5k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {
+   "sr": 72.06072571311866,
+   "miou": 65.4400731880324,
+   "n_instances": 29378,
+   "n_images_with_boxes": 4925
+  },
+  "quality": {
+   "psnr": 32.751661693573,
+   "ssim": 0.9334664693813426,
+   "lpips": 0.018001107099163347,
+   "dists": 0.013868512690067291,
+   "fid": 0.5047807189939704,
+   "pfid": 1.2373349981502884
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/vae_roundtrip/coco_val5k",
+  "time_s": 1243.8
+ }
+]

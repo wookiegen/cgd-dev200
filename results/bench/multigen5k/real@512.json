@@ -1,0 +1,43 @@
+[
+ {
+  "method": "real",
+  "controller": "",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {
+   "f1": 1.0
+  },
+  "quality": {
+   "musiq": 72.77775458984375,
+   "niqe": 3.6151598374350637,
+   "maniqa": 0.4977360603734851,
+   "qalign": 4.3059609375
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/multigen5k/images",
+  "time_s": 2522.5
+ },
+ {
+  "method": "real",
+  "controller": "",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {
+   "mse": 0.001151424261002671,
+   "rmse": 0.03143382758596427
+  },
+  "quality": {
+   "musiq": 72.77775458984375,
+   "niqe": 3.6151598374350637,
+   "maniqa": 0.4977360603734851,
+   "qalign": 4.3059609375
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/multigen5k/images",
+  "time_s": 2522.5
+ }
+]

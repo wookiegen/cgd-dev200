@@ -1,0 +1,25 @@
+[
+ {
+  "method": "vae_roundtrip",
+  "controller": "",
+  "condition": "seg",
+  "split": "ade20k_val2k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {
+   "miou": 53.56028741072938,
+   "miou_img_mean": 47.01270857012276
+  },
+  "quality": {
+   "psnr": 36.789152199745175,
+   "ssim": 0.9689587570392861,
+   "lpips": 0.011714564207941293,
+   "dists": 0.010386920988559723,
+   "fid": 0.7036874642195698,
+   "pfid": 1.9043170963994953
+  },
+  "n": 2000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/vae_roundtrip/ade20k_val2k",
+  "time_s": 432.2
+ }
+]

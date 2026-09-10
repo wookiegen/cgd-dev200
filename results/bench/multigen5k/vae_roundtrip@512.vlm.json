@@ -1,0 +1,20 @@
+[
+ {
+  "method": "vae_roundtrip",
+  "controller": "",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {},
+  "quality": {
+   "deqa": 3.9764509765625,
+   "vqr1": 4.470428000000001,
+   "unipercept_iaa": 69.8201,
+   "unipercept_iqa": 69.113
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/vae_roundtrip/multigen5k",
+  "time_s": 2607.3
+ }
+]

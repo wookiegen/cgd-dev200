@@ -1,0 +1,18 @@
+[
+ {
+  "method": "pid_roundtrip",
+  "controller": "",
+  "condition": "seg",
+  "split": "ade20k_val2k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "miou": 53.65197882734505,
+   "miou_img_mean": 46.0393092512841
+  },
+  "quality": {},
+  "n": 2000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip/ade20k_val2k",
+  "time_s": 581.7
+ }
+]

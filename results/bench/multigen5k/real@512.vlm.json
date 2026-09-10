@@ -1,0 +1,20 @@
+[
+ {
+  "method": "real",
+  "controller": "",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {},
+  "quality": {
+   "deqa": 3.8577318359375,
+   "vqr1": 4.483976,
+   "unipercept_iaa": 71.3611375,
+   "unipercept_iqa": 69.786425
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/multigen5k/images",
+  "time_s": 2309.5
+ }
+]

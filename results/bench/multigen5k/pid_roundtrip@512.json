@@ -1,0 +1,55 @@
+[
+ {
+  "method": "pid_roundtrip",
+  "controller": "",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 2048,
+  "adherence": {
+   "f1": 0.636674256983723
+  },
+  "quality": {
+   "musiq": 72.95310610275268,
+   "niqe": 4.090176721253997,
+   "maniqa": 0.579257899236679,
+   "qalign": 4.438605859375,
+   "psnr": 28.430132653045654,
+   "ssim": 0.8571051431710858,
+   "lpips": 0.053653025724273176,
+   "dists": 0.056101373720169066,
+   "fid": 1.8808460212712248,
+   "pfid": 3.780142503604054
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip/multigen5k",
+  "time_s": 3898.2
+ },
+ {
+  "method": "pid_roundtrip",
+  "controller": "",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 2048,
+  "adherence": {
+   "mse": 62.398339057025034,
+   "rmse": 6.179832565933156
+  },
+  "quality": {
+   "musiq": 72.95310610275268,
+   "niqe": 4.090176721253997,
+   "maniqa": 0.579257899236679,
+   "qalign": 4.438605859375,
+   "psnr": 28.430132653045654,
+   "ssim": 0.8571051431710858,
+   "lpips": 0.053653025724273176,
+   "dists": 0.056101373720169066,
+   "fid": 1.8808460212712248,
+   "pfid": 3.780142503604054
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip/multigen5k",
+  "time_s": 3898.2
+ }
+]

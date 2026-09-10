@@ -1,0 +1,43 @@
+[
+ {
+  "method": "pid_roundtrip",
+  "controller": "",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "f1": 0.25628848494020984
+  },
+  "quality": {
+   "musiq": 70.63233834762573,
+   "niqe": 3.5708556578739574,
+   "maniqa": 0.33951208212822676,
+   "qalign": 4.5015841796875
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip/multigen5k",
+  "time_s": 5162.1
+ },
+ {
+  "method": "pid_roundtrip",
+  "controller": "",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "mse": 61.99200827423462,
+   "rmse": 6.183940467247271
+  },
+  "quality": {
+   "musiq": 70.63233834762573,
+   "niqe": 3.5708556578739574,
+   "maniqa": 0.33951208212822676,
+   "qalign": 4.5015841796875
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip/multigen5k",
+  "time_s": 5162.1
+ }
+]

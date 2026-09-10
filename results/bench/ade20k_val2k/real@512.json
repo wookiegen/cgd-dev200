@@ -1,0 +1,18 @@
+[
+ {
+  "method": "real",
+  "controller": "",
+  "condition": "seg",
+  "split": "ade20k_val2k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {
+   "miou": 53.66232183199474,
+   "miou_img_mean": 47.22452906516615
+  },
+  "quality": {},
+  "n": 2000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/ade20k_val2k/images",
+  "time_s": 126.1
+ }
+]
