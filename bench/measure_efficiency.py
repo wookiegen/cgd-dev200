@@ -24,10 +24,15 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--n", type=int, default=5); ap.add_argument("--max-s", type=float, default=900)
 ap.add_argument("--out", default=str(REPO_BENCH.parent / "results" / "bench" / "efficiency.json"))
 ap.add_argument("--skip-4096-native", action="store_true")
+ap.add_argument("--only-pid", action="store_true", help="reuse the FLUX + VAE rows of an existing --out file and (re)measure only the PiD rows")
 a = ap.parse_args()
 caps = [r["caption"] for r in list(csv.DictReader(open(REPO_BENCH / "multigen5k" / "manifest.csv")))[: a.n + 1]]
 dev = "cuda"
 results = []
+if a.only_pid:
+    import os
+    results = [r for r in json.load(open(a.out)) if r["pipeline"] == "FLUX + VAE"] if os.path.exists(a.out) else []
+    print(f"--only-pid: kept {len(results)} FLUX + VAE rows", flush=True)
 
 
 def timed(fn):
@@ -42,8 +47,10 @@ def record(**kw):
 
 
 from diffusers import FluxPipeline  # noqa: E402
-pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16).to(dev)
-pipe.set_progress_bar_config(disable=True)
+pipe = None
+if not a.only_pid:
+    pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16).to(dev)
+    pipe.set_progress_bar_config(disable=True)
 
 
 def gen(res, steps, cap, seed=0):
@@ -59,6 +66,8 @@ def vae_decode(packed, res):
 
 # ---- FLUX generation at several resolutions / step counts (+ VAE decode)
 plan = [(512, 28), (512, 24), (512, 16), (1024, 28), (1024, 24), (1024, 16), (2048, 28)] + ([] if a.skip_4096_native else [(4096, 28)])
+if a.only_pid:
+    plan = []
 lat_cache = {}
 for res, steps in plan:
     try:
@@ -81,7 +90,9 @@ for res, steps in plan:
         torch.cuda.empty_cache()
 
 # ---- generation cost at the quarter resolution for the truncated settings is already in `plan` (512 / 1024 at 28, 24, 16)
-del pipe; torch.cuda.empty_cache()
+if pipe is not None:
+    del pipe
+torch.cuda.empty_cache()
 
 # ---- PiD decode: 512 -> 2048 (2k ckpt), 1024 -> 4096 (2kto4k v1.5 ckpt)
 from flux_pid import PiD  # noqa: E402
@@ -101,7 +112,7 @@ for ckpt, gres, out_res in [("2k", 512, 2048), ("2kto4k_v1pt5", 1024, 4096)]:
             g = gen_rows.get(K)
             record(pipeline="FLUX + PiD", output=out_res, gen_res=gres, gen_steps=K, dec_steps=4, pid_ckpt=pid.ckpt.experiment,
                    gen_s=g["gen_s"] if g else None, dec_s=statistics.median(ts), latency_s=(g["gen_s"] if g else float("nan")) + statistics.median(ts),
-                   peak_mem_gb=max([g["peak_mem_gb"]] if g else [0] + ms), dec_peak_mem_gb=max(ms), n=len(ts))
+                   peak_mem_gb=max(([g["peak_mem_gb"]] if g else [0]) + ms), dec_peak_mem_gb=max(ms), n=len(ts))
         del pid; torch.cuda.empty_cache()
     except Exception as e:  # noqa: BLE001
         record(pipeline="FLUX + PiD", output=out_res, gen_res=gres, gen_steps=None, dec_steps=4, latency_s=None, peak_mem_gb=None, n=0, note=f"failed: {type(e).__name__}: {str(e)[:100]}")

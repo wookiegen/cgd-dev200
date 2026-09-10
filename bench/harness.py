@@ -3,7 +3,7 @@
   python harness.py --method <label> --split <multigen5k|ade20k_val2k|coco_val5k> --gen-dir <dir of <id>.png> --res <512|2048>
                     [--condition canny,depth | seg | bbox]   (default: all conditions of the split)
                     [--gen-dir-512 <dir>]  precomputed INTER_AREA 512 view of a 2048 gen-dir (else computed on the fly)
-                    [--metrics adherence,noref,recon,fid]   (default: adherence,noref,recon,fid; recon/fid only at res 512)
+                    [--metrics adherence,noref,recon,fid,vlm]   (default: adherence,noref,recon,fid; recon/fid only at res 512; vlm = DeQA, VQ-R1, UniPercept, slow)
                     [--controller <label>] [--limit N] [--out-dir results/bench]
 The gen-dir is any directory of <sample_id>.png at the method's native resolution; a 512-native method scored at --res 2048 is refused
 (never upsample). Conditions, GT, and real images come from $CGD_BENCH_ROOT/<split>/. The Real row = --gen-dir <split>/images --method real.
@@ -35,7 +35,7 @@ ap.add_argument("--res", type=int, required=True, choices=[512, 2048])
 ap.add_argument("--condition", default=None); ap.add_argument("--metrics", default="adherence,noref,recon,fid")
 ap.add_argument("--controller", default=""); ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--out-dir", default=str(REPO_BENCH.parent / "results" / "bench"))
-ap.add_argument("--vlm", action="store_true", help="also run DeQA / UniPercept / VisualQuality-R1 through PiD's evaluation module (slow)")
+ap.add_argument("--vlm-batch", type=int, default=16, help="images per forward for the VLM scorers (metrics keyword 'vlm': DeQA, VisualQuality-R1, UniPercept IAA/IQA via PiD's evaluation module)")
 a = ap.parse_args()
 
 conds = a.condition.split(",") if a.condition else CONDS[a.split]
@@ -46,7 +46,9 @@ rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))[: a.lim
 gen = Path(a.gen_dir); gen512 = Path(a.gen_dir_512) if a.gen_dir_512 else None
 bench = OUT_ROOT / a.split
 out_dir = Path(a.out_dir) / a.split; out_dir.mkdir(parents=True, exist_ok=True)
+DEFAULT_METRICS = {"adherence", "noref", "recon", "fid"}
 tag = f"{a.method}@{a.res}"
+file_tag = tag if metrics == (DEFAULT_METRICS - ({"recon", "fid"} if a.res == 2048 else set())) else f"{tag}.{'-'.join(sorted(metrics))}"
 
 # probe native resolution
 probe = np.array(Image.open(gen / f"{rows[0]['sample_id']}.png"))
@@ -79,16 +81,39 @@ if "bbox" in conds:
     for l in open(REPO_BENCH / a.split / "boxes.jsonl"):
         d = json.loads(l); boxes[d["sample_id"]] = d["boxes"]
 vlm = None
-if a.vlm:
+if "vlm" in metrics:
     import sys
     pid_root = os.environ.get("PID_ROOT", "/data/wookiekim/cgd/PiD"); sys.path.insert(0, pid_root); cwd = os.getcwd(); os.chdir(pid_root)
     from pid._src.evaluations.metrics import image_metrics as IM  # noqa: E402
     os.chdir(cwd)
-    vlm = {"deqa": IM.DeQAScore(device=S.DEVICE), "vqr1": IM.VisualQualityR1(device=S.DEVICE)}
+    import transformers
     try:
-        vlm["unipercept"] = IM.UniPercept(device=S.DEVICE)  # exposes IAA + IQA
-    except Exception as e:  # noqa: BLE001
-        print("UniPercept unavailable:", e)
+        import flash_attn  # noqa: F401
+    except ImportError:   # PiD's VisualQuality-R1 loader hardcodes flash_attention_2; fall back to SDPA when flash_attn is absent
+        _orig_fp = transformers.AutoModelForVision2Seq.from_pretrained.__func__
+
+        def _fp(cls, *args, **kw):
+            if kw.get("attn_implementation") == "flash_attention_2":
+                kw["attn_implementation"] = "sdpa"
+            return _orig_fp(cls, *args, **kw)
+        transformers.AutoModelForVision2Seq.from_pretrained = classmethod(_fp)
+    vlm = {"deqa": IM.DeQAScore(device=S.DEVICE), "vqr1": IM.VisualQualityR1(device=S.DEVICE),
+           "unipercept_iaa": IM.UniPerceptIAA(device=S.DEVICE), "unipercept_iqa": IM.UniPerceptIQA(device=S.DEVICE)}
+    vlm_buf = []   # (rec, view) pairs scored in chunks of --vlm-batch
+
+
+def flush_vlm():
+    if not vlm_buf:
+        return
+    views = [v for _, v in vlm_buf]
+    for name, m in vlm.items():
+        try:
+            vals = m.compute_batch_list(views)          # numpy HWC uint8 inputs
+        except Exception as e:  # noqa: BLE001
+            vals = [float("nan")] * len(views); vlm_buf[0][0].setdefault("_vlm_err", f"{name}: {str(e)[:80]}")
+        for (rec_, _), v in zip(vlm_buf, vals):
+            rec_[name] = float(v)
+    vlm_buf.clear()
 
 per_image = []
 crop_dir_gen = crop_dir_real = None
@@ -116,16 +141,9 @@ for k, r in enumerate(rows):
     if noref is not None:
         rec.update(noref.score(view))
     if vlm is not None:
-        pil = Image.fromarray(view)
-        for name, m in vlm.items():
-            try:
-                val = m.compute_batch_list([pil])
-                if name == "unipercept" and isinstance(val[0], (list, tuple, dict)):
-                    rec["unipercept_iaa"], rec["unipercept_iqa"] = (val[0][0], val[0][1]) if not isinstance(val[0], dict) else (val[0].get("iaa"), val[0].get("iqa"))
-                else:
-                    rec[name] = float(val[0])
-            except Exception as e:  # noqa: BLE001
-                rec[name] = float("nan"); rec.setdefault("_vlm_err", str(e)[:80])
+        vlm_buf.append((rec, view))
+        if len(vlm_buf) >= a.vlm_batch:
+            flush_vlm()
     if recon is not None:
         real = np.array(Image.open(bench / "images" / f"{sid}.png").convert("RGB"))
         rec.update(recon.score(view, real))
@@ -136,6 +154,8 @@ for k, r in enumerate(rows):
     per_image.append(rec)
     if (k + 1) % 250 == 0:
         print(f"  [{k+1}/{len(rows)}] {time.time()-t0:.0f}s", flush=True)
+if vlm is not None:
+    flush_vlm()
 
 # aggregate
 def mean(key):
@@ -177,10 +197,10 @@ for c in conds:
     records.append({"method": a.method, "controller": a.controller, "condition": c, "split": a.split, "res": a.res,
                     "native_res": native, "adherence": adh, "quality": quality, "n": len(per_image),
                     "gen_dir": str(gen), "time_s": round(time.time() - t0, 1)})
-json.dump(records, open(out_dir / f"{tag}.json", "w"), indent=1)
+json.dump(records, open(out_dir / f"{file_tag}.json", "w"), indent=1)
 keys = sorted({k for x in per_image for k in x}, key=lambda k: (k != "sample_id", k))
-with open(out_dir / f"{tag}_per_image.csv", "w", newline="") as f:
+with open(out_dir / f"{file_tag}_per_image.csv", "w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=keys); w.writeheader(); w.writerows(per_image)
 for rec in records:
     print(json.dumps({k: rec[k] for k in ["method", "condition", "res", "adherence", "quality", "n"]}))
-print(f"wrote {out_dir / (tag + '.json')}")
+print(f"wrote {out_dir / (file_tag + '.json')}")
