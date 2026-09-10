@@ -21,7 +21,7 @@ Completion markers: `done_ref_all.txt`, `done_latents_omini_all.txt`, `done_omin
 
 | File | Content |
 |---|---|
-| `<split>/<method>@<res>.json` | one record per condition: adherence + quality (schema: paper repo `SCORING_HARNESS.md`); `<method>@<res>.<metrics>.json` for metric-subset runs (e.g. `.vlm.json`) |
+| `<split>/<method>@<res>.json` | one record per condition: adherence + quality (schema: paper repo `SCORING_HARNESS.md`); `<method>@<res>.<metrics>.json` for metric-subset runs (e.g. `.vlm.json`); `.<condition>` appended when a run scored a subset of the split's conditions (the controller blocks score canny and depth in separate runs; `assemble.py` merges all of them) |
 | `<split>/<method>@<res>_per_image.csv` | per-sample scores (paired analysis, figures) |
 | `efficiency.json` | tab:efficiency measurements (one H200) |
 | `SUMMARY.md`, `summary.csv` | everything merged, one row per (split, condition, method, controller, res) |
