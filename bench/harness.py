@@ -48,6 +48,8 @@ bench = OUT_ROOT / a.split
 out_dir = Path(a.out_dir) / a.split; out_dir.mkdir(parents=True, exist_ok=True)
 DEFAULT_METRICS = {"adherence", "noref", "recon", "fid"}
 tag = f"{a.method}@{a.res}"
+if a.controller:                      # results of different controllers must not share a file name
+    tag = f"{a.controller}.{tag}"
 file_tag = tag if metrics == (DEFAULT_METRICS - ({"recon", "fid"} if a.res == 2048 else set())) else f"{tag}.{'-'.join(sorted(metrics))}"
 if conds != CONDS[a.split]:          # a run restricted to a subset of the split's conditions gets its own file (two condition runs must not overwrite each other)
     file_tag += "." + "-".join(conds)
