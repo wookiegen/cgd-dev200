@@ -12,7 +12,7 @@ What exists on the group server, what is running unattended, what remains. Paths
 | OminiControl latents (x_0 + x_t at 16, 24) and its VAE decode | `latents/omini/<canny,depth>/<id>.pt`, `outputs/omini/<cond>/vae@28/` | done (5000 + 5000) |
 | vanilla PiD decodes of the OminiControl latents at K = 28 / 24 / 16 | `outputs/omini/<cond>/pid@<K>/`, `pid@<K>_512/` | done + SCORED (block filled in the paper 2026-09-11) |
 | EasyControl latents (canny, depth; seg on ade20k_val2k) and FLUX ControlNet latents (canny, depth) | `latents/<easycontrol,fluxcn>/<cond>/`, `outputs/<ctrl>/<cond>/vae@28/` | done (all five caches) |
-| their PiD decodes at K | `outputs/<ctrl>/<cond>/pid@<K>/` | fluxcn: decoded, scoring (GPUs 2,3); easycontrol: decoding (GPUs 0,1) |
+| their PiD decodes at K | `outputs/<ctrl>/<cond>/pid@<K>/` | fluxcn: done + SCORED (block filled in the paper 2026-09-12 02:30 KST; canny 0.656 VAE / 0.655 PiD K=24, depth RMSE 29.9 / 29.9, FID 16.5 / 16.6); easycontrol: decoded, scoring (GPUs 0,1; seg chain done, canny + VLM chains on their last run, depth chain at K=24 native) |
 | CGD training triplets | `train/<set>/` | NOT built (`make_targets.py`; ~12 GPU-hours; waits for a slot after the baselines) |
 
 Completion markers: `done_ref_all.txt`, `done_latents_omini_all.txt`, `done_omini_block.txt`, `done_latents_<ctrl>_<cond>.txt`, `done_easycontrol_block.txt`, `done_fluxcn_block.txt`, `done_queue.txt`. Status lines: `omini_block_status.txt`, `queue_status.txt`, `<ctrl>_block_status.txt`.
@@ -44,13 +44,13 @@ Done: `real`, `vae_roundtrip`, `pid_roundtrip` on all three splits at 512 (and 2
 2. Paper repo `docs/EXPERIMENTS_draft.tex`: fill the block's `+ VAE decode` and `+ PiD` rows of `tab:main` (PiD row shows K = 24 while K is undecided; put K = 28 and 16 in the `%` comment), the `<controller> + PiD` row of `tab:native-other`, and, for EasyControl, the seg cell (ade20k_val2k) and the choice in OPEN_QUESTIONS 13; extend the modularity paragraph with the per-controller VAE vs PiD deltas. Keep the `%` provenance comment convention (result file names).
 3. `python3 tools/table_widths.py` in the paper repo; `git add results/bench bench/STATUS.md && git commit && git push` here; update the table in Section 1 above.
 
-Running at hand-off (2026-09-11 ~14:00 KST, detached inside the container, independent of any Claude session): `run/run_block.sh fluxcn "canny depth"` on GPUs 2,3 (marker `done_fluxcn_block.txt`, ETA ~20:00 KST) and `run/run_block.sh easycontrol "canny depth seg"` on GPUs 0,1 (marker `done_easycontrol_block.txt`, ETA ~04:00 KST 2026-09-12). If a block fails: every stage skips existing outputs, so re-running the same command resumes it.
+Running at hand-off (2026-09-12 02:30 KST, detached inside the container, independent of any Claude session): `run/run_block.sh easycontrol "canny depth seg"` on GPUs 0,1 (marker `done_easycontrol_block.txt`, ETA ~05:30 KST 2026-09-12). The fluxcn block finished 2026-09-12 02:22 KST (`done_fluxcn_block.txt`) and is filled; GPUs 2,3 are free. If a block fails: every stage skips existing outputs, so re-running the same command resumes it. Scoring with three chains on two GPUs takes ~13 h per block (the 4-GPU OminiControl block took ~8 h).
 
 ## 4. Remaining work (method-independent unless stated)
 
 | # | Task | Needs | Fills |
 |---|---|---|---|
-| 1 | Let the queue finish; `assemble.py`; fill the three controller blocks and the truncation sweep {28, 24, 16} | running | tab:main, tab:noref, tab:recon controller rows |
+| 1 | Fill the EasyControl block when `done_easycontrol_block.txt` appears (OminiControl and FLUX ControlNet blocks are filled) | running (GPUs 0,1) | tab:main EasyControl rows incl. seg, tab:native-other, modularity paragraph |
 | 2 | Train the 3 LoRAs (seg: OminiControl; bbox: OminiControl, EasyControl) with the official recipes on `train/ade20k_train` and `train/coco_train` (drop `blocked`, use `split`), then their latent caches + blocks | ~1 GPU-day each | seg / layout cells of the controller blocks |
 | 3 | Conditioned VAE decoder (the 2x2 archetype): train on the OminiControl latents + conditions, score with the harness | small training job | tab:decoder-conditioning |
 | 4 | CGD training triplets (`make_targets.py`, full COCO train) | ~12 GPU-hours | adapter training data |
