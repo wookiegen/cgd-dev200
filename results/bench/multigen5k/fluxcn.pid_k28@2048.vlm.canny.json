@@ -1,0 +1,20 @@
+[
+ {
+  "method": "pid_k28",
+  "controller": "fluxcn",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {},
+  "quality": {
+   "deqa": 3.983836328125,
+   "vqr1": 4.455684,
+   "unipercept_iaa": 70.5636,
+   "unipercept_iqa": 70.30335
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn/canny/pid@28",
+  "time_s": 4922.0
+ }
+]

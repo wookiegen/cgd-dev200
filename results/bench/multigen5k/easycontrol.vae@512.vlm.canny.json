@@ -1,0 +1,20 @@
+[
+ {
+  "method": "vae",
+  "controller": "easycontrol",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {},
+  "quality": {
+   "deqa": 3.925187109375,
+   "vqr1": 4.443494,
+   "unipercept_iaa": 63.1519,
+   "unipercept_iqa": 66.991325
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/canny/vae@28",
+  "time_s": 3351.7
+ }
+]

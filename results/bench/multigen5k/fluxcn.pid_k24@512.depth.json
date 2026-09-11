@@ -1,0 +1,29 @@
+[
+ {
+  "method": "pid_k24",
+  "controller": "fluxcn",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 2048,
+  "adherence": {
+   "mse": 1093.1805806489458,
+   "rmse": 29.880391903554973
+  },
+  "quality": {
+   "musiq": 70.95112201690674,
+   "niqe": 3.332836363745041,
+   "maniqa": 0.48942616575807335,
+   "qalign": 3.94397421875,
+   "psnr": 9.617683919239044,
+   "ssim": 0.2647145087194735,
+   "lpips": 0.6482486686915159,
+   "dists": 0.2939507846713066,
+   "fid": 21.6335968406799,
+   "pfid": 21.043898308384996
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn/depth/pid@24",
+  "time_s": 6002.5
+ }
+]

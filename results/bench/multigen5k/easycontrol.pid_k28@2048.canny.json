@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pid_k28",
+  "controller": "easycontrol",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "f1": 0.7700240777186437,
+   "f1_strict": 0.1834201787976751,
+   "tol_px": 4
+  },
+  "quality": {
+   "musiq": 70.26678805923461,
+   "niqe": 4.077581186940529,
+   "maniqa": 0.33721562038660047,
+   "qalign": 4.5479638671875
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/canny/pid@28",
+  "time_s": 3333.5
+ }
+]

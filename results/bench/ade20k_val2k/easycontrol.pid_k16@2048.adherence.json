@@ -1,0 +1,18 @@
+[
+ {
+  "method": "pid_k16",
+  "controller": "easycontrol",
+  "condition": "seg",
+  "split": "ade20k_val2k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "miou": 36.04551734692303,
+   "miou_img_mean": 29.682391821558713
+  },
+  "quality": {},
+  "n": 2000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/seg/pid@16",
+  "time_s": 565.5
+ }
+]

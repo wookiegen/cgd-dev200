@@ -1,0 +1,20 @@
+[
+ {
+  "method": "vae",
+  "controller": "fluxcn",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {},
+  "quality": {
+   "deqa": 3.88697109375,
+   "vqr1": 4.341612,
+   "unipercept_iaa": 64.5181875,
+   "unipercept_iqa": 65.6769
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn/canny/vae@28",
+  "time_s": 3145.4
+ }
+]

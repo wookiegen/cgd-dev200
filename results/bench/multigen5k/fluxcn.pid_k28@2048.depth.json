@@ -1,0 +1,23 @@
+[
+ {
+  "method": "pid_k28",
+  "controller": "fluxcn",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "mse": 1058.8811153160411,
+   "rmse": 29.35754614034103
+  },
+  "quality": {
+   "musiq": 61.87421041412353,
+   "niqe": 3.9903088701927976,
+   "maniqa": 0.23198468749150633,
+   "qalign": 3.752480078125
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn/depth/pid@28",
+  "time_s": 6219.6
+ }
+]

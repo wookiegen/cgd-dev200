@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pid_k16",
+  "controller": "fluxcn",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "f1": 0.5767165222691941,
+   "f1_strict": 0.16697427985876162,
+   "tol_px": 4
+  },
+  "quality": {
+   "musiq": 74.05375627059937,
+   "niqe": 2.900893968892708,
+   "maniqa": 0.42145896371304986,
+   "qalign": 4.680991015625
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn/canny/pid@16",
+  "time_s": 3683.1
+ }
+]

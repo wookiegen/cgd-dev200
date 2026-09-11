@@ -1,0 +1,23 @@
+[
+ {
+  "method": "pid_k16",
+  "controller": "fluxcn",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "mse": 1581.280402692078,
+   "rmse": 36.938817139058784
+  },
+  "quality": {
+   "musiq": 72.66930721817016,
+   "niqe": 2.876938170395499,
+   "maniqa": 0.39192382947802545,
+   "qalign": 4.556669140625
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn/depth/pid@16",
+  "time_s": 7207.6
+ }
+]

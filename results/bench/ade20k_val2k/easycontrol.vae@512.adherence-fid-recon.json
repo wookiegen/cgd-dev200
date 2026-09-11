@@ -1,0 +1,25 @@
+[
+ {
+  "method": "vae",
+  "controller": "easycontrol",
+  "condition": "seg",
+  "split": "ade20k_val2k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {
+   "miou": 39.2891756067593,
+   "miou_img_mean": 37.62477952637529
+  },
+  "quality": {
+   "psnr": 10.608888099431992,
+   "ssim": 0.3866506161265585,
+   "lpips": 0.6109542052000762,
+   "dists": 0.29221914252638814,
+   "fid": 38.23133262746882,
+   "pfid": 48.22123233107982
+  },
+  "n": 2000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/seg/vae@28",
+  "time_s": 599.8
+ }
+]
