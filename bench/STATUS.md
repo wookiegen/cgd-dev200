@@ -47,5 +47,7 @@ Done: `real`, `vae_roundtrip`, `pid_roundtrip` on all three splits at 512 (and 2
 | 6 | Eyeball the lifted numbers of tab:contextual / tab:subject against the official PDFs | reading | supplementary |
 | 7 | **CGD rows** (every table) and the choice of K (16 or 24; the truncation sweep informs it) | THE METHOD | |
 | 8 | Subject track (DreamBench, released subject LoRAs) | low priority | tab:subject |
+| 9 | 1024 side comparison (QUEUED, not launched): EasyControl + FLUX ControlNet generated at 1024, VAE-decoded, downsampled to 512, scored on `subset500` (tests the 512-resolution caveat; side comparison only) | ~4 GPU-hours, after the blocks | supplementary table |
+| 10 | Checkpoint consistency: vanilla PiD rows use the 2K checkpoint, a trained CGD will be v1.5-based (only undistilled FLUX checkpoint); re-decode vanilla rows with v1.5 distilled (~8 GPU-hours per block) or keep 2K as headline; decide with the method | decision | tab:main PiD rows |
 
 Rules that bit us: never let two generator processes write the same set without disjoint shards (a race produced six corrupt PNGs, since regenerated); every decoder reads the cached latents, never regenerates; the harness refuses to upsample.
