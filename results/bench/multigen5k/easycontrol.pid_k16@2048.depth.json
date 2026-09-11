@@ -1,0 +1,23 @@
+[
+ {
+  "method": "pid_k16",
+  "controller": "easycontrol",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "mse": 723.5135801889054,
+   "rmse": 24.557056114447192
+  },
+  "quality": {
+   "musiq": 73.77688448562623,
+   "niqe": 3.2487121994733688,
+   "maniqa": 0.43097180031239984,
+   "qalign": 4.722755859375
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/depth/pid@16",
+  "time_s": 6255.0
+ }
+]

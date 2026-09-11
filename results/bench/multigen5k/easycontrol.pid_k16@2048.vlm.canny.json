@@ -1,0 +1,20 @@
+[
+ {
+  "method": "pid_k16",
+  "controller": "easycontrol",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {},
+  "quality": {
+   "deqa": 4.366617578125,
+   "vqr1": 4.718436,
+   "unipercept_iaa": 76.70565,
+   "unipercept_iqa": 77.9585
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/canny/pid@16",
+  "time_s": 4056.8
+ }
+]
