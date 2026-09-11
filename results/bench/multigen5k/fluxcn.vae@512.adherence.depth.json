@@ -1,0 +1,18 @@
+[
+ {
+  "method": "vae",
+  "controller": "fluxcn",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {
+   "mse": 1102.913030698118,
+   "rmse": 29.911737494688115
+  },
+  "quality": {},
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn/depth/vae@28",
+  "time_s": 374.6
+ }
+]

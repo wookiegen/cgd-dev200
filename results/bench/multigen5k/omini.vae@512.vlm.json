@@ -1,0 +1,20 @@
+[
+ {
+  "method": "vae",
+  "controller": "omini",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {},
+  "quality": {
+   "deqa": 3.704376953125,
+   "vqr1": 4.294864,
+   "unipercept_iaa": 67.6395,
+   "unipercept_iqa": 66.694
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/vae@28",
+  "time_s": 3838.0
+ }
+]

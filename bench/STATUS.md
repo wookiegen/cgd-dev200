@@ -9,10 +9,10 @@ What exists on the group server, what is running unattended, what remains. Paths
 | Clean latents of the real crops (decoder-only reference rows) | `latents/ref/<split>/<id>.pt` | 12,000 done (multigen5k, ade20k_val2k, coco_val5k) |
 | VAE round trip (512) | `outputs/ref/vae_roundtrip/<split>/<id>.png` | done |
 | vanilla PiD round trip (2048 + 512 view) | `outputs/ref/pid_roundtrip/<split>/`, `outputs/ref/pid_roundtrip_512/<split>/` | done |
-| OminiControl latents (x_0 + x_t at 16, 24) and its VAE decode | `latents/omini/<canny,depth>/<id>.pt`, `outputs/omini/<cond>/vae@28/` | RUNNING (multigen5k, 2 shards per condition) |
-| vanilla PiD decodes of the OminiControl latents at K = 28 / 24 / 16 | `outputs/omini/<cond>/pid@<K>/`, `pid@<K>_512/` | queued (`run/run_omini_block.sh`) |
-| EasyControl latents (canny, depth; seg on ade20k_val2k) and FLUX ControlNet latents (canny, depth) | `latents/<easycontrol,fluxcn>/<cond>/`, `outputs/<ctrl>/<cond>/vae@28/` | queued (`run/run_queue_controllers.sh`, starts when the omini decodes finish) |
-| their PiD decodes at K | `outputs/<ctrl>/<cond>/pid@<K>/` | queued (`run/run_block.sh <ctrl>`) |
+| OminiControl latents (x_0 + x_t at 16, 24) and its VAE decode | `latents/omini/<canny,depth>/<id>.pt`, `outputs/omini/<cond>/vae@28/` | done (5000 + 5000) |
+| vanilla PiD decodes of the OminiControl latents at K = 28 / 24 / 16 | `outputs/omini/<cond>/pid@<K>/`, `pid@<K>_512/` | done + SCORED (block filled in the paper 2026-09-11) |
+| EasyControl latents (canny, depth; seg on ade20k_val2k) and FLUX ControlNet latents (canny, depth) | `latents/<easycontrol,fluxcn>/<cond>/`, `outputs/<ctrl>/<cond>/vae@28/` | done (all five caches) |
+| their PiD decodes at K | `outputs/<ctrl>/<cond>/pid@<K>/` | fluxcn: decoded, scoring (GPUs 2,3); easycontrol: decoding (GPUs 0,1) |
 | CGD training triplets | `train/<set>/` | NOT built (`make_targets.py`; ~12 GPU-hours; waits for a slot after the baselines) |
 
 Completion markers: `done_ref_all.txt`, `done_latents_omini_all.txt`, `done_omini_block.txt`, `done_latents_<ctrl>_<cond>.txt`, `done_easycontrol_block.txt`, `done_fluxcn_block.txt`, `done_queue.txt`. Status lines: `omini_block_status.txt`, `queue_status.txt`, `<ctrl>_block_status.txt`.
@@ -35,6 +35,8 @@ Done: `real`, `vae_roundtrip`, `pid_roundtrip` on all three splits at 512 (and 2
 - vanilla PiD on the same clean latent: canny 0.637 at the 512 view and 0.256 at native 2048 (the resolution gap), depth MSE 62 vs 11 for the VAE, seg / layout unchanged, MANIQA higher (0.58 vs 0.48): the blind generative decoder invents fine structure.
 - FLUX + PiD reaches 2048 in 2.4 to 3.3 s vs 36 s for native FLUX + VAE; native FLUX at 4096 is out of memory on an H200, FLUX-at-1024 + PiD takes 12 to 15 s.
 - 512-generation behavior of EasyControl and FLUX ControlNet Union-Pro-2.0 verified visually (both follow the condition; EasyControl's seg LoRA reads the ADE20K palette render).
+
+- **OminiControl block (2026-09-11, tolerant F1 512 | 2048 / depth RMSE / FID):** VAE decode 0.771 | n/a / 23.8 / 17.2; vanilla PiD K=28 0.785 | 0.733 / 23.5 / 16.1; K=24 0.719 | 0.669 / 23.6 / 18.1; K=16 0.548 | 0.572 / 30.8 / 26.3. Truncation is expensive for the blind decoder (edges and, at K=16, depth) while MANIQA rises 0.62 -> 0.68: it fills the missing steps with detail that scores well and follows the condition less.
 
 ## 4. Remaining work (method-independent unless stated)
 

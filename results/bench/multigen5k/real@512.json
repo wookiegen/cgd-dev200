@@ -7,7 +7,9 @@
   "res": 512,
   "native_res": 512,
   "adherence": {
-   "f1": 1.0
+   "f1": 1.0,
+   "f1_strict": 1.0,
+   "tol_px": 1
   },
   "quality": {
    "musiq": 72.77775458984375,

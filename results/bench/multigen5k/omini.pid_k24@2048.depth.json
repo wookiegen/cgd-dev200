@@ -1,0 +1,23 @@
+[
+ {
+  "method": "pid_k24",
+  "controller": "omini",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "mse": 676.3674911852254,
+   "rmse": 23.245234926826768
+  },
+  "quality": {
+   "musiq": 72.6803643409729,
+   "niqe": 3.3456102364686973,
+   "maniqa": 0.40930868990421293,
+   "qalign": 4.5185455078125
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/depth/pid@24",
+  "time_s": 5135.9
+ }
+]

@@ -1,0 +1,20 @@
+[
+ {
+  "method": "pid_k16",
+  "controller": "omini",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 2048,
+  "adherence": {},
+  "quality": {
+   "deqa": 4.320878515625,
+   "vqr1": 4.691692,
+   "unipercept_iaa": 78.2382,
+   "unipercept_iqa": 78.13605
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/pid@16",
+  "time_s": 1968.3
+ }
+]
