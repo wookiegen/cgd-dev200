@@ -38,6 +38,14 @@ Done: `real`, `vae_roundtrip`, `pid_roundtrip` on all three splits at 512 (and 2
 
 - **OminiControl block (2026-09-11, tolerant F1 512 | 2048 / depth RMSE / FID):** VAE decode 0.771 | n/a / 23.8 / 17.2; vanilla PiD K=28 0.785 | 0.733 / 23.5 / 16.1; K=24 0.719 | 0.669 / 23.6 / 18.1; K=16 0.548 | 0.572 / 30.8 / 26.3. Truncation is expensive for the blind decoder (edges and, at K=16, depth) while MANIQA rises 0.62 -> 0.68: it fills the missing steps with detail that scores well and follows the condition less.
 
+## 3b. How to fill a controller block into the paper once its marker exists
+
+1. In the container: `cd /data/wookiekim/cgd/cgd-dev200/bench && python tools_rename_controller_results.py && python assemble.py && python collect_block.py <controller> --out /tmp/<controller>_numbers.json` (prints every number of the block: `vae@512`, `pid_k28/24/16@512`, `pid_k*@2048`, with canny F1 (tolerant) + f1_strict, depth MSE/RMSE, seg mIoU where present, FID/pFID, the 8 no-ref metrics, PSNR/SSIM/LPIPS/DISTS).
+2. Paper repo `docs/EXPERIMENTS_draft.tex`: fill the block's `+ VAE decode` and `+ PiD` rows of `tab:main` (PiD row shows K = 24 while K is undecided; put K = 28 and 16 in the `%` comment), the `<controller> + PiD` row of `tab:native-other`, and, for EasyControl, the seg cell (ade20k_val2k) and the choice in OPEN_QUESTIONS 13; extend the modularity paragraph with the per-controller VAE vs PiD deltas. Keep the `%` provenance comment convention (result file names).
+3. `python3 tools/table_widths.py` in the paper repo; `git add results/bench bench/STATUS.md && git commit && git push` here; update the table in Section 1 above.
+
+Running at hand-off (2026-09-11 ~14:00 KST, detached inside the container, independent of any Claude session): `run/run_block.sh fluxcn "canny depth"` on GPUs 2,3 (marker `done_fluxcn_block.txt`, ETA ~20:00 KST) and `run/run_block.sh easycontrol "canny depth seg"` on GPUs 0,1 (marker `done_easycontrol_block.txt`, ETA ~04:00 KST 2026-09-12). If a block fails: every stage skips existing outputs, so re-running the same command resumes it.
+
 ## 4. Remaining work (method-independent unless stated)
 
 | # | Task | Needs | Fills |
@@ -51,6 +59,7 @@ Done: `real`, `vae_roundtrip`, `pid_roundtrip` on all three splits at 512 (and 2
 | 7 | **CGD rows** (every table) and the choice of K (16 or 24; the truncation sweep informs it) | THE METHOD | |
 | 8 | Subject track (DreamBench, released subject LoRAs) | low priority | tab:subject |
 | 9 | 1024 side comparison (QUEUED, not launched): EasyControl + FLUX ControlNet generated at 1024, VAE-decoded, downsampled to 512, scored on `subset500` (tests the 512-resolution caveat; side comparison only) | ~4 GPU-hours, after the blocks | supplementary table |
+| 11 | Which controller the seg group of the paper's reconstruction table (and the seg cells of the 2x2) uses: OminiControl (needs the seg LoRA) or EasyControl (released seg LoRA, decodes done) | decision | tab:recon / 2x2 seg cells |
 | 10 | Checkpoint consistency: vanilla PiD rows use the 2K checkpoint, a trained CGD will be v1.5-based (only undistilled FLUX checkpoint); re-decode vanilla rows with v1.5 distilled (~8 GPU-hours per block) or keep 2K as headline; decide with the method | decision | tab:main PiD rows |
 
 Rules that bit us: never let two generator processes write the same set without disjoint shards (a race produced six corrupt PNGs, since regenerated); every decoder reads the cached latents, never regenerates; the harness refuses to upsample.
