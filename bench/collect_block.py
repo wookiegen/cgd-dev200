@@ -28,17 +28,23 @@ for split, conds in [("multigen5k", ["canny", "depth"]), ("ade20k_val2k", ["seg"
                     d = out.setdefault(key, {})
                     adh = rec.get("adherence", {}); q = rec.get("quality", {})
                     c = rec["condition"]
+                    upd = {}
                     if c == "canny":
-                        d.update({"f1": adh.get("f1"), "f1_strict": adh.get("f1_strict")})
+                        upd = {"f1": adh.get("f1"), "f1_strict": adh.get("f1_strict")}
                     elif c == "depth":
-                        d.update({"mse": adh.get("mse"), "rmse": adh.get("rmse")})
+                        upd = {"mse": adh.get("mse"), "rmse": adh.get("rmse")}
                     elif c == "seg":
-                        d.update({"seg_miou": adh.get("miou")})
+                        upd = {"seg_miou": adh.get("miou")}
                     elif c == "bbox":
-                        d.update({"layout_sr": adh.get("sr"), "layout_miou": adh.get("miou")})
+                        upd = {"layout_sr": adh.get("sr"), "layout_miou": adh.get("miou")}
+                    d.update({k: v for k, v in upd.items() if v is not None})   # metric-subset records (e.g. .vlm) carry no adherence
+                    # Under a controller the canny and depth runs decode DIFFERENT latents (different condition + LoRA), so their quality metrics
+                    # (FID, no-ref, recon) are per condition: plain keys = canny split (the paper's FID / tab:noref / tab:recon canny group),
+                    # "depth_" prefix = depth split (tab:recon depth group), "seg_" prefix = ade20k.
+                    pre = "" if c == "canny" else f"{c}_"
                     for k in ["fid", "pfid", "musiq", "niqe", "maniqa", "qalign", "deqa", "unipercept_iaa", "unipercept_iqa", "vqr1", "psnr", "ssim", "lpips", "dists"]:
                         if q.get(k) is not None:
-                            d[(k if c != "seg" else f"seg_{k}")] = q[k]
+                            d[pre + k] = q[k]
 for key in sorted(out):
     print(key, {k: (round(v, 4) if isinstance(v, float) else v) for k, v in sorted(out[key].items())})
 if a.out:
