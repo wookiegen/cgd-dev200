@@ -30,7 +30,8 @@ Done: `real`, `vae_roundtrip`, `pid_roundtrip` on all three splits at 512 (and 2
 
 ## 3. Findings so far
 
-- Deterministic decode ceiling for strict canny F1 at 512: 0.747 (VAE round trip); segmentation and layout are unchanged by the decode (53.6 / 72.1 vs 53.7 / 72.7 on the real images).
+- **Edge metric changed to tolerant F1 (BENCHMARK v1.8, 2026-09-11)**: strict F1 at 2048 compared 1-2 px re-extracted edges with the 4-px-thick nearest-resampled reference (a bicubic x4 of the REAL image scores 0.149 strict), so the strict 0.64 -> 0.26 drop of the PiD round trip was mostly the metric. Paper metric = F1 with a one-condition-pixel tolerance (1 px @512, 4 px @2048); strict kept as `f1_strict`. Tolerant: VAE round trip 0.94 @512; PiD round trip 0.92 -> 0.79; OminiControl + VAE decode 0.76; + PiD K=28 0.78 -> 0.73; K=16 0.54 -> 0.56. `bench/rescore_canny.py` patched the existing records.
+- Deterministic decode ceiling for strict canny F1 at 512: 0.747 (VAE round trip; 0.94 tolerant); segmentation and layout are unchanged by the decode (53.6 / 72.1 vs 53.7 / 72.7 on the real images). Depth / seg / layout scorers resize internally, so their 2048 values are flat by construction (moved to a supplementary table).
 - vanilla PiD on the same clean latent: canny 0.637 at the 512 view and 0.256 at native 2048 (the resolution gap), depth MSE 62 vs 11 for the VAE, seg / layout unchanged, MANIQA higher (0.58 vs 0.48): the blind generative decoder invents fine structure.
 - FLUX + PiD reaches 2048 in 2.4 to 3.3 s vs 36 s for native FLUX + VAE; native FLUX at 4096 is out of memory on an H200, FLUX-at-1024 + PiD takes 12 to 15 s.
 - 512-generation behavior of EasyControl and FLUX ControlNet Union-Pro-2.0 verified visually (both follow the condition; EasyControl's seg LoRA reads the ADE20K palette render).

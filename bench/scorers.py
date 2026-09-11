@@ -1,7 +1,8 @@
 """Frozen scorers of the CGD benchmark (BENCHMARK_v1.md Section 5; SCORING_HARNESS.md). One class per condition, lazy model loading,
 identical code path for every method. All image inputs are uint8 RGB numpy arrays at the SCORING resolution (512 view or 2048 native).
 
-  CannyF1      cv2.Canny(gray, 100, 200) on the output vs the input edge map (nearest-resampled to the scoring resolution); strict pixel F1.
+  CannyF1      cv2.Canny(gray, 100, 200) on the output vs the input edge map (nearest-resampled to the scoring resolution); F1 with a
+               one-condition-pixel tolerance (v1.8, the paper metric) plus the strict pixel F1 (anchor to published 512 numbers).
   DepthScorer  Intel/dpt-large on the output; reference = the input DPT depth (float, 512) resized to the scoring resolution and min-max
                normalized to [0, 255]; the prediction is least-squares scale+shift aligned to the reference; MSE and RMSE in those units.
   SegScorer    facebook/mask2former-swin-large-ade-semantic on the output -> ids 0..149 (+1 = ADE20K labels 1..150); dataset-level mIoU
@@ -44,12 +45,32 @@ class CannyF1:
     def edges(rgb: np.ndarray) -> np.ndarray:
         return cv2.Canny(cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY), 100, 200) > 0
 
+    @staticmethod
+    def f1_strict(pred: np.ndarray, ref: np.ndarray) -> float:
+        tp = np.logical_and(pred, ref).sum(); fp = np.logical_and(pred, ~ref).sum(); fn = np.logical_and(~pred, ref).sum()
+        return float(2 * tp / max(2 * tp + fp + fn, 1))
+
+    @staticmethod
+    def f1_tolerant(pred: np.ndarray, ref: np.ndarray, tol: int) -> float:
+        """Edge F1 with a matching tolerance of `tol` pixels (BSDS-style): a predicted edge pixel is correct if a reference edge lies within
+        tol pixels, and a reference pixel is recalled if a predicted edge lies within tol pixels."""
+        if tol <= 0:
+            return CannyF1.f1_strict(pred, ref)
+        k = np.ones((2 * tol + 1, 2 * tol + 1), np.uint8)
+        ref_d = cv2.dilate(ref.astype(np.uint8), k) > 0; pred_d = cv2.dilate(pred.astype(np.uint8), k) > 0
+        prec = np.logical_and(pred, ref_d).sum() / max(pred.sum(), 1); rec = np.logical_and(ref, pred_d).sum() / max(ref.sum(), 1)
+        return float(2 * prec * rec / max(prec + rec, 1e-9))
+
     def score(self, out_rgb: np.ndarray, cond_rgb512: np.ndarray) -> dict:
+        """BENCHMARK v1.8: `f1` = tolerant F1 with a tolerance of ONE CONDITION PIXEL (1 px at 512, 4 px at 2048), the paper's edge metric;
+        `f1_strict` = pixel-exact F1 (the ControlNet++ convention at 512; kept as the anchor to published numbers). The strict score at
+        2048 mostly measures the 4-px-thick nearest-upsampled reference against thin re-extracted edges (a bicubic upsample of the REAL
+        image scores 0.15 strict), which is why it is not the paper metric at native resolution."""
         res = out_rgb.shape[0]
         ref = resize((cond_rgb512[..., 0] > 0).astype(np.uint8), res, cv2.INTER_NEAREST) > 0
         pred = self.edges(out_rgb)
-        tp = np.logical_and(pred, ref).sum(); fp = np.logical_and(pred, ~ref).sum(); fn = np.logical_and(~pred, ref).sum()
-        return {"f1": float(2 * tp / max(2 * tp + fp + fn, 1))}
+        tol = max(1, res // 512)
+        return {"f1": self.f1_tolerant(pred, ref, tol), "f1_strict": self.f1_strict(pred, ref), "tol_px": tol}
 
 
 # ----------------------------------------------------------------------------- depth

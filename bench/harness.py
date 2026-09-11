@@ -189,7 +189,7 @@ if crop_dir_gen is not None:
 records = []
 for c in conds:
     adh = {}
-    if c == "canny" and "canny" in sc: adh = {"f1": mean("canny_f1")}
+    if c == "canny" and "canny" in sc: adh = {"f1": mean("canny_f1"), "f1_strict": mean("canny_f1_strict"), "tol_px": int(max(1, a.res // 512))}
     if c == "depth" and "depth" in sc: adh = {"mse": mean("depth_mse"), "rmse": mean("depth_rmse")}
     if c == "seg" and "seg" in sc: adh = {"miou": sc["seg"].dataset_miou(), "miou_img_mean": mean("seg_miou_img")}
     if c == "bbox" and "bbox" in sc:
