@@ -14,13 +14,13 @@ This is the **dev** setting (fast method selection), not the paper benchmark. Nu
 
 Every row decodes the **same cached latent** (FLUX.1-dev + OminiControl canny LoRA, 512×512, 28 steps, guidance 3.5, seed 0). Only the decoder changes, so any difference is the decoder's doing:
 
-| Decoder | condition-aware? | generative? | output |
-|---|---|---|---|
-| VAE decode (FLUX's own) | no | no (deterministic) | 512 |
-| vanilla PiD (final latent) | no | yes (pixel diffusion, 4 steps) | 2048 |
-| vanilla PiD, early-terminated (latent at step 24/28) | no | yes | 2048 |
-| vanilla PiD, early-terminated (latent at step 16/28) | no | yes | 2048 |
-| **CGD (your method)** | **yes** | yes | 2048 |
+| Decoder | condition-aware? | generative? | output | route to 2048 |
+|---|---|---|---|---|
+| VAE decode (FLUX's own) | no | no (deterministic) | 512 | interpolation (bicubic x4, ‡) |
+| OminiControl generating at 2048 + VAE decode | no | no | 2048 | native route (FLUX at 4 MP; slow) |
+| vanilla PiD student (final latent; K=24; K=16) | no | yes (pixel diffusion, 4 steps) | 2048 | pixel decoder from the 512 latent |
+| vanilla PiD teacher (final latent; K=24; K=16) | no | yes (undistilled, 25 steps, CFG 5) | 2048 | pixel decoder from the 512 latent |
+| **CGD (your method)** | **yes** | yes | 2048 | pixel decoder from the 512 latent (+ the condition, at 512 or at 2048) |
 
 The PiD rows are the baselines a CGD variant must beat. Vanilla PiD on the final latent is the paired ablation ("CGD minus the condition"); the early-terminated rows feed PiD a partially-denoised latent through its sigma-aware adapter: 24/28 (σ≈0.24) is PiD's own recommended operating point, 16/28 is a more aggressive truncation.
 
