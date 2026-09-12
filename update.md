@@ -4,9 +4,11 @@ For colleagues and their coding agents. This file records the evaluation decisio
 judged the way the paper will judge it. The authoritative spec is the paper repo's `docs/BENCHMARK_v1.md` (v1.9.1) and the experiments
 draft's subsubsection "Scoring Protocol Across Resolutions"; this is the working summary.
 
-**한 줄 요약.** condition은 항상 512입니다. 평가는 512 matched view와 native 2048에서 따로 하며, edge F1은 "condition 픽셀 1개" tolerance
-(512에서 1px, 2048에서 4px)를 씁니다. dev-200 게이트도 이 지표로 바뀌었습니다 (`git pull` 후 `scripts/03_score.py` 재실행). native 2048의
-실질적 상한은 1.0이 아니라 PiD round trip의 0.80입니다.
+**한 줄 요약.** 기본 설정에서 condition은 항상 512입니다. 평가는 512 matched view와 native 2048에서 따로 하며, edge F1은 "condition 픽셀 1개"
+tolerance (512에서 1px, 2048에서 4px)를 씁니다. dev-200 게이트도 이 지표로 바뀌었습니다 (`git pull` 후 `scripts/03_score.py` 재실행). native
+2048의 실질적 상한은 1.0이 아니라 PiD round trip의 0.80입니다. 여기에 더해 **native-condition track** (Section 7)이 추가되었습니다: 디코더에만
+2048 condition을 주는 두 번째 설정으로, 학습 시 512 / 2048 두 형태를 반반 섞어 하나의 디코더가 둘 다 받을 수 있게 합니다. 논문의 헤드라인은
+여전히 512-condition 프로토콜입니다.
 
 ## 1. What changed in the dev loop
 
@@ -81,7 +83,12 @@ ControlNet 0.305 (vs vanilla PiD K=24 native 0.669 / 0.766 / 0.649). Tool: `benc
 - Paired significance: `bench/paired_ci.py` (paired bootstrap 95% CIs on per-image CSVs; on 5000 images the CIs are within +-0.003).
 - Live state of all runs: `bench/STATUS.md`.
 
-## 7. Native-condition track (added 2026-09-12, later the same day)
+## 7. Native-condition setting (added 2026-09-12; FIRM framing decided the same evening)
+
+**Framing (user decision, option 1).** 2048 is the REFERENCE resolution of the benchmark; the 512 view is derived from it. The matched
+view exists only because the VAE decode produces nothing above 512. The cached latents stay as they are: the generator's condition is
+Canny of the REAL 512 image, the native condition is Canny of the PiD round trip at 2048; the two agree at the 512 view at F1 0.92 (the
+round trip's own 512 score), stated in the paper. No regeneration.
 
 A second setting, supplementary in the paper: the DECODER receives the edge condition at the output resolution (2048), while the
 generator keeps the 512 map. A latent-space controller cannot consume a 2048 map; a pixel-space decoder can. This is a strength of CGD we
@@ -99,3 +106,29 @@ keep, in addition to the default 512-condition protocol above (which remains the
   when the setting is "512 condition"; in the native-condition setting the 2048 map IS the condition, by definition.
 - **Paper table**: `tab:native-cond` (supplementary): per controller {VAE decode (dagger), vanilla PiD K, CGD with the 512 condition, CGD
   with the 2048 condition}; the difference between the two CGD rows is the value of condition resolution.
+
+**Baseline numbers against the native condition (tolerance 1 px at 2048; `results/bench/multigen5k/*.cond2048*.json`):**
+
+| row | canny F1 @2048 vs native condition |
+|---|---|
+| PiD round trip (the reference) | 1.000 |
+| real image, bicubic x4 (dagger) | 0.306 |
+| VAE round trip, bicubic x4 (dagger) | 0.296 |
+| OminiControl: VAE decode x4 (dagger) / PiD K=28 / K=24 / K=16 | 0.114 / 0.547 / 0.514 / 0.435 |
+| EasyControl: VAE decode x4 (dagger) / PiD K=28 / K=24 / K=16 | 0.156 / 0.425 / 0.476 / 0.463 |
+| FLUX ControlNet: VAE decode x4 (dagger) / PiD K=28 / K=24 / K=16 | 0.130 / 0.466 / 0.489 / 0.434 |
+
+Reading: interpolation routes reach 0.11 to 0.31; the blind decoder recovers about half of the native structure from the truncated latent;
+the reference is 1.0. This is the largest headroom of any setting for a condition-aware decoder. CGD rows: one with the 512 condition, one
+with the 2048 condition (the difference = the value of condition resolution).
+
+## 8. Queued / decided the same evening
+
+- **PiD in two forms (BENCHMARK v1.11).** The main tables keep the released 4-step distilled STUDENT (`pid_k<K>`). The undistilled v1.5
+  TEACHER (`pidt_k<K>`; `PiD_v1pt5_res2kto4k_sr4x_official_flux_undistilled`, PiD's documented teacher setting 25 steps + CFG 5, ~25 s per
+  2048 decode) is the checkpoint CGD trains on; it is compared with the student on subset500 in a supplementary paired table
+  (`tab:teacher`), plus a teacher round trip and a teacher latency row. Decoder: `decode_pid.py --pid-ckpt-type teacher --subset500`.
+  For colleagues: build CGD on the TEACHER; the exact "CGD minus the condition" ablation is the `pidt` row.
+- **Native-route baseline QUEUED** (controllers generating at 2048 directly, FLUX at 4 MP + VAE, subset500; red text in the paper).
+- **Do not `pip install` into the container without `--no-deps`** (a plain install upgraded torch to 2.14 on 2026-09-12 and broke new
+  processes until restored to 2.5.1+cu121).
