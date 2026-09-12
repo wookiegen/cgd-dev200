@@ -1,122 +1,155 @@
 #!/usr/bin/env python
-"""03: Score every decoder variant on dev-200 (the DEV_SETTING metrics), write per-image CSV + summary table.
+"""03: Score every decoder row on dev-200 under the FINAL protocol (BENCHMARK v1.11 / update.md) and write the reference table.
 
-Adherence (the signal):  Canny F1 between cv2.Canny(gray(output), 100, 200) and the input condition.
-   - matched 512 view : output at 512 (VAE native; PiD via the INTER_AREA downsample) vs the 512 condition
-   - native 2048      : 2048 output vs the condition resampled to 2048 with NEAREST (BENCHMARK v1.1 rule);
-                        for the 512-native VAE row this is a REFERENCE computed on a BICUBIC x4 upsample of its output (the paper's
-                        dagger convention for 512-native rows; the interpolation route to 2048, not a native output)
-   TWO F1 variants (BENCHMARK v1.8, 2026-09-12 update of this loop): `canny_f1_*` = F1 with a matching tolerance of ONE CONDITION PIXEL
-   (1 px at 512, 4 px at 2048; BSDS-style dilation) = the paper metric and THE GATE at both resolutions; `canny_f1s_*` = the strict
-   pixel-exact F1 of the original loop, kept as the 512 anchor (its 2048 value mostly measures the 4-px-thick resampled reference).
-Fidelity vs the real source image (512), computed on the WHOLE RGB image (not edges): LPIPS (alex, lower better), PSNR, SSIM (higher better) [pyiqa]
-No-reference quality (higher better): MUSIQ on the matched 512 view (comparable across rows) and at native resolution [pyiqa]
-Cost: per-image generation / decode latency and peak memory from the run logs.
-
-Variants scored (dir under outputs/): omini_vae (512), omini_pid_512 + omini_pid (2048), omini_pid_et24_512 + omini_pid_et24.
+Every row gets a 512 column and a 2048 column, both in the paper's tolerant canny F1 (one condition pixel: 1 px at 512, 4 px at 2048):
+  512  = the matched view: the output at 512 (VAE native; 2048 outputs via the INTER_AREA downsample, the pinned view)
+  2048 = the native output when the row produces 2048; for 512-native rows (VAE decode, Real, VAE round trip) it is the INTERPOLATION
+         route, bicubic x4 of the 512 output, marked with a dagger (‡) = "post-enlarge"
+  2048 vs native condition = F1 at 2048 against the 2048 edge map (Canny of the PiD round trip of the real image; tolerance 1 px), the
+         native-condition setting; the dagger applies as above
+  strict@512 = the pixel-exact F1 of the original loop (anchor)
+Rows (dirs under outputs/, present ones are scored): omini_vae (512 native), omini_vae_gen2048 (OminiControl GENERATING at 2048 = the
+native route), omini_pid / _et24 / _et16 (4-step distilled student), omini_pidt / _et24 / _et16 (undistilled teacher, 25 steps CFG 5);
+reference rows: real (dev200/images), vae_roundtrip / pid_roundtrip (mapped from the paper benchmark's outputs by sample id).
+Also: LPIPS / PSNR / SSIM vs the source at 512, MUSIQ at 512 and native, decode s/img and peak memory from the run logs.
 """
-import argparse, glob, json, os
+import argparse, csv, glob, json, os, sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(REPO, "bench"))
 import numpy as np, cv2, torch, pandas as pd
 from PIL import Image
+from scorers import CannyF1  # the paper's scorer (tolerant + strict), bench/scorers.py
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--repo", default=REPO)
-ap.add_argument("--variants", default="omini_vae,omini_pid,omini_pid_et24,omini_pid_et16")
+ap.add_argument("--bench-root", default=os.environ.get("CGD_BENCH_ROOT", "/data/wookiekim/cgd/data/bench"), help="materialized paper benchmark (round trips, canny2048)")
+ap.add_argument("--variants", default="omini_vae,omini_vae_gen2048,omini_pid,omini_pid_et24,omini_pid_et16,omini_pidt,omini_pidt_et24,omini_pidt_et16")
 a = ap.parse_args()
-dev = os.path.join(a.repo, "dev200"); outs = os.path.join(a.repo, "outputs"); res = os.path.join(a.repo, "results")
-os.makedirs(res, exist_ok=True)
+dev = os.path.join(a.repo, "dev200"); outs = os.path.join(a.repo, "outputs"); res = os.path.join(a.repo, "results"); os.makedirs(res, exist_ok=True)
 ids = sorted(json.load(open(os.path.join(dev, "captions.json"))))
-
+# dev idx -> paper sample_id (the dev-200 is a subset of multigen5k)
+sid_of = {r["dev200_idx"].zfill(3): r["sample_id"] for r in csv.DictReader(open(os.path.join(a.repo, "bench", "multigen5k", "manifest.csv"))) if r["dev200_idx"]}
+B = a.bench_root
+HR = 2048
+sc = CannyF1()
 import pyiqa
 dev_t = "cuda" if torch.cuda.is_available() else "cpu"
 M = {k: pyiqa.create_metric(k, device=dev_t) for k in ["lpips", "psnr", "ssim", "musiq"]}
 
-def canny(img_rgb):                     # uint8 RGB -> binary edge map
-    return cv2.Canny(cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY), 100, 200) > 0
-
-def f1(pred, ref):                      # strict pixel-exact F1 (the original loop metric; the 512 anchor)
-    tp = np.logical_and(pred, ref).sum(); fp = np.logical_and(pred, ~ref).sum(); fn = np.logical_and(~pred, ref).sum()
-    return float(2 * tp / max(2 * tp + fp + fn, 1))
-
-def f1_tol(pred, ref, tol):             # BENCHMARK v1.8 paper metric: tolerance of one condition pixel (tol = res // 512)
-    if tol <= 0:
-        return f1(pred, ref)
-    k = np.ones((2 * tol + 1, 2 * tol + 1), np.uint8)
-    ref_d = cv2.dilate(ref.astype(np.uint8), k) > 0; pred_d = cv2.dilate(pred.astype(np.uint8), k) > 0
-    prec = np.logical_and(pred, ref_d).sum() / max(pred.sum(), 1); rec = np.logical_and(ref, pred_d).sum() / max(ref.sum(), 1)
-    return float(2 * prec * rec / max(prec + rec, 1e-9))
 
 def load(p): return np.array(Image.open(p).convert("RGB"))
-def tens(arr): return torch.from_numpy(arr).permute(2, 0, 1)[None].float().div(255).to(dev_t)
+def tens(arr): return torch.from_numpy(np.ascontiguousarray(arr)).permute(2, 0, 1)[None].float().div(255).to(dev_t)
+def up4(img512): return cv2.resize(img512, (HR, HR), interpolation=cv2.INTER_CUBIC)
 
-def native_dir(v):
-    return os.path.join(outs, v)
+
+def native_cond(idx):
+    p = os.path.join(B, "multigen5k", "conditions", "canny2048", f"{sid_of[idx]}.png") if idx in sid_of else None
+    return load(p) if p and os.path.exists(p) else None
+
+
+def ref_paths(row, idx):
+    """512 image and (optional) 2048 image of a reference row."""
+    sid = sid_of.get(idx)
+    if row == "real":
+        return os.path.join(dev, "images", f"{idx}.png"), None
+    if row == "vae_roundtrip":
+        return os.path.join(B, "outputs", "ref", "vae_roundtrip", "multigen5k", f"{sid}.png"), None
+    if row == "pid_roundtrip":
+        return os.path.join(B, "outputs", "ref", "pid_roundtrip_512", "multigen5k", f"{sid}.png"), os.path.join(B, "outputs", "ref", "pid_roundtrip", "multigen5k", f"{sid}.png")
+    if row == "pidt_roundtrip":
+        return os.path.join(B, "outputs", "ref", "pidt_roundtrip_512", "multigen5k", f"{sid}.png"), os.path.join(B, "outputs", "ref", "pidt_roundtrip", "multigen5k", f"{sid}.png")
+    raise KeyError(row)
+
+
+def score_pair(view512, nat, cond512, cond2048, src, dagger):
+    """view512: 512 view; nat: 2048 image (native or bicubic upsample when dagger)."""
+    r = {}
+    s = sc.score(view512, cond512); r["canny_f1_512"] = s["f1"]; r["canny_f1s_512"] = s["f1_strict"]
+    s = sc.score(nat, cond512); r["canny_f1_2048"] = s["f1"]; r["canny_f1s_2048"] = s["f1_strict"]
+    if cond2048 is not None:
+        r["canny_f1_2048_natcond"] = sc.score(nat, cond2048)["f1"]
+    r["dagger"] = int(dagger)
+    with torch.no_grad():
+        r["lpips"] = float(M["lpips"](tens(view512), tens(src))); r["psnr"] = float(M["psnr"](tens(view512), tens(src))); r["ssim"] = float(M["ssim"](tens(view512), tens(src)))
+        r["musiq_512"] = float(M["musiq"](tens(view512))); r["musiq_native"] = float(M["musiq"](tens(nat)))
+    return r
+
 
 rows = []
 for idx in ids:
     src = load(os.path.join(dev, "images", f"{idx}.png"))
-    cond512 = load(os.path.join(dev, "canny", f"{idx}.png"))[..., 0] > 0
+    cond512 = load(os.path.join(dev, "canny", f"{idx}.png")); cond2048 = native_cond(idx)
+    # reference rows
+    for ref in ["real", "vae_roundtrip", "pid_roundtrip", "pidt_roundtrip"]:
+        p512, p2048 = ref_paths(ref, idx)
+        if not os.path.exists(p512):
+            continue
+        v = load(p512)
+        if p2048 and os.path.exists(p2048):
+            rows.append({"idx": idx, "variant": ref, "native_res": HR, **score_pair(v, load(p2048), cond512, cond2048, src, False)})
+        else:
+            rows.append({"idx": idx, "variant": ref, "native_res": 512, **score_pair(v, up4(v), cond512, cond2048, src, True)})
+    # decoder rows
     for v in a.variants.split(","):
-        nat_p = os.path.join(native_dir(v), f"{idx}.png")
+        nat_p = os.path.join(outs, v, f"{idx}.png")
         if not os.path.exists(nat_p):
             continue
         nat = load(nat_p); H = nat.shape[0]
         if H == 512:
-            view512 = nat
+            rows.append({"idx": idx, "variant": v, "native_res": 512, **score_pair(nat, up4(nat), cond512, cond2048, src, True)})
         else:
-            p512 = os.path.join(native_dir(v) + "_512", f"{idx}.png")
+            p512 = os.path.join(outs, v + "_512", f"{idx}.png")
             view512 = load(p512) if os.path.exists(p512) else cv2.resize(nat, (512, 512), interpolation=cv2.INTER_AREA)
-        r = {"idx": idx, "variant": v, "native_res": H}
-        e512 = canny(view512)
-        r["canny_f1_512"] = f1_tol(e512, cond512, 1); r["canny_f1s_512"] = f1(e512, cond512)
-        HR = 2048
-        cond_hr = cv2.resize(cond512.astype(np.uint8), (HR, HR), interpolation=cv2.INTER_NEAREST) > 0
-        if H == HR:
-            e_hr = canny(nat); r["native_via"] = "native"
-        else:   # 512-native decoders (VAE): REFERENCE value on a BICUBIC x4 upsample (the paper's dagger convention, 2026-09-12; was bilinear); not a claim
-            e_hr = canny(cv2.resize(nat, (HR, HR), interpolation=cv2.INTER_CUBIC)); r["native_via"] = "bicubic_x4"
-        r["canny_f1_native"] = f1_tol(e_hr, cond_hr, HR // 512); r["canny_f1s_native"] = f1(e_hr, cond_hr)
-        with torch.no_grad():
-            r["lpips"] = float(M["lpips"](tens(view512), tens(src)))
-            r["psnr"] = float(M["psnr"](tens(view512), tens(src)))
-            r["ssim"] = float(M["ssim"](tens(view512), tens(src)))
-            r["musiq_native"] = float(M["musiq"](tens(nat)))
-            r["musiq_512"] = float(M["musiq"](tens(view512)))
-        rows.append(r)
+            rows.append({"idx": idx, "variant": v, "native_res": H, **score_pair(view512, nat, cond512, cond2048, src, False)})
 
 df = pd.DataFrame(rows); df.to_csv(os.path.join(res, "dev200_per_image.csv"), index=False)
 
 # cost from logs
 lat = {}
-if os.path.exists(os.path.join(res, "log_01_generate.jsonl")):
-    g = pd.read_json(os.path.join(res, "log_01_generate.jsonl"), lines=True)
-    lat["gen_s"] = g.t_gen_s.mean(); lat["omini_vae"] = (g.t_vae_s.mean(), g.peak_mem_vae_gb.max())
-if os.path.exists(os.path.join(res, "log_02_pid.jsonl")):
-    p = pd.read_json(os.path.join(res, "log_02_pid.jsonl"), lines=True)
-    for v, gdf in p.groupby("variant"):
-        lat["omini_pid" + ("" if v == "final" else f"_{v}")] = (gdf.t_dec_s.mean(), gdf.peak_mem_gb.max())
+for f, key in [("log_01_generate.jsonl", None), ("log_02_pid.jsonl", "pid"), ("log_02b_teacher.jsonl", "pidt"), ("log_01b_gen2048.jsonl", "gen2048")]:
+    p = os.path.join(res, f)
+    if not os.path.exists(p):
+        continue
+    g = pd.read_json(p, lines=True)
+    if key is None:
+        lat["gen_s"] = g.t_gen_s.mean(); lat["omini_vae"] = (g.t_vae_s.mean(), g.peak_mem_vae_gb.max())
+    elif key == "gen2048":
+        lat["omini_vae_gen2048"] = (g.t_gen_vae_s.mean(), g.peak_mem_gb.max())
+    else:
+        for v, gdf in g.groupby("variant"):
+            lat[f"omini_{key}" + ("" if v == "final" else f"_{v}")] = (gdf.t_dec_s.mean(), gdf.peak_mem_gb.max())
 
-agg = df.groupby("variant").agg(n=("idx", "count"), native_res=("native_res", "first"),
-                                canny_f1_512=("canny_f1_512", "mean"), canny_f1_native=("canny_f1_native", "mean"),
-                                canny_f1s_512=("canny_f1s_512", "mean"), canny_f1s_native=("canny_f1s_native", "mean"),
+agg = df.groupby("variant").agg(n=("idx", "count"), native_res=("native_res", "first"), dagger=("dagger", "first"),
+                                canny_f1_512=("canny_f1_512", "mean"), canny_f1_2048=("canny_f1_2048", "mean"),
+                                canny_f1_2048_natcond=("canny_f1_2048_natcond", "mean"), canny_f1s_512=("canny_f1s_512", "mean"),
                                 lpips=("lpips", "mean"), psnr=("psnr", "mean"), ssim=("ssim", "mean"),
-                                musiq_native=("musiq_native", "mean"), musiq_512=("musiq_512", "mean")).reset_index()
-agg["decode_s"] = agg.variant.map(lambda v: round(lat.get(v, (np.nan, np.nan))[0], 3))
-agg["peak_mem_gb"] = agg.variant.map(lambda v: round(lat.get(v, (np.nan, np.nan))[1], 1))
-order = {"omini_vae": 0, "omini_pid": 1, "omini_pid_et24": 2, "omini_pid_et16": 3}
-agg = agg.sort_values("variant", key=lambda s: s.map(lambda v: order.get(v, 9))).reset_index(drop=True)
+                                musiq_512=("musiq_512", "mean"), musiq_native=("musiq_native", "mean")).reset_index()
+agg["decode_s"] = agg.variant.map(lambda v: round(lat.get(v, (np.nan, np.nan))[0], 2)); agg["peak_mem_gb"] = agg.variant.map(lambda v: round(lat.get(v, (np.nan, np.nan))[1], 1))
+order = {"real": 0, "vae_roundtrip": 1, "pid_roundtrip": 2, "pidt_roundtrip": 3, "omini_vae": 10, "omini_vae_gen2048": 11, "omini_pid": 20, "omini_pid_et24": 21, "omini_pid_et16": 22,
+         "omini_pidt": 30, "omini_pidt_et24": 31, "omini_pidt_et16": 32}
+agg = agg.sort_values("variant", key=lambda s: s.map(lambda v: order.get(v, 99))).reset_index(drop=True)
 agg.to_csv(os.path.join(res, "dev200_summary.csv"), index=False)
 
-names = {"omini_vae": "OminiControl + VAE decode (512, native)",
-         "omini_pid": "OminiControl + vanilla PiD (final latent, 2048)",
-         "omini_pid_et24": "OminiControl + vanilla PiD, early-terminated at 24/28 (2048)",
-         "omini_pid_et16": "OminiControl + vanilla PiD, early-terminated at 16/28 (2048)"}
-lines = ["| Decoder | n | Canny F1 @512 (matched, tolerant) ↑ | Canny F1 @2048 (native, tolerant; VAE row = bicubic x4 reference) ↑ | strict F1 @512 (anchor) ↑ | strict F1 @2048 (metric-dominated) | LPIPS ↓ | PSNR ↑ | SSIM ↑ | MUSIQ @512 (matched) ↑ | MUSIQ (native) ↑ | decode s/img ↓ | peak mem GB ↓ |",
+names = {"real": "Real image (512; 2048 = bicubic x4 ‡)", "vae_roundtrip": "VAE round trip (decode ceiling; 2048 = bicubic x4 ‡)",
+         "pid_roundtrip": "PiD round trip, student (generative ceiling; 2048 native)", "pidt_roundtrip": "PiD round trip, teacher",
+         "omini_vae": "OminiControl + VAE decode (512 native; 2048 = bicubic x4 ‡, the interpolation route)",
+         "omini_vae_gen2048": "OminiControl GENERATING at 2048 + VAE decode (the native route)",
+         "omini_pid": "OminiControl + vanilla PiD student, final latent (28/28)", "omini_pid_et24": "OminiControl + vanilla PiD student, K=24 **(gate row)**", "omini_pid_et16": "OminiControl + vanilla PiD student, K=16",
+         "omini_pidt": "OminiControl + vanilla PiD teacher, final latent (28/28)", "omini_pidt_et24": "OminiControl + vanilla PiD teacher, K=24 **(gate row for teacher-based CGD)**", "omini_pidt_et16": "OminiControl + vanilla PiD teacher, K=16"}
+
+
+def f(v, nd=4, dag=False):
+    if v is None or (isinstance(v, float) and np.isnan(v)):
+        return ""
+    return f"{v:.{nd}f}" + ("‡" if dag else "")
+
+
+lines = ["| Decoder | n | Canny F1 @512 (matched, tolerant) ↑ | Canny F1 @2048 (tolerant 4 px) ↑ | Canny F1 @2048 vs NATIVE condition (1 px) ↑ | strict F1 @512 (anchor) | LPIPS ↓ | PSNR ↑ | SSIM ↑ | MUSIQ @512 ↑ | MUSIQ @2048 ↑ | s/img ↓ | peak GB ↓ |",
          "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
 for _, r in agg.iterrows():
-    f1n = f"{r.canny_f1_native:.4f}" + (" (bicubic x4 ref.)" if r.native_res == 512 else "")
-    lines.append(f"| {names.get(r.variant, r.variant)} | {int(r.n)} | {r.canny_f1_512:.4f} | {f1n} | {r.canny_f1s_512:.4f} | {r.canny_f1s_native:.4f} | {r.lpips:.4f} | {r.psnr:.2f} | {r.ssim:.4f} | {r.musiq_512:.2f} | {r.musiq_native:.2f} | {r.decode_s} | {r.peak_mem_gb} |")
-gen_line = f"\nGeneration (FLUX.1-dev + OminiControl canny LoRA, 28 steps @512, seed 0): {lat.get('gen_s', float('nan')):.2f} s/img, shared by every row.\n" if "gen_s" in lat else ""
+    dag = bool(r.dagger)
+    lines.append(f"| {names.get(r.variant, r.variant)} | {int(r.n)} | {f(r.canny_f1_512)} | {f(r.canny_f1_2048, dag=dag)} | {f(r.canny_f1_2048_natcond, dag=dag)} | {f(r.canny_f1s_512)} | "
+                 f"{f(r.lpips)} | {f(r.psnr, 2)} | {f(r.ssim)} | {f(r.musiq_512, 2)} | {f(r.musiq_native, 2)} | {f(r.decode_s, 2)} | {f(r.peak_mem_gb, 1)} |")
+gen_line = f"\nGeneration at 512 (FLUX.1-dev + OminiControl canny LoRA, 28 steps, seed 0): {lat.get('gen_s', float('nan')):.2f} s/img, shared by every row except the native-route row, whose s/img includes its own 2048 generation. ‡ = bicubic x4 upsample of a 512 output (interpolation route, not a native output). Native condition = Canny of the PiD round trip at 2048 (`bench/build_native_conditions.py`); its reference is the student round trip (1.0).\n" if "gen_s" in lat else ""
 open(os.path.join(res, "dev200_summary.md"), "w").write("\n".join(lines) + "\n" + gen_line)
 print("\n".join(lines)); print(gen_line)

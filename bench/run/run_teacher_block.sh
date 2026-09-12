@@ -6,7 +6,18 @@ set -u
 read -r -a G <<< "${GPUS:-0 1 2 3}"; NG=${#G[@]}
 LOG=/data/wookiekim/cgd/data/_logs; B=/data/wookiekim/cgd/data/bench
 cd /data/wookiekim/cgd/cgd-dev200/bench
-echo "$(date '+%F %T') teacher block: decoding on GPUs ${G[*]}" > $LOG/teacher_block_status.txt
+echo "$(date '+%F %T') teacher block: PHASE 1 dev-200 (teacher decodes on ${G[0]}; OminiControl generating at 2048 on ${G[*]:1})" > $LOG/teacher_block_status.txt
+# ---- PHASE 1: the colleagues' dev-200 reference table (user priority 2026-09-12): teacher rows + the native-route VAE row
+REPO=/data/wookiekim/cgd/cgd-dev200
+CUDA_VISIBLE_DEVICES=${G[0]} python $REPO/scripts/02b_decode_teacher.py 2>&1 | grep -v -i -E "warning|pynvml|it/s" > $LOG/dev200_teacher.log &
+NR=$((NG-1)); for ((k=1; k<NG; k++)); do
+  CUDA_VISIBLE_DEVICES=${G[$k]} python $REPO/scripts/01b_generate_omini_2048.py --shard $((k-1)) --nshards $NR 2>&1 | grep -v -i -E "warning|pynvml|it/s" > $LOG/dev200_gen2048_$((k-1)).log &
+done
+wait
+echo "$(date '+%F %T') phase 1 decodes done; scoring dev-200" >> $LOG/teacher_block_status.txt
+( cd $REPO && CUDA_VISIBLE_DEVICES=${G[0]} python scripts/03_score.py && python scripts/04_fill_readme.py && chmod -R a+rwX results README.md ) 2>&1 | grep -v -i -E "warning|pynvml" > $LOG/dev200_score.log
+echo "$(date '+%F %T') DEV200 TABLE DONE" > $LOG/done_dev200_final.txt
+echo "$(date '+%F %T') PHASE 2: subset500 teacher decodes on GPUs ${G[*]}" >> $LOG/teacher_block_status.txt
 for c in canny depth; do
   for ((k=0; k<NG; k++)); do
     CUDA_VISIBLE_DEVICES=${G[$k]} python decode_pid.py --controller omini --condition $c --ks 28,24,16 --pid-ckpt-type teacher --subset500 --nshards $NG --shard $k 2>&1 \
