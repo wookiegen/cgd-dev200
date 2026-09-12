@@ -2,6 +2,8 @@
 
 A fixed 200-image canny benchmark for iterating on **Conditional Generative Decoding (CGD)**: the same conditioned FLUX latent, decoded by different decoders, scored on how well the decoded pixels honor the condition.
 
+**Read `update.md` first** (2026-09-12): the resolution and evaluation decisions, the tolerant-F1 gate, the native-resolution ceiling, and the rules for CGD training conditions.
+
 This is the **dev** setting (fast method selection), not the paper benchmark. Numbers here are never reported in the paper; they exist so everyone iterates on the same images, the same latents, and the same scorers. The full protocol lives in the paper repo's `docs/BENCHMARK_v1.md`; this repo implements its `DEV_SETTING.md`.
 
 ## Paper benchmark manifests (`bench/`)

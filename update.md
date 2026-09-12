@@ -1,0 +1,82 @@
+# update.md: resolution and evaluation decisions (2026-09-12)
+
+For colleagues and their coding agents. This file records the evaluation decisions made on 2026-09-12 so that a variant is built and
+judged the way the paper will judge it. The authoritative spec is the paper repo's `docs/BENCHMARK_v1.md` (v1.9.1) and the experiments
+draft's subsubsection "Scoring Protocol Across Resolutions"; this is the working summary.
+
+**한 줄 요약.** condition은 항상 512입니다. 평가는 512 matched view와 native 2048에서 따로 하며, edge F1은 "condition 픽셀 1개" tolerance
+(512에서 1px, 2048에서 4px)를 씁니다. dev-200 게이트도 이 지표로 바뀌었습니다 (`git pull` 후 `scripts/03_score.py` 재실행). native 2048의
+실질적 상한은 1.0이 아니라 PiD round trip의 0.80입니다.
+
+## 1. What changed in the dev loop
+
+- The gate is now the **tolerant canny F1** (one condition pixel: 1 px at the 512 matched view, 4 px at native 2048) at BOTH resolutions,
+  against vanilla PiD at the same truncation point K. Strict pixel-exact F1 is still printed at 512 as an anchor; strict F1 at 2048 is not a
+  gate (it measures the 4 px thick resampled reference, not content).
+- Gate values (tolerant F1 to exceed, 512 / 2048): K=24 0.713 / 0.662; K=16 0.538 / 0.556; full latent 0.778 / 0.725. MUSIQ not lower,
+  LPIPS not worse than vanilla PiD. Full table: README.md.
+- Ids, cached latents, baseline outputs are unchanged. Pull commit d321661 or later and re-run `scripts/03_score.py`.
+
+## 2. The scoring rule across resolutions
+
+1. Every score is computed at a declared scoring resolution (512 matched view or native 2048) and compared only within it.
+2. Matched view = `cv2.INTER_AREA` downsample of the native output to 512. Nothing is ever upsampled to be scored.
+3. Edge F1 at resolution R: re-extract Canny (100, 200) from the output at R; reference = the 512 edge map resampled with NEAREST; a match
+   counts within one condition pixel = R/512 output pixels. Thresholds are NOT rescaled with resolution.
+4. Depth (DPT-Large), segmentation (Mask2Former), subject (DINO / CLIP) scorers resize internally, so their scores are resolution-invariant;
+   they are reported at the matched view, native values only as a check.
+5. No-reference quality (MUSIQ etc.) is compared within one resolution group only. FID / pFID / PSNR-SSIM-LPIPS use the 512 view (paired
+   real images exist at 512 only).
+
+Why the tolerance scales and the thresholds do not (control experiment on all 5000 real MultiGen images, upsampled bicubically and scored
+against their own 512 edge map; `results/bench/metric_checks/upsampled_real_multigen5k.json`):
+
+| scoring resolution | tolerant F1 | strict F1 | detected edge density |
+|---|---|---|---|
+| 512 (original) | 1.000 | 1.000 | 9.9% |
+| 1024 (bicubic x2) | 0.859 | 0.469 | 5.5% |
+| 2048 (bicubic x4) | 0.547 | 0.153 | 1.4% |
+| 2048 then INTER_AREA back to 512 | 0.961 | 0.915 | 9.3% |
+
+Reading: strict F1 at 2048 mostly measures edge thickness (0.15 for a perfect image); the tolerant score of a merely upsampled image is
+0.55 because fixed Canny thresholds do not fire on interpolated (soft) edges. So the native column requires edges that are SHARP at native
+scale and lie inside the condition's pixel blocks. A decoder that blurs upward will not score; that is intended.
+
+## 3. Native-resolution ceiling
+
+The practical ceiling of the native 2048 column is **0.80**, the tolerant F1 of the vanilla PiD round trip (clean latent of the real image,
+decoded by PiD, scored at 2048). Thin edges re-extracted at 2048 never align perfectly with the 4 px blocks of a condition defined at 512,
+so no method reaches 1.0 there. Read native scores against 0.80, not 1.0. Vanilla PiD at K=24 under OminiControl scores 0.67; the gap to
+0.80 is the headroom a condition-aware decoder can recover.
+
+## 4. Indirect 2048 values for 512-native rows (double dagger)
+
+Rows that only produce 512 (Real image, VAE round trip, each controller's VAE decode) get an indirect 2048 value: the tolerant F1 of their
+BICUBIC x4 upsample, marked with a double dagger in the paper and "bicubic x4 ref." in the dev-200 table. It is the interpolation route to
+2048, not a native output. Values on multigen5k: Real 0.547, VAE round trip 0.529, VAE decode under OminiControl 0.276 / EasyControl 0.439 /
+ControlNet 0.305 (vs vanilla PiD K=24 native 0.669 / 0.766 / 0.649). Tool: `bench/tools_upsampled_ref.py`.
+
+## 5. Conditions for CGD training and inference
+
+- **The condition is always the 512 map** the generator received. The decoder gets the same map (pillar "condition twice"). If a variant
+  injects at the pixel stream, resize the 512 map to the working resolution inside the decoder: NEAREST for edges / masks, BICUBIC for depth.
+  A 4 px thick edge at 2048 is the honest representation: the condition says "an edge lies in this condition pixel", not where inside it.
+- **Training triplets** (`bench/make_targets.py`, paper Method "Training the Conditioned Decoder"): input = the clean FLUX latent of the
+  training crop re-noised to the truncation level; target = the 2048 vanilla-PiD decode of the clean latent; condition = extracted FROM THE
+  TARGET at the 512 view (Canny / DPT on the INTER_AREA downsample of the target), so target and condition agree by construction (F1 = 1 at
+  the matched view). Segmentation keeps the ground-truth mask (PiD's deviations are below mask scale).
+- **Do NOT** extract a thin edge map from the 2048 target and feed it as the condition: it is more information than the generator received,
+  and no such map exists at test time (train / test mismatch).
+- **Allowed**: an auxiliary loss against the target's own 2048 edges. The target is ground truth; only the conditioning INPUT must stay at 512.
+- The loss is on the 2048 pixels of the target, so nothing is lost in supervision; only the conditioning input is coarse, as it is at test time.
+- Training data: MultiGen-20M train subset (canny, depth) and ADE20K train (seg); bounding-box layout was dropped from the paper on
+  2026-09-12. Eval images are excluded by sha256 (`bench/blocklist/`); a 500-row `val` split per training set is for tuning.
+
+## 6. Where things live
+
+- Paper protocol text: paper repo `docs/EXPERIMENTS_draft.tex`, subsubsection `subsubsec:exp-resolution-protocol`; spec `docs/BENCHMARK_v1.md`
+  (changelog v1.8, v1.9, v1.9.1); dev loop `docs/DEV_SETTING.md`.
+- Scorers: `bench/scorers.py` (`CannyF1.score` returns `f1` tolerant and `f1_strict`), `bench/harness.py` (`--res 512|2048`, `--subset500`).
+- Dev-200 scorer: `scripts/03_score.py` (`canny_f1_*` tolerant, `canny_f1s_*` strict).
+- Paired significance: `bench/paired_ci.py` (paired bootstrap 95% CIs on per-image CSVs; on 5000 images the CIs are within +-0.003).
+- Live state of all runs: `bench/STATUS.md`.
