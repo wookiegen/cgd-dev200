@@ -20,7 +20,8 @@ for ctrl in omini easycontrol fluxcn; do
 done
 echo "$(date '+%F %T') generation done; scoring" >> $LOG/native_route_status.txt
 score() { # gpu ctrl cond
-  local g=$1 ctrl=$2 c=$3 O=$B/outputs/${ctrl}_2048/$c/vae@28
+  local g=$1 ctrl=$2 c=$3
+  local O=$B/outputs/${ctrl}_2048/$c/vae@28   # separate statement (see run_teacher_block.sh)
   CUDA_VISIBLE_DEVICES=$g python harness.py --method vae --controller ${ctrl}_2048 --split multigen5k --condition $c --subset500 --gen-dir $O --res 512
   CUDA_VISIBLE_DEVICES=$g python harness.py --method vae --controller ${ctrl}_2048 --split multigen5k --condition $c --subset500 --gen-dir $O --res 2048 --metrics adherence,noref
   [ "$c" = canny ] && CUDA_VISIBLE_DEVICES=$g python harness.py --method vae --controller ${ctrl}_2048 --split multigen5k --condition $c --subset500 --gen-dir $O --res 2048 --metrics adherence --cond-res 2048

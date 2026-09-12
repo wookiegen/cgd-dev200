@@ -33,7 +33,8 @@ done
 wait
 echo "$(date '+%F %T') round trip done; scoring" >> $LOG/teacher_block_status.txt
 score() { # gpu condition
-  local g=$1 c=$2 O=$B/outputs/omini/$c
+  local g=$1 c=$2
+  local O=$B/outputs/omini/$c   # separate statement: in one 'local' line $c would expand to the OUTER c (bug found 2026-09-12: canny rows scored the depth decodes)
   for K in 28 24 16; do
     for who in pidt pid; do                     # teacher and student on the SAME subset (paired table)
       local m=${who}_k$K
