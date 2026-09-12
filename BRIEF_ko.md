@@ -16,6 +16,11 @@
 - **edge F1.** Canny(100, 200)을 출력에서 다시 뽑고, condition은 nearest로 맞춘 뒤 "condition 픽셀 1개" 안에 들어오면 맞은 것으로 봅니다
   (512에서 1px, 2048에서 4px). strict F1은 512에서만 anchor로 같이 찍습니다. Canny threshold는 해상도에 따라 낮추지 않으므로 2048에서는
   실제로 선명한 edge가 있어야 점수가 납니다. 진짜 이미지를 bicubic으로 키운 것도 0.55밖에 못 받습니다.
+- **512에서 2048로 갈 때 F1이 떨어지는 이유는 precision입니다.** dev-200에서 분해해 보면 recall은 떨어지지 않고 오히려 오릅니다
+  (PiD K=24: 0.76 -> 0.86). 떨어지는 것은 precision입니다 (0.69 -> 0.57). 즉 native 해상도에서 디코더가 만든 edge의 25~43%가 condition에
+  없는 자리에 있습니다. 텍스처, 지어낸 구조입니다. 512 view에서는 area downsample이 그 미세 텍스처를 평균으로 지워 버려서 보이지 않습니다.
+  그래서 2048 열은 "condition이 요구하지 않은 디테일을 얼마나 만들어 냈나"를 재는 열이고, CGD가 해야 할 일은 recall을 잃지 않으면서
+  2048에서 precision을 올리는 것입니다. 스코어러가 precision / recall / edge density를 이미지별로 기록하니 어느 쪽이 움직였는지 확인하세요.
 - **2048 열의 상한은 0.80입니다.** PiD round trip이 그 값이고, 얇은 2048 edge는 512 condition의 4px 블록과 완벽히 겹치지 않기 때문입니다.
   1.0 기준으로 읽지 마세요.
 - **‡ (double dagger).** 512만 내는 행(VAE decode 등)의 2048 값은 bicubic x4로 키워서 잰 참고값입니다. 보간으로 2048을 만들면 얼마나
