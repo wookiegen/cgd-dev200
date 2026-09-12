@@ -1,0 +1,35 @@
+[
+ {
+  "method": "vae",
+  "controller": "fluxcn_1024",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 1024,
+  "subset": "subset500",
+  "adherence": {
+   "f1": 0.432591710944597,
+   "f1_strict": 0.1815587528978972,
+   "tol_px": 1,
+   "cond_res": 512,
+   "precision": 0.6708412326472841,
+   "recall": 0.3572393197090584,
+   "edge_density": 0.0456685791015625
+  },
+  "quality": {
+   "musiq": 72.0630021057129,
+   "niqe": 4.535043000847425,
+   "maniqa": 0.47633336125314235,
+   "qalign": 4.096791015625,
+   "psnr": 11.861647473335266,
+   "ssim": 0.4122821764155866,
+   "lpips": 0.5609827460944653,
+   "dists": 0.29901653480529783,
+   "fid": 86.28436891090672,
+   "pfid": 90.02660217659223
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn_1024/canny/vae@28",
+  "time_s": 338.3
+ }
+]

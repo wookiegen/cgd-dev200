@@ -1,0 +1,24 @@
+{
+  "benchmark_version": "v1.13",
+  "captions": "one sentence per image by the captioner recorded in CAPTIONS.json (stage --captions)",
+  "conditions/canny": "c512 = cv2.Canny(gray(512 image), 100, 200)",
+  "conditions/canny2048": "c2048 = cv2.Canny(gray(2048 crop), 100, 200)",
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "images": "cv2.INTER_AREA downsample of the crop to 512 (the real 512 image)",
+  "images2048": "cv2.INTER_AREA downsample so that the short side is 2048 (never upsampled), then the 2048 x 2048 center crop (the real 2048 reference)",
+  "n": 1000,
+  "reference_of_c2048_column": "the real 2048 image (1.0); the PiD round trip is a row here, not the reference",
+  "selection": "members with min(w, h) >= 2048, seeded shuffle (numpy default_rng(0)), first 1000",
+  "source": "hf://datasets/Iceclear/DIV8K_TrainingSet/DIV8K.zip (DIV8K, Gu et al., ICCVW 2019 'DIV8K: DIVerse 8K Resolution Image Dataset')",
+  "split": "div8k1k",
+  "why_not_lsdir": "LSDIR's HR images are ~1K on the short side (HF mirrors danjacobellis/LSDIR, LSDIR_raw: none >= 2048), checked 2026-09-12"
+}

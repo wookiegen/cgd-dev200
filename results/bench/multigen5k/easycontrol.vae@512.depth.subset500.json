@@ -1,0 +1,30 @@
+[
+ {
+  "method": "vae",
+  "controller": "easycontrol",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "subset": "subset500",
+  "adherence": {
+   "mse": 598.6987147601301,
+   "rmse": 21.957657143504154
+  },
+  "quality": {
+   "musiq": 73.11041413879394,
+   "niqe": 4.4273017693836625,
+   "maniqa": 0.41353444159030917,
+   "qalign": 4.19356640625,
+   "psnr": 10.46014016532898,
+   "ssim": 0.3861766920369598,
+   "lpips": 0.5942159081250429,
+   "dists": 0.28772417318820953,
+   "fid": 82.15120780632179,
+   "pfid": 98.03309396572018
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/depth/vae@28",
+  "time_s": 267.0
+ }
+]
