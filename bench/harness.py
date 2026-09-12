@@ -214,7 +214,7 @@ for c in conds:
                "n_instances": n_inst, "n_images_with_boxes": sum(1 for x in per_image if x.get("bbox_n_inst", 0) > 0)}
     if c == "subject" and "subject" in sc: adh = {"dino": mean("subject_dino"), "clip_i": mean("subject_clip_i"), "clip_t": mean("subject_clip_t")}
     records.append({"method": a.method, "controller": a.controller, "condition": c, "split": a.split, "res": a.res,
-                    "native_res": native, "adherence": adh, "quality": quality, "n": len(per_image),
+                    "native_res": native, "subset": "subset500" if a.subset500 else "", "adherence": adh, "quality": quality, "n": len(per_image),
                     "gen_dir": str(gen), "time_s": round(time.time() - t0, 1)})
 json.dump(records, open(out_dir / f"{file_tag}.json", "w"), indent=1)
 keys = sorted({k for x in per_image for k in x}, key=lambda k: (k != "sample_id", k))
