@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pid_k16",
+  "controller": "omini",
+  "condition": "subject",
+  "split": "dreambench750",
+  "res": 512,
+  "native_res": 2048,
+  "adherence": {
+   "dino": 0.5220579432149728,
+   "clip_i": 0.7266346625884375,
+   "clip_t": 0.2600459983150164
+  },
+  "quality": {
+   "musiq": 75.86256442260742,
+   "niqe": 4.12617688203733,
+   "maniqa": 0.6245168232520422,
+   "qalign": 4.559888020833333
+  },
+  "n": 750,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/subject/pid@16",
+  "time_s": 267.9
+ }
+]

@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pid_k28",
+  "controller": "omini",
+  "condition": "subject",
+  "split": "dreambench750",
+  "res": 512,
+  "native_res": 2048,
+  "adherence": {
+   "dino": 0.5665382053342958,
+   "clip_i": 0.7684444104433059,
+   "clip_t": 0.24215323916077613
+  },
+  "quality": {
+   "musiq": 75.2887466583252,
+   "niqe": 5.0133989608627525,
+   "maniqa": 0.6201548341711363,
+   "qalign": 4.59108203125
+  },
+  "n": 750,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/subject/pid@28",
+  "time_s": 243.1
+ }
+]

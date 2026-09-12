@@ -1,0 +1,24 @@
+[
+ {
+  "method": "vae",
+  "controller": "omini",
+  "condition": "subject",
+  "split": "dreambench750",
+  "res": 512,
+  "native_res": 512,
+  "adherence": {
+   "dino": 0.5673051388214032,
+   "clip_i": 0.7745820749998092,
+   "clip_t": 0.2434489883184433
+  },
+  "quality": {
+   "musiq": 75.16821464538575,
+   "niqe": 5.064143076136107,
+   "maniqa": 0.5720733951727549,
+   "qalign": 4.633834635416667
+  },
+  "n": 750,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/subject/vae@28",
+  "time_s": 228.9
+ }
+]
