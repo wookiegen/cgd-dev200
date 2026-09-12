@@ -162,3 +162,9 @@ with the 2048 condition (the difference = the value of condition resolution).
   `bench/build_div8k1k.py`, `bench/run/run_hires_validation.sh`; results `results/bench/div8k1k/`, `BASELINES.md` Section F2. It runs
   automatically after the teacher block, followed by the native-route baseline (`bench/run/run_native_route.sh`, subset500, three
   controllers generating at 2048 + VAE, canny + depth). Nothing changes for a CGD variant: the dev-200 gate and `eval_variant.py` stay.
+- **Native route on dev-200 (2026-09-12 13:29 KST): OminiControl generating at 2048 directly COLLAPSES** (near-black textures tracing the
+  condition; MUSIQ 35, F1 0.04, 174 s/img); at 1024 the same script produces a normal image. The row stays in the README table as the
+  honest result of that route; the subset500 native-route baseline with all three controllers (`run/run_native_route.sh`) is still queued
+  and will show whether EasyControl / the ControlNet survive 2048. **Teacher rows landed:** the undistilled teacher scores slightly BELOW
+  the student in adherence at every K (final latent 0.7636 / 0.7114 vs 0.7781 / 0.7253; K=24 0.6938 / 0.6654 vs 0.7133 / 0.6620) at
+  17.5 s vs 0.96 s per decode; a teacher-based CGD is gated against the TEACHER rows (README table, BASELINES.md Section E).
