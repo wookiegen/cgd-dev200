@@ -75,15 +75,18 @@ ControlNet 0.305 (vs vanilla PiD K=24 native 0.669 / 0.766 / 0.649). Tool: `benc
 
 ## 5. Conditions for CGD training and inference
 
-- **The condition is always the 512 map** the generator received. The decoder gets the same map (pillar "condition twice"). If a variant
-  injects at the pixel stream, resize the 512 map to the working resolution inside the decoder: NEAREST for edges / masks, BICUBIC for depth.
-  A 4 px thick edge at 2048 is the honest representation: the condition says "an edge lies in this condition pixel", not where inside it.
+- **Two condition inputs, both reported (v1.12).** CGD is evaluated twice on the same latents: with the 512 map the generator received
+  (`<variant>_c512`; the like-for-like ablation against vanilla PiD) and with the 2048 map (`<variant>_c2048`; the input only a pixel-space
+  decoder can use). Produce both decodes and run `eval_variant.py` on each. Conditions are never resized between scales: the 512 map is Canny
+  of the 512 image, the 2048 map is Canny of the 2048 reference (same content, two scales, F1 0.92 between them). Inside the decoder you may
+  resize the 512 map to the working resolution (NEAREST for edges / masks, BICUBIC for depth); a 4 px thick edge at 2048 then means "an edge
+  lies in this condition pixel".
 - **Training triplets** (`bench/make_targets.py`, paper Method "Training the Conditioned Decoder"): input = the clean FLUX latent of the
   training crop re-noised to the truncation level; target = the 2048 vanilla-PiD decode of the clean latent; condition = extracted FROM THE
   TARGET at the 512 view (Canny / DPT on the INTER_AREA downsample of the target), so target and condition agree by construction (F1 = 1 at
   the matched view). Segmentation keeps the ground-truth mask (PiD's deviations are below mask scale).
-- **Do NOT** extract a thin edge map from the 2048 target and feed it as the condition: it is more information than the generator received,
-  and no such map exists at test time (train / test mismatch).
+- The 2048 form of the condition is legitimate input for the `_c2048` row (and for training, mixed 50/50 with the 512 form); just do not
+  label a decode that used the 2048 map as the `_c512` row, since that row is the like-for-like ablation.
 - **Allowed**: an auxiliary loss against the target's own 2048 edges. The target is ground truth; only the conditioning INPUT must stay at 512.
 - The loss is on the 2048 pixels of the target, so nothing is lost in supervision; only the conditioning input is coarse, as it is at test time.
 - Training data: MultiGen-20M train subset (canny, depth) and ADE20K train (seg); bounding-box layout was dropped from the paper on

@@ -44,12 +44,14 @@ bootstrap 95% 신뢰구간, 그리고 게이트 PASS / FAIL을 출력합니다 (
 
 ## 4. CGD 학습 시 condition 규칙
 
-- 기본 설정의 condition은 512 map입니다. 학습 타깃은 2048 PiD 디코드이고, condition은 타깃을 512로 내려서 뽑습니다 (타깃과 정확히 맞음).
-  디코더 내부에서 필요하면 늘려서 쓰세요 (edge는 nearest, depth는 bicubic).
+- 학습 타깃은 2048 PiD 디코드이고, condition은 두 형태를 저장합니다: 타깃을 512로 내려서 뽑은 것과 타깃 자체(2048)에서 뽑은 것. 둘을
+  반반 섞어 학습하면 한 디코더가 둘 다 받습니다. 디코더 내부에서 512 map을 늘려 써야 하면 edge는 nearest, depth는 bicubic입니다.
 - native-condition 설정을 위해 `make_targets.py`는 타깃의 2048 Canny(`conditions/canny2048`)도 저장합니다. 학습 때 512 형태와 2048 형태를
   예시마다 반반 섞으면 하나의 디코더가 둘 다 받습니다.
-- 기본 설정을 평가할 때 2048에서 뽑은 얇은 edge를 condition으로 넣으면 안 됩니다. 생성기가 받은 것보다 많은 정보이고 그 설정에는 없는
-  입력입니다. 타깃의 2048 edge를 보조 loss로 쓰는 것은 괜찮습니다.
+- **CGD는 두 가지 condition으로 모두 평가합니다.** 같은 latent를 512 condition으로 디코딩한 결과(`<이름>_c512`, vanilla PiD와의 동일 조건
+  비교)와 2048 condition으로 디코딩한 결과(`<이름>_c2048`, pixel-space 디코더만 쓸 수 있는 입력) 둘 다 내고 둘 다 채점하세요. condition은
+  스케일 간에 리사이즈하지 않고 각 스케일에서 다시 뽑은 것입니다 (edge map은 리사이즈하면 망가짐). 2048 condition으로 디코딩한 결과를
+  `_c512` 행으로 표기하지만 마세요.
 
 ## 5. PiD는 두 가지입니다
 
