@@ -27,25 +27,34 @@ ap.add_argument("--split", required=True, choices=["multigen5k", "ade20k_val2k",
 ap.add_argument("--shard", type=int, default=0); ap.add_argument("--nshards", type=int, default=1)
 ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--no-pid", action="store_true"); ap.add_argument("--no-vae", action="store_true")
-ap.add_argument("--steps", type=int, default=4); ap.add_argument("--seed", type=int, default=0)
-ap.add_argument("--pid-ckpt-type", default="2k")
+ap.add_argument("--steps", type=int, default=None, help="PiD steps (default 4 student, 25 teacher)"); ap.add_argument("--seed", type=int, default=0)
+ap.add_argument("--cfg", type=float, default=None, help="PiD CFG (default 1.0 student, 5.0 teacher)")
+ap.add_argument("--pid-ckpt-type", default="2k", help="2k = released distilled student; teacher = undistilled v1.5 (BENCHMARK v1.11)")
+ap.add_argument("--out-name", default=None, help="PiD round-trip folder name (default pid_roundtrip; teacher -> pidt_roundtrip)")
+ap.add_argument("--subset500", action="store_true", help="only the manifest rows with subset500 == 1")
 a = ap.parse_args()
+TEACHER = a.pid_ckpt_type == "teacher"
+steps = a.steps if a.steps is not None else (25 if TEACHER else 4)
+cfg = a.cfg if a.cfg is not None else (5.0 if TEACHER else 1.0)
+name = a.out_name or ("pidt_roundtrip" if TEACHER else "pid_roundtrip")
 
 rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))
+if a.subset500:
+    rows = [r for r in rows if r.get("subset500") == "1"]
 rows = [r for i, r in enumerate(rows) if i % a.nshards == a.shard][: a.limit or None]
 img_dir = OUT_ROOT / a.split / "images"
 d_lat = OUT_ROOT / "latents" / "ref" / a.split
 d_vae = OUT_ROOT / "outputs" / "ref" / "vae_roundtrip" / a.split
-d_pid = OUT_ROOT / "outputs" / "ref" / "pid_roundtrip" / a.split
-d_pid512 = OUT_ROOT / "outputs" / "ref" / "pid_roundtrip_512" / a.split
+d_pid = OUT_ROOT / "outputs" / "ref" / name / a.split
+d_pid512 = OUT_ROOT / "outputs" / "ref" / f"{name}_512" / a.split
 for d in [d_lat, d_vae, d_pid, d_pid512]:
     d.mkdir(parents=True, exist_ok=True)
-log = OUT_ROOT / "outputs" / "ref" / f"log_{a.split}_shard{a.shard}.jsonl"
+log = OUT_ROOT / "outputs" / "ref" / f"log_{name}_{a.split}_shard{a.shard}.jsonl"
 
 from flux_pid import FluxVAE, PiD  # noqa: E402  (imports torch/diffusers; PiD chdirs into its root)
 vae = FluxVAE()
 pid = None if a.no_pid else PiD(ckpt_type=a.pid_ckpt_type)
-print(f"{a.split} shard {a.shard}/{a.nshards}: {len(rows)} rows; vae={'yes'} pid={'no' if a.no_pid else pid.ckpt.experiment}", flush=True)
+print(f"{a.split} shard {a.shard}/{a.nshards}: {len(rows)} rows; vae={'yes'} pid={'no' if a.no_pid else pid.experiment} ({steps} steps, cfg {cfg}) -> {name}", flush=True)
 
 t0 = time.time(); n = 0
 for r in rows:
@@ -67,7 +76,7 @@ for r in rows:
         Image.fromarray(y).save(d_vae / f"{s}.png")
     if need_pid:
         torch.cuda.reset_peak_memory_stats(); torch.cuda.synchronize(); t1 = time.time()
-        y = pid.decode(lat, [r["caption"]], sigma=0.0, steps=a.steps, seed=a.seed)[0]
+        y = pid.decode(lat, [r["caption"]], sigma=0.0, steps=steps, seed=a.seed, cfg=cfg)[0]
         torch.cuda.synchronize(); rec["t_pid_s"] = time.time() - t1; rec["pid_peak_gb"] = torch.cuda.max_memory_allocated() / 1e9
         Image.fromarray(y).save(d_pid / f"{s}.png")
         cv2.imwrite(str(d_pid512 / f"{s}.png"), cv2.cvtColor(cv2.resize(y, (512, 512), interpolation=cv2.INTER_AREA), cv2.COLOR_RGB2BGR))

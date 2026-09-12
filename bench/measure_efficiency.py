@@ -32,6 +32,8 @@ results = []
 if a.only_pid:
     import os
     results = [r for r in json.load(open(a.out)) if r["pipeline"] == "FLUX + VAE"] if os.path.exists(a.out) else []
+    for r in results:            # the stored FLUX rows carry the 28-step latency; recover gen_s for the PiD rows if it was not saved
+        r.setdefault("gen_s", (r.get("latency_s") or 0) - (r.get("vae_s") or 0) if r.get("latency_s") else None)
     print(f"--only-pid: kept {len(results)} FLUX + VAE rows", flush=True)
 
 
@@ -94,26 +96,27 @@ if pipe is not None:
     del pipe
 torch.cuda.empty_cache()
 
-# ---- PiD decode: 512 -> 2048 (2k ckpt), 1024 -> 4096 (2kto4k v1.5 ckpt)
+# ---- PiD decode: 512 -> 2048 (2k student, 4 steps), 1024 -> 4096 (2kto4k v1.5 student), 512 -> 2048 (undistilled TEACHER, 25 steps, CFG 5; BENCHMARK v1.11)
 from flux_pid import PiD  # noqa: E402
-for ckpt, gres, out_res in [("2k", 512, 2048), ("2kto4k_v1pt5", 1024, 4096)]:
+for ckpt, gres, out_res, dsteps, dcfg, label in [("2k", 512, 2048, 4, 1.0, "FLUX + PiD"), ("2kto4k_v1pt5", 1024, 4096, 4, 1.0, "FLUX + PiD"),
+                                                  ("teacher", 512, 2048, 25, 5.0, "FLUX + PiD teacher")]:
     try:
         pid = PiD(ckpt_type=ckpt)
         lat = lat_cache.get(gres)
         if lat is None:
             lat = torch.randn(1, 16, gres // 8, gres // 8).half()
         with torch.no_grad():
-            _ = pid.decode(lat, [caps[0]], steps=4)
+            _ = pid.decode(lat, [caps[0]], steps=dsteps, cfg=dcfg)
             ts, ms = [], []
             for i in range(1, a.n + 1):
-                (_, t, m) = timed(lambda: pid.decode(lat, [caps[i]], steps=4)); ts.append(t); ms.append(m)
+                (_, t, m) = timed(lambda: pid.decode(lat, [caps[i]], steps=dsteps, cfg=dcfg)); ts.append(t); ms.append(m)
         gen_rows = {r["gen_steps"]: r for r in results if r["pipeline"] == "FLUX + VAE" and r["gen_res"] == gres and r.get("gen_s")}
         for K in [28, 24, 16]:
             g = gen_rows.get(K)
-            record(pipeline="FLUX + PiD", output=out_res, gen_res=gres, gen_steps=K, dec_steps=4, pid_ckpt=pid.ckpt.experiment,
+            record(pipeline=label, output=out_res, gen_res=gres, gen_steps=K, dec_steps=dsteps, dec_cfg=dcfg, pid_ckpt=pid.experiment,
                    gen_s=g["gen_s"] if g else None, dec_s=statistics.median(ts), latency_s=(g["gen_s"] if g else float("nan")) + statistics.median(ts),
                    peak_mem_gb=max(([g["peak_mem_gb"]] if g else [0]) + ms), dec_peak_mem_gb=max(ms), n=len(ts))
         del pid; torch.cuda.empty_cache()
     except Exception as e:  # noqa: BLE001
-        record(pipeline="FLUX + PiD", output=out_res, gen_res=gres, gen_steps=None, dec_steps=4, latency_s=None, peak_mem_gb=None, n=0, note=f"failed: {type(e).__name__}: {str(e)[:100]}")
+        record(pipeline=label, output=out_res, gen_res=gres, gen_steps=None, dec_steps=dsteps, latency_s=None, peak_mem_gb=None, n=0, note=f"failed: {type(e).__name__}: {str(e)[:100]}")
 print("wrote", a.out)
