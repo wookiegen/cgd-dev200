@@ -13,7 +13,7 @@ What exists on the group server, what is running unattended, what remains. Paths
 | vanilla PiD decodes of the OminiControl latents at K = 28 / 24 / 16 | `outputs/omini/<cond>/pid@<K>/`, `pid@<K>_512/` | done + SCORED (block filled in the paper 2026-09-11) |
 | EasyControl latents (canny, depth; seg on ade20k_val2k) and FLUX ControlNet latents (canny, depth) | `latents/<easycontrol,fluxcn>/<cond>/`, `outputs/<ctrl>/<cond>/vae@28/` | done (all five caches) |
 | their PiD decodes at K | `outputs/<ctrl>/<cond>/pid@<K>/` | fluxcn: done + SCORED (block filled in the paper 2026-09-12 02:30 KST; canny 0.656 VAE / 0.655 PiD K=24, depth RMSE 29.9 / 29.9, FID 16.5 / 16.6); easycontrol: done + SCORED (block filled in the paper 2026-09-12 06:00 KST; canny 0.810 VAE / 0.802 PiD K=24, depth RMSE 22.5 / 22.3, seg mIoU 39.3 / 39.6, FID 20.9 / 18.2) |
-| CGD training triplets | `train/<set>/` | NOT built (`make_targets.py`; ~12 GPU-hours; waits for a slot after the baselines) |
+| CGD training triplets | `train/<set>/` | NOT built (`make_targets.py`; measured 2026-09-12: 1.3 s/row at `--batch 8`, so ~174k rows = ~60 GPU-hours, ~16 h on 4 GPUs; 24 val rows of multigen_train30 exist from the timing run) |
 
 Completion markers: `done_ref_all.txt`, `done_latents_omini_all.txt`, `done_omini_block.txt`, `done_latents_<ctrl>_<cond>.txt`, `done_easycontrol_block.txt`, `done_fluxcn_block.txt`, `done_queue.txt`. Status lines: `omini_block_status.txt`, `queue_status.txt`, `<ctrl>_block_status.txt`.
 
@@ -53,7 +53,7 @@ Nothing running at hand-off (2026-09-12 06:00 KST). All three controller blocks 
 | 1 | All three controller blocks filled (2026-09-12). Open: which controller feeds the seg group of tab:recon (row 11 below; EasyControl rows sit in a `%` comment) | user decision | tab:recon seg group |
 | 2 | Train the 3 LoRAs (seg: OminiControl; bbox: OminiControl, EasyControl) with the official recipes on `train/ade20k_train` and `train/coco_train` (drop `blocked`, use `split`), then their latent caches + blocks | ~1 GPU-day each | seg / layout cells of the controller blocks |
 | 3 | Conditioned VAE decoder (the 2x2 archetype): train on the OminiControl latents + conditions, score with the harness | small training job | tab:decoder-conditioning |
-| 4 | CGD training triplets (`make_targets.py`, full COCO train) | ~12 GPU-hours | adapter training data |
+| 4 | CGD training triplets (`make_targets.py`, all three sets, full COCO train) | ~60 GPU-hours (1.3 s/row measured; ~16 h on 4 GPUs) | adapter training data |
 | 5 | Condition-scale sweep for fig:ceiling on dev-200 (`condition_scale` in OminiControl's `generate`) | ~1 GPU-hour | fig:ceiling |
 | 6 | Eyeball the lifted numbers of tab:contextual / tab:subject against the official PDFs | reading | supplementary |
 | 7 | **CGD rows** (every table) and the choice of K (16 or 24; the truncation sweep informs it) | THE METHOD | |
