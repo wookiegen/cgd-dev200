@@ -26,7 +26,7 @@
 - **‡ (double dagger).** 512만 내는 행(VAE decode 등)의 2048 값은 bicubic x4로 키워서 잰 참고값입니다. 보간으로 2048을 만들면 얼마나
   나오는지 보여주는 것이고, native 출력이 아닙니다.
 - **depth, seg, subject**는 스코어러가 내부에서 크기를 맞추므로 해상도에 무관합니다. 512 view 값만 보면 됩니다.
-- **native-condition 설정 (표 B).** 디코더에만 2048 condition을 주는 두 번째 설정입니다. 2048 condition은 진짜 이미지의 PiD round trip에서
+- **c2048 열 (표 A의 세 번째 edge 열).** 2048 출력을 2048 edge map(c2048)에 대해 1px tolerance로 잰 점수이고, 모든 행에 있습니다. 디코더에 2048 condition을 주는 설정은 여기서 강점이 드러납니다. 2048 condition은 진짜 이미지의 PiD round trip에서
   뽑은 Canny이고(`multigen5k/conditions/canny2048`), 그래서 round trip이 기준(1.0)입니다. tolerance는 1px. 여기서 vanilla PiD K=24는
   0.51, 보간 경로는 0.11에서 0.31이므로 condition-aware 디코더의 여지가 가장 큽니다. 생성기 입력은 그대로 512 condition입니다.
 

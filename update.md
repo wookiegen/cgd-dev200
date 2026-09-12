@@ -126,8 +126,8 @@ keep, in addition to the default 512-condition protocol above (which remains the
   Sample one of the two per example (p = 0.5) so ONE decoder accepts a condition at either scale; the 512 form is nearest-upsampled inside
   the decoder when the injection point is at 2048. Section 5 above stays valid for the default protocol: never feed a 2048-extracted map
   when the setting is "512 condition"; in the native-condition setting the 2048 map IS the condition, by definition.
-- **Paper table**: `tab:native-cond` (supplementary): per controller {VAE decode (dagger), vanilla PiD K, CGD with the 512 condition, CGD
-  with the 2048 condition}; the difference between the two CGD rows is the value of condition resolution.
+- **Paper table**: since v1.12 the c2048 score is the THIRD edge column of the MAIN table (512 / c512, 2048 / c512, 2048 / c2048), for every
+  row incl. both CGD rows; the former separate table is gone. `BASELINES.md` Table A has the same three columns.
 
 **Baseline numbers against the native condition (tolerance 1 px at 2048; `results/bench/multigen5k/*.cond2048*.json`):**
 

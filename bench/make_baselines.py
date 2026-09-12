@@ -1,7 +1,7 @@
 """Build BASELINES.md (repo root) + results/bench/baselines.json: the curated baseline numbers a CGD variant has to beat, read from the
 harness records under results/bench/. Re-run after any new record: python bench/make_baselines.py
 
-Sections: A main benchmark (512-generation, condition = 512 map; n = 5000 / 2000), B native-condition setting (condition = 2048 map),
+Sections: A main benchmark (512-generation; three edge columns: 512 / c512, 2048 / c512, 2048 / c2048; n = 5000 / 2000),
 C DreamBench subject rows, D condition-scale sweep (dev-200), E dev-200 gate, F student vs teacher (subset500, when present),
 G efficiency, H the rule for "beating" a baseline. Dagger = bicubic x4 upsample of a 512-native output (interpolation route, not native).
 """
@@ -64,51 +64,35 @@ L = ["# BASELINES.md: the numbers a CGD variant has to beat", "",
 
 # ---------------------------------------------------------------- A. main benchmark
 L += ["## A. Main benchmark: 512-generation, condition = the 512 map (canny + depth on multigen5k, n = 5000; seg on ade20k_val2k, n = 2000)", "",
-      "| row | Canny F1 @512 vs c512 (1 px) ↑ | Canny F1 @2048 vs c512 (4 px) ↑ | strict F1 @512 | Depth MSE ↓ | Depth RMSE ↓ | Seg mIoU ↑ | FID ↓ | pFID ↓ | MUSIQ @512 ↑ | MANIQA @512 ↑ | LPIPS vs source ↓ |",
-      "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+      "| row | Canny F1 @512 vs c512 (1 px) ↑ | Canny F1 @2048 vs c512 (4 px) ↑ | Canny F1 @2048 vs c2048 (1 px) ↑ | strict F1 @512 | Depth MSE ↓ | Depth RMSE ↓ | Seg mIoU ↑ | FID ↓ | pFID ↓ | MUSIQ @512 ↑ | MANIQA @512 ↑ | LPIPS vs source ↓ |",
+      "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
 
 
-def row(label, c512, c2048, d512, s512, dagger=None):
+def row(label, c512, c2048, d512, s512, dagger=None, nat=None, nat_dagger=None):
     f2048 = A(c2048, "f1") if c2048 is not None else (dag(dagger) if dagger is not None else "n/a")
-    L.append("| " + " | ".join([label, A(c512, "f1"), f2048, A(c512, "f1_strict"), A(d512, "mse", 1), A(d512, "rmse", 2), A(s512, "miou", 1),
+    fnat = A(nat, "f1") if nat is not None else (dag(nat_dagger) if nat_dagger is not None else "")
+    L.append("| " + " | ".join([label, A(c512, "f1"), f2048, fnat, A(c512, "f1_strict"), A(d512, "mse", 1), A(d512, "rmse", 2), A(s512, "miou", 1),
                                 Q(c512, "fid", 2), Q(c512, "pfid", 2), Q(c512, "musiq", 1), Q(c512, "maniqa", 3), Q(c512, "lpips", 3)]) + " |")
 
 
 M = "multigen5k"; ADE = "ade20k_val2k"
-row("Real image", get(M, "canny", "", "real", 512), None, get(M, "depth", "", "real", 512), get(ADE, "seg", "", "real", 512), dagger=get(M, "canny", "", "real", 2048, via="ref"))
-row("VAE round trip (decode ceiling)", get(M, "canny", "", "vae_roundtrip", 512), None, get(M, "depth", "", "vae_roundtrip", 512), get(ADE, "seg", "", "vae_roundtrip", 512), dagger=get(M, "canny", "", "vae_roundtrip", 2048, via="ref"))
-row("PiD round trip (generative ceiling; 0.80 = practical ceiling of the 2048 column)", get(M, "canny", "", "pid_roundtrip", 512), get(M, "canny", "", "pid_roundtrip", 2048), get(M, "depth", "", "pid_roundtrip", 512), get(ADE, "seg", "", "pid_roundtrip", 512))
+row("Real image", get(M, "canny", "", "real", 512), None, get(M, "depth", "", "real", 512), get(ADE, "seg", "", "real", 512), dagger=get(M, "canny", "", "real", 2048, via="ref"), nat_dagger=get(M, "canny", "", "real", 2048, cond_res=2048, via="ref"))
+row("VAE round trip (decode ceiling)", get(M, "canny", "", "vae_roundtrip", 512), None, get(M, "depth", "", "vae_roundtrip", 512), get(ADE, "seg", "", "vae_roundtrip", 512), dagger=get(M, "canny", "", "vae_roundtrip", 2048, via="ref"), nat_dagger=get(M, "canny", "", "vae_roundtrip", 2048, cond_res=2048, via="ref"))
+row("PiD round trip (generative ceiling; 0.80 = practical ceiling of the 2048 column)", get(M, "canny", "", "pid_roundtrip", 512), get(M, "canny", "", "pid_roundtrip", 2048), get(M, "depth", "", "pid_roundtrip", 512), get(ADE, "seg", "", "pid_roundtrip", 512), nat=get(M, "canny", "", "pid_roundtrip", 2048, cond_res=2048))
 for ctrl, name in CTRL.items():
-    L.append(f"| **{name}** | | | | | | | | | | | |")
-    row(f"&nbsp;&nbsp;+ VAE decode (the controller as published)", get(M, "canny", ctrl, "vae", 512), None, get(M, "depth", ctrl, "vae", 512), get(ADE, "seg", ctrl, "vae", 512), dagger=get(M, "canny", ctrl, "vae", 2048, via="ref"))
+    L.append(f"| **{name}** | | | | | | | | | | | | |")
+    row(f"&nbsp;&nbsp;+ VAE decode (the controller as published)", get(M, "canny", ctrl, "vae", 512), None, get(M, "depth", ctrl, "vae", 512), get(ADE, "seg", ctrl, "vae", 512), dagger=get(M, "canny", ctrl, "vae", 2048, via="ref"), nat_dagger=get(M, "canny", ctrl, "vae", 2048, cond_res=2048, via="ref"))
     for K in (28, 24, 16):
-        row(f"&nbsp;&nbsp;+ vanilla PiD, K={K}" + (" **(the row to beat at K=24)**" if K == 24 else ""), get(M, "canny", ctrl, f"pid_k{K}", 512), get(M, "canny", ctrl, f"pid_k{K}", 2048), get(M, "depth", ctrl, f"pid_k{K}", 512), get(ADE, "seg", ctrl, f"pid_k{K}", 512))
+        row(f"&nbsp;&nbsp;+ vanilla PiD, K={K}" + (" **(the row to beat at K=24)**" if K == 24 else ""), get(M, "canny", ctrl, f"pid_k{K}", 512), get(M, "canny", ctrl, f"pid_k{K}", 2048), get(M, "depth", ctrl, f"pid_k{K}", 512), get(ADE, "seg", ctrl, f"pid_k{K}", 512), nat=get(M, "canny", ctrl, f"pid_k{K}", 2048, cond_res=2048))
         if get(M, "canny", ctrl, f"pidt_k{K}", 512) or get(M, "canny", ctrl, f"pidt_k{K}", 512, subset="subset500"):
             r5 = get(M, "canny", ctrl, f"pidt_k{K}", 512) or get(M, "canny", ctrl, f"pidt_k{K}", 512, subset="subset500")
             sub = "" if get(M, "canny", ctrl, f"pidt_k{K}", 512) else "subset500"
-            row(f"&nbsp;&nbsp;+ vanilla PiD teacher, K={K}" + (f" (n = 500)" if sub else ""), r5, get(M, "canny", ctrl, f"pidt_k{K}", 2048, subset=sub), get(M, "depth", ctrl, f"pidt_k{K}", 512, subset=sub), None)
+            row(f"&nbsp;&nbsp;+ vanilla PiD teacher, K={K}" + (f" (n = 500)" if sub else ""), r5, get(M, "canny", ctrl, f"pidt_k{K}", 2048, subset=sub), get(M, "depth", ctrl, f"pidt_k{K}", 512, subset=sub), None, nat=get(M, "canny", ctrl, f"pidt_k{K}", 2048, cond_res=2048, subset=sub))
 L += ["", "Notes: FID / pFID / no-ref / LPIPS come from the CANNY run of each controller (its depth run is a different set of images). Seg mIoU exists only for "
       "EasyControl (released seg LoRA); OminiControl's seg adapter is optional (red text in the paper). Depth and seg are flat across resolutions by construction "
       "(scorers resize internally). Paired bootstrap 95% CIs on 5000 images are within ±0.003 F1 (`bench/paired_ci.py`).", ""]
 
-# ---------------------------------------------------------------- B. native condition
-L += ["## B. Scored against c2048, the 2048 edge map (multigen5k canny, tolerance 1 px at 2048)", "",
-      "The 2048 condition is Canny of the PiD round trip of the real image (`multigen5k/conditions/canny2048`), so the round trip is the reference (1.0). "
-      "Generator input unchanged (512 map). Score with `harness.py --res 2048 --cond-res 2048`.", "",
-      "| row | Canny F1 @2048 vs c2048 (1 px) ↑ |", "|---|---|"]
-for label, r in [("PiD round trip (reference)", get(M, "canny", "", "pid_roundtrip", 2048, cond_res=2048)),
-                 ("Real image, bicubic x4 ‡", get(M, "canny", "", "real", 2048, cond_res=2048, via="ref")),
-                 ("VAE round trip, bicubic x4 ‡", get(M, "canny", "", "vae_roundtrip", 2048, cond_res=2048, via="ref"))]:
-    L.append(f"| {label} | {A(r, 'f1')} |")
-for ctrl, name in CTRL.items():
-    L.append(f"| **{name}** | |")
-    L.append(f"| &nbsp;&nbsp;+ VAE decode, bicubic x4 ‡ | {A(get(M, 'canny', ctrl, 'vae', 2048, cond_res=2048, via='ref'), 'f1')} |")
-    for K in (28, 24, 16):
-        L.append(f"| &nbsp;&nbsp;+ vanilla PiD, K={K}{' **(to beat)**' if K == 24 else ''} | {A(get(M, 'canny', ctrl, f'pid_k{K}', 2048, cond_res=2048), 'f1')} |")
-        rt = get(M, "canny", ctrl, f"pidt_k{K}", 2048, cond_res=2048) or get(M, "canny", ctrl, f"pidt_k{K}", 2048, cond_res=2048, subset="subset500")
-        if rt:
-            L.append(f"| &nbsp;&nbsp;+ vanilla PiD teacher, K={K} | {A(rt, 'f1')} |")
-L.append("")
+# (former Table B, the c2048 scores, is now the third edge column of Table A; v1.12)
 
 # ---------------------------------------------------------------- C. subject
 L += ["## C. Subject (DreamBench, 750 pairs, OminiControl subject LoRA, 512 view)", "", "| row | DINO ↑ | CLIP-I ↑ | CLIP-T ↑ | MUSIQ ↑ |", "|---|---|---|---|---|"]
@@ -157,8 +141,8 @@ L += ["## H. What \"beating the baseline\" means", "",
       "1. Decode the SAME cached latents (`latents/<controller>/<condition>/<sid>.pt`, x_0 + x_t@24 + x_t@16) at the same truncation point K as the row you compare with.",
       "2. Score with `python bench/eval_variant.py --name <yourname> --gen-dir <dir of 2048 PNGs> --controller omini --condition canny --k 24` "
       "(runs the harness at the 512 view and at native 2048, both condition definitions, and prints the deltas and paired CIs against this file).",
-      "3. Pass = tolerant canny F1 higher than vanilla PiD at the same K at BOTH the 512 view and native 2048, with MUSIQ not lower and LPIPS not worse; "
-      "depth RMSE not worse; and, if you use the 2048 condition, the native-condition F1 (Section B) is your extra headroom.",
+      "3. Pass = tolerant canny F1 higher than vanilla PiD at the same K at BOTH the 512 view and native 2048 (vs c512), with MUSIQ not lower and LPIPS not worse; "
+      "depth RMSE not worse. The third edge column (2048 vs c2048, 1 px) is where a 2048-condition decode shows its extra headroom.",
       "4. Compare a teacher-based CGD against the TEACHER rows (Section F) for the exact ablation; the student rows are the deployed decoder.",
       "5. Never report dev-200 numbers as paper numbers; the paper uses the full sets (Sections A-C)."]
 (ROOT / "BASELINES.md").write_text("\n".join(L) + "\n")
