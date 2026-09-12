@@ -11,7 +11,7 @@ if [ "$COND" = "depth" ]; then
   python precompute_real_depth.py --set multigen_train30 2>&1 | grep -v -i "warning|pynvml" > $LOG/condvae_depth_precompute.log
   echo "$(date '+%F %T') depth conditions done; training" >> $LOG/condvae_${COND}_status.txt
 fi
-python train_cond_vae.py --condition $COND --steps $STEPS --batch 8 --accum 1 2>&1 | grep -v -i -E "warning|pynvml" > $LOG/condvae_${COND}_train.log
+python train_cond_vae.py --condition $COND --steps $STEPS --batch 8 --accum 1 ${EXTRA:-} 2>&1 | grep -v -i -E "warning|pynvml" > $LOG/condvae_${COND}_train.log   # EXTRA e.g. "--freeze-decoder --lr-branch 1e-4"
 echo "$(date '+%F %T') training done; decoding" >> $LOG/condvae_${COND}_status.txt
 python decode_cond_vae.py --condition $COND --controller omini 2>&1 | grep -v -i -E "warning|pynvml" > $LOG/condvae_${COND}_decode.log
 echo "$(date '+%F %T') decode done; scoring" >> $LOG/condvae_${COND}_status.txt
