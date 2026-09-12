@@ -28,6 +28,7 @@ ap.add_argument("--controller", default="omini"); ap.add_argument("--condition",
 ap.add_argument("--k", type=int, default=24, help="truncation point of the latents you decoded (28 = full latent)")
 ap.add_argument("--subset500", action="store_true"); ap.add_argument("--skip-noref", action="store_true"); ap.add_argument("--teacher", action="store_true", help="also compare with the teacher rows")
 ap.add_argument("--n-boot", type=int, default=5000)
+ap.add_argument("--report-only", action="store_true", help="skip the harness runs and rebuild the report from existing records")
 a = ap.parse_args()
 RESERVED = {"vae", "real", "condvae"}
 assert a.name not in RESERVED and not a.name.startswith(("pid_k", "pidt_k")) and not a.name.endswith("_roundtrip"), "reserved method name"
@@ -52,11 +53,12 @@ def harness(res, metrics=None, cond_res=None):
     subprocess.run(cmd, check=True)
 
 
-m512 = "adherence,recon,fid" if a.skip_noref else "adherence,noref,recon,fid"
-harness(512, m512)
-harness(2048, "adherence" if a.skip_noref else "adherence,noref")
-if a.condition == "canny":
-    harness(2048, "adherence", cond_res=2048)
+if not a.report_only:
+    m512 = "adherence,recon,fid" if a.skip_noref else "adherence,noref,recon,fid"
+    harness(512, m512)
+    harness(2048, "adherence" if a.skip_noref else "adherence,noref")
+    if a.condition == "canny":
+        harness(2048, "adherence", cond_res=2048)
 
 
 def load_records(d):
@@ -84,16 +86,29 @@ def pick(recs, method, res, cond_res=512, allow_full=True):
     return r
 
 
-def per_image(recs_dir, method, res, cond_res=512, subset=sub):
-    pat = f"{a.controller}.{method}@{res}*{'.subset500' if subset else ''}{'.cond2048' if cond_res == 2048 else ''}_per_image.csv"
-    fs = [f for f in glob.glob(str(recs_dir / split / pat)) if (".cond2048" in f) == (cond_res == 2048) and ((".subset500" in f) == bool(subset))]
-    fs = [f for f in fs if ".vlm" not in f]
+KEYCOL = {"canny": "canny_f1", "depth": "depth_rmse", "seg": "seg_miou_img", "subject": "subject_dino"}[a.condition]
+
+
+def per_image(recs_dir, method, res, cond_res=512, subset=sub, col=None):
+    """Per-image values of one column from the harness CSV of (method, res, condition, cond_res, subset); falls back to the full-set file."""
+    col = col or KEYCOL
+    pat = f"{a.controller}.{method}@{res}*_per_image.csv"
+    fs = [f for f in glob.glob(str(recs_dir / split / pat))
+          if (".cond2048" in f) == (cond_res == 2048) and ((".subset500" in f) == bool(subset)) and ".vlm" not in f and f".{a.condition}" in Path(f).name]
     if not fs and subset:
-        return per_image(recs_dir, method, res, cond_res, subset="")
+        return per_image(recs_dir, method, res, cond_res, subset="", col=col)
     if not fs:
         return {}
-    col = {"canny": "canny_f1", "depth": "depth_rmse", "seg": "seg_miou_img", "subject": "subject_dino"}[a.condition]
     return {r["sample_id"]: float(r[col]) for r in csv.DictReader(open(fs[0])) if r.get(col) not in (None, "", "nan")}
+
+
+def paired(method_b, res, cond_res=512, col=None):
+    """(variant mean, baseline mean, n) over the SAME images; None if either side lacks per-image data."""
+    v = per_image(OUT, a.name, res, cond_res, col=col); b = per_image(BASE, method_b, res, cond_res, col=col)
+    ids = sorted(set(v) & set(b))
+    if len(ids) < 20:
+        return None
+    return float(np.mean([v[i] for i in ids])), float(np.mean([b[i] for i in ids])), len(ids)
 
 
 def ci(v, b):
@@ -126,32 +141,51 @@ def line(label, recs, method):
 for label, m in rows:
     lines.append(line(label, B, m))
 lines.append(line(f"**{a.name}**", V, a.name))
-lines += ["", "## Verdict against vanilla PiD at the same K (paired on the same images)", ""]
-v5, v20 = pick(V, a.name, 512), pick(V, a.name, 2048); b5, b20 = pick(B, f"pid_k{a.k}", 512), pick(B, f"pid_k{a.k}", 2048)
+if a.subset500:
+    lines.append(""); lines.append("Baseline rows above are the full-set records (n = 5000); the variant is n = 500, so its FID / pFID are NOT comparable with theirs "
+                                    "(FID grows with fewer samples). The verdict below uses PAIRED means over the same 500 images.")
+lines += ["", f"## Verdict against vanilla PiD at the same K = {a.k} (paired on the same images)", ""]
+PB = f"pid_k{a.k}"
+v5, v20 = pick(V, a.name, 512), pick(V, a.name, 2048); b5, b20 = pick(B, PB, 512), pick(B, PB, 2048)
 ok = []
 
 
-def check(name, val, ref, higher=True, tol=0.0):
+def check(name, val, ref, higher=True, tol=0.0, n=None):
     if val is None or ref is None:
         lines.append(f"- {name}: n/a"); return
     good = (val >= ref - tol) if higher else (val <= ref + tol)
     if tol == 0.0:
         good = (val > ref) if higher else (val < ref)
-    ok.append(good); lines.append(f"- {name}: {val:.4f} vs {ref:.4f} -> {'PASS' if good else 'FAIL'}")
+    ok.append(good); lines.append(f"- {name}: {val:.4f} vs {ref:.4f}{f' (paired, n = {n})' if n else ''} -> {'PASS' if good else 'FAIL'}")
+
+
+def vals(res, col, cond_res=512, quality=False):
+    """paired means when per-image data exist on both sides, else the record means"""
+    p = paired(PB, res, cond_res, col=col)
+    if p:
+        return p
+    rv, rb = pick(V, a.name, res, cond_res), pick(B, PB, res, cond_res)
+    src = "quality" if quality else "adherence"
+    k = col.split("_", 1)[1] if "_" in col else col
+    return (rv and rv[src].get(k), rb and rb[src].get(k), None)
 
 
 km, direction = keymetric
-check(f"{km} @512 ({direction} better, strict)", v5 and v5["adherence"].get(km), b5 and b5["adherence"].get(km), direction == "higher")
-check(f"{km} @2048 ({direction} better)", v20 and v20["adherence"].get(km), b20 and b20["adherence"].get(km), direction == "higher")
+x = vals(512, KEYCOL); check(f"{km} @512 ({direction} better, strict inequality)", x[0], x[1], direction == "higher", n=x[2])
+x = vals(2048, KEYCOL); check(f"{km} @2048 ({direction} better)", x[0], x[1], direction == "higher", n=x[2])
 if not a.skip_noref:
-    check("MUSIQ @512 not lower (tol 0.5)", v5 and v5["quality"].get("musiq"), b5 and b5["quality"].get("musiq"), True, tol=0.5)
-check("LPIPS vs source not worse (tol 0.01)", v5 and v5["quality"].get("lpips"), b5 and b5["quality"].get("lpips"), False, tol=0.01)
+    x = vals(512, "musiq", quality=True); check("MUSIQ @512 not lower (tol 0.5)", x[0], x[1], True, tol=0.5, n=x[2])
+x = vals(512, "lpips", quality=True); check("LPIPS vs source not worse (tol 0.01)", x[0], x[1], False, tol=0.01, n=x[2])
 for res, cond_res in [(512, 512), (2048, 512), (2048, 2048)]:
     if cond_res == 2048 and a.condition != "canny":
         continue
-    c = ci(per_image(OUT, a.name, res, cond_res), per_image(BASE, f"pid_k{a.k}", res, cond_res))
+    c = ci(per_image(OUT, a.name, res, cond_res), per_image(BASE, PB, res, cond_res))
     if c:
         lines.append(f"- paired bootstrap, {km} @{res}{' vs 2048 cond' if cond_res == 2048 else ''}: variant minus PiD = {c[0]:+.4f}, 95% CI [{c[1]:+.4f}, {c[2]:+.4f}], n = {c[3]}")
+if a.teacher:
+    t = paired(f"pidt_k{a.k}", 512); t2 = paired(f"pidt_k{a.k}", 2048)
+    if t:
+        lines.append(f"- vs TEACHER K={a.k} (paired): {km} @512 {t[0]:.4f} vs {t[1]:.4f}" + (f"; @2048 {t2[0]:.4f} vs {t2[1]:.4f}" if t2 else ""))
 lines.append(""); lines.append("**GATE: " + ("PASS" if ok and all(ok) else "FAIL") + "** (all criteria above)" if ok else "**GATE: incomplete**")
 lines.append(""); lines.append("Baselines: BASELINES.md (regenerate with bench/make_baselines.py). Protocol: update.md.")
 (OUT / "REPORT.md").write_text("\n".join(lines) + "\n")
