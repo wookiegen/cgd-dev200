@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pidt_k16",
+  "controller": "omini",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "mse": 997.0830566264207,
+   "rmse": 29.115766817105012
+  },
+  "quality": {
+   "musiq": 72.08599935150147,
+   "niqe": 4.339190052322132,
+   "maniqa": 0.3517027317881584,
+   "qalign": 4.58100390625
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/depth/pidt@16",
+  "time_s": 433.6
+ }
+]

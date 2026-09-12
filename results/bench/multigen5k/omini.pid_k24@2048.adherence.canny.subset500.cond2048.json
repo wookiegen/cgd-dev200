@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pid_k24",
+  "controller": "omini",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "f1": 0.5100905437374091,
+   "f1_strict": 0.25959676216685273,
+   "tol_px": 1,
+   "cond_res": 2048,
+   "precision": 0.4418180562343483,
+   "recall": 0.678060755173924,
+   "edge_density": 0.10892044544219971
+  },
+  "quality": {},
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/pid@24",
+  "time_s": 95.7
+ }
+]

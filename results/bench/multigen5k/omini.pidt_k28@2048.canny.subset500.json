@@ -1,0 +1,29 @@
+[
+ {
+  "method": "pidt_k28",
+  "controller": "omini",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "f1": 0.7202830890448788,
+   "f1_strict": 0.21825169564782204,
+   "tol_px": 4,
+   "cond_res": 512,
+   "precision": 0.6949938962430517,
+   "recall": 0.8166692473273749,
+   "edge_density": 0.08374863243103027
+  },
+  "quality": {
+   "musiq": 71.39993537139893,
+   "niqe": 5.06727726446767,
+   "maniqa": 0.3484318879544735,
+   "qalign": 4.3944296875
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/pidt@28",
+  "time_s": 422.7
+ }
+]
