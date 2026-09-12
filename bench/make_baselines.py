@@ -3,7 +3,7 @@ harness records under results/bench/. Re-run after any new record: python bench/
 
 Sections: A main benchmark (512-generation; three edge columns: 512 / c512, 2048 / c512, 2048 / c2048; n = 5000 / 2000),
 C DreamBench subject rows, D condition-scale sweep (dev-200), E dev-200 gate, F student vs teacher (subset500, when present),
-F2 LSDIR validation (when present), G efficiency, H the rule for "beating" a baseline. Dagger = bicubic x4 upsample of a 512-native output (interpolation route, not native).
+F2 DIV8K real high-resolution validation (when present), G efficiency, H the rule for "beating" a baseline. Dagger = bicubic x4 upsample of a 512-native output (interpolation route, not native).
 """
 import csv
 import glob
@@ -128,10 +128,10 @@ if has_t:
                          f"{A(get(M, 'canny', 'omini', f'{who}_k{K}', 2048, cond_res=2048, subset='subset500'), 'f1')} | {A(get(M, 'depth', 'omini', f'{who}_k{K}', 512, subset='subset500'), 'rmse', 2)} | {Q(r, 'musiq')} | {Q(r, 'lpips', 3)} |")
     L.append("")
 
-# ---------------------------------------------------------------- F2. LSDIR real high-resolution validation (v1.13; when present)
-LS = "lsdir1k"
+# ---------------------------------------------------------------- F2. DIV8K real high-resolution validation (v1.13; when present)
+LS = "div8k1k"
 if any(k[0] == LS for k in recs):
-    L += ["## F2. LSDIR validation of the c2048 column on REAL 2048 photographs (lsdir1k, OminiControl canny; the real image is the reference at 1.0)", "",
+    L += ["## F2. Validation of the c2048 column on REAL 2048 photographs (DIV8K split div8k1k, OminiControl canny; the real image is the reference at 1.0)", "",
           "| row | Canny F1 @512 vs c512 (1 px) ↑ | Canny F1 @2048 vs c512 (4 px) ↑ | Canny F1 @2048 vs c2048 (1 px) ↑ | FID ↓ | pFID ↓ | MUSIQ @512 ↑ | LPIPS ↓ |", "|---|---|---|---|---|---|---|---|"]
 
     def lrow(label, c512, c2048=None, nat=None, dagger=None, nat_dagger=None):

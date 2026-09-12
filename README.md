@@ -24,7 +24,7 @@ Every row decodes the **same cached latent** (FLUX.1-dev + OminiControl canny Lo
 
 The PiD rows are the baselines a CGD variant must beat. Vanilla PiD on the final latent is the paired ablation ("CGD minus the condition"); the early-terminated rows feed PiD a partially-denoised latent through its sigma-aware adapter: 24/28 (σ≈0.24) is PiD's own recommended operating point, 16/28 is a more aggressive truncation.
 
-Queued after the current GPU work (BENCHMARK v1.13): a validation of the c2048 column on 1000 REAL 2048 photographs (LSDIR split `lsdir1k`, where the real image, not the round trip, is the 1.0) and the native-route baseline for all three controllers on subset500; both land in `BASELINES.md` (Sections F2 and A) automatically.
+Queued after the current GPU work (BENCHMARK v1.13): a validation of the c2048 column on 1000 REAL 2048 photographs (DIV8K split `div8k1k`, where the real image, not the round trip, is the 1.0) and the native-route baseline for all three controllers on subset500; both land in `BASELINES.md` (Sections F2 and A) automatically.
 
 ## Results (dev-200, OminiControl canny, seed 0)
 

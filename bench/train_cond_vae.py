@@ -35,6 +35,7 @@ ap.add_argument("--lpips-w", type=float, default=0.5)
 ap.add_argument("--val-every", type=int, default=500); ap.add_argument("--n-val", type=int, default=64)
 ap.add_argument("--out", default=None); ap.add_argument("--resume", action="store_true"); ap.add_argument("--seed", type=int, default=0)
 ap.add_argument("--freeze-decoder", action="store_true", help="train only the condition branch + injections")
+ap.add_argument("--mode", default="add", choices=["add", "mod"], help="injection archetype: add = feature fusion (default), mod = SPADE-style modulation")
 a = ap.parse_args()
 
 dev = "cuda"; torch.manual_seed(a.seed); random.seed(a.seed); np.random.seed(a.seed)
@@ -46,7 +47,7 @@ rows = [r for r in csv.DictReader(open(REPO_BENCH / "train" / a.set / "manifest.
 have = lambda r: (T / "images512" / f"{r['sample_id']}.png").exists() and (cond_dir / f"{r['sample_id']}.png").exists()  # noqa: E731
 train_rows = [r for r in rows if r["split"] == "train" and have(r)]
 val_rows = [r for r in rows if r["split"] == "val" and have(r)][: a.n_val]
-print(f"{a.condition}: {len(train_rows)} train rows, {len(val_rows)} val rows from {T}", flush=True)
+print(f"{a.condition} ({a.mode}, decoder {'frozen' if a.freeze_decoder else 'finetuned'}): {len(train_rows)} train rows, {len(val_rows)} val rows from {T} -> {OUT}", flush=True)
 assert len(train_rows) > 1000, "training crops / conditions missing (run make_targets.py --dry-run and precompute_real_depth.py first)"
 
 
@@ -71,13 +72,13 @@ import pyiqa  # noqa: E402
 vae = AutoencoderKL.from_pretrained("black-forest-labs/FLUX.1-dev", subfolder="vae").to(dev)
 vae.requires_grad_(False); vae.eval()
 SF, SH = vae.config.scaling_factor, vae.config.shift_factor
-model = CondVAEDecoder(vae.decoder, getattr(vae, "post_quant_conv", None)).to(dev)
+model = CondVAEDecoder(vae.decoder, getattr(vae, "post_quant_conv", None), mode=a.mode).to(dev)
 for p in model.dec.parameters():
     p.requires_grad_(not a.freeze_decoder)
-for p in list(model.branch.parameters()) + list(model.inject.parameters()):
+for p in model.cond_parameters():
     p.requires_grad_(True)
 lpips = pyiqa.create_metric("lpips", device=dev, as_loss=True)
-groups = [{"params": list(model.branch.parameters()) + list(model.inject.parameters()), "lr": a.lr_branch}]
+groups = [{"params": model.cond_parameters(), "lr": a.lr_branch}]
 if not a.freeze_decoder:
     groups.append({"params": list(model.dec.parameters()), "lr": a.lr})
 opt = torch.optim.AdamW(groups, weight_decay=1e-2, betas=(0.9, 0.99))

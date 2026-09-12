@@ -2,7 +2,7 @@
 upsampled to 2048 with a bicubic filter and scored with the v1.8 canny scorer at 2048 (tolerance 4 px = one condition pixel; strict kept).
 This is NOT a native output and the harness refuses to upsample by design; the value is a marked REFERENCE (paper symbol $^{\\ddag}$): the
 score of the interpolation route to 2048, a lower bound on what native detail consistent with the same 512 content would reach.
-Writes results/bench/<split>/<controller.>method@2048ref.canny.json (+ _per_image.csv). CPU. Usage (--split lsdir1k for the LSDIR validation):
+Writes results/bench/<split>/<controller.>method@2048ref.canny.json (+ _per_image.csv). CPU. Usage (--split div8k1k for the real high-resolution validation):
   python tools_upsampled_ref.py --method real --gen-dir $CGD_BENCH_ROOT/multigen5k/images
   python tools_upsampled_ref.py --method vae --controller omini --gen-dir $CGD_BENCH_ROOT/outputs/omini/canny/vae@28
 """

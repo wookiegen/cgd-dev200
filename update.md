@@ -154,11 +154,11 @@ with the 2048 condition (the difference = the value of condition resolution).
 - **Native-route baseline QUEUED** (controllers generating at 2048 directly, FLUX at 4 MP + VAE, subset500; red text in the paper).
 - **Do not `pip install` into the container without `--no-deps`** (a plain install upgraded torch to 2.14 on 2026-09-12 and broke new
   processes until restored to 2.5.1+cu121).
-- **LSDIR real high-resolution validation QUEUED (2026-09-12 night; BENCHMARK v1.13).** On multigen5k the second reference map c2048 is
+- **Real high-resolution validation QUEUED (2026-09-12 night; BENCHMARK v1.13; DIV8K, since LSDIR has no images at 2048).** On multigen5k the second reference map c2048 is
   synthesized (Canny of the PiD round trip), so the round trip is its 1.0. To check that the c2048 column behaves the same against a
-  photographic map, a split `lsdir1k` is built from LSDIR (1000 photographs with a short side >= 2048, center crop of the ORIGINAL 2048
-  pixels, INTER_AREA 512 view; c512 = Canny(512 image), c2048 = Canny(real 2048 crop); captions by Qwen2.5-VL-7B). There the REAL image
+  photographic map, a split `div8k1k` is built from DIV8K (1000 photographs with a short side >= 2048, area-downsampled to a short side of 2048 and
+  center-cropped; INTER_AREA 512 view; c512 = Canny(512 image), c2048 = Canny(real 2048 crop); captions by Qwen2.5-VL-7B). There the REAL image
   is the 1.0 of the c2048 column and the PiD round trip is a row. Same generator, decoders, scorers; OminiControl canny only. Scripts:
-  `bench/build_lsdir1k.py`, `bench/run/run_lsdir_validation.sh`; results `results/bench/lsdir1k/`, `BASELINES.md` Section F2. It runs
+  `bench/build_div8k1k.py`, `bench/run/run_hires_validation.sh`; results `results/bench/div8k1k/`, `BASELINES.md` Section F2. It runs
   automatically after the teacher block, followed by the native-route baseline (`bench/run/run_native_route.sh`, subset500, three
   controllers generating at 2048 + VAE, canny + depth). Nothing changes for a CGD variant: the dev-200 gate and `eval_variant.py` stay.
