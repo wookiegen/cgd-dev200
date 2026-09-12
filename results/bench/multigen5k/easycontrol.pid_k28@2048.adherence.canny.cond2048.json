@@ -1,0 +1,20 @@
+[
+ {
+  "method": "pid_k28",
+  "controller": "easycontrol",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "f1": 0.42458680898558016,
+   "f1_strict": 0.1925179337210649,
+   "tol_px": 1,
+   "cond_res": 2048
+  },
+  "quality": {},
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/canny/pid@28",
+  "time_s": 1001.4
+ }
+]
