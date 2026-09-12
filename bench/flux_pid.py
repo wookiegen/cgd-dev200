@@ -33,17 +33,28 @@ class FluxVAE:
         return [((im.permute(1, 2, 0).cpu().numpy() + 1) / 2 * 255).round().clip(0, 255).astype(np.uint8) for im in x]
 
 
+TEACHER = {   # BENCHMARK v1.11: the undistilled multi-step PiD v1.5 (the checkpoint CGD trains on), loaded the way PiD's docs/inference.md
+              # loads a teacher (training-config experiment + --load_ema_to_reg); documented inference setting = 25 steps, CFG 5.
+    "experiment": "pid_v1pt5_teacher_flux_h1024_d4_fix_backbone_res_2048",
+    "checkpoint": "checkpoints/PiD_v1pt5_res2kto4k_sr4x_official_flux_undistilled/model_ema_bf16.pth",
+    "config_file": "pid/_src/configs/pid_training/config.py", "steps": 25, "cfg": 5.0}
+
+
 class PiD:
     def __init__(self, pid_root: str | None = None, ckpt_type: str = "2k", load_ema_to_reg: bool = False):
         self.root = pid_root or os.environ.get("PID_ROOT", "/data/wookiekim/cgd/PiD")
         os.chdir(self.root); sys.path.insert(0, self.root)                    # PiD resolves checkpoints/ae.safetensors relative to its root
-        from pid._src.inference.checkpoint_registry import get_pid_checkpoint  # noqa: E402
         from pid._src.utils.model_loader import load_model_from_checkpoint    # noqa: E402
-        ck = get_pid_checkpoint("flux", ckpt_type)
-        self.ckpt = ck
-        self.model, _ = load_model_from_checkpoint(experiment_name=ck.experiment, checkpoint_path=ck.checkpoint_path,
-                                                   config_file="pid/_src/configs/pid/config.py", enable_fsdp=False,
-                                                   experiment_opts=[], strict=False, load_ema_to_reg=load_ema_to_reg)
+        self.ckpt_type = ckpt_type
+        if ckpt_type == "teacher":
+            experiment, path, cfg_file, ema = TEACHER["experiment"], os.path.join(self.root, TEACHER["checkpoint"]), TEACHER["config_file"], True
+        else:
+            from pid._src.inference.checkpoint_registry import get_pid_checkpoint  # noqa: E402
+            ck = get_pid_checkpoint("flux", ckpt_type); self.ckpt = ck
+            experiment, path, cfg_file, ema = ck.experiment, ck.checkpoint_path, "pid/_src/configs/pid/config.py", load_ema_to_reg
+        self.experiment, self.checkpoint_path = experiment, path
+        self.model, _ = load_model_from_checkpoint(experiment_name=experiment, checkpoint_path=path, config_file=cfg_file, enable_fsdp=False,
+                                                   experiment_opts=[], strict=False, load_ema_to_reg=ema)
         self.model.eval()
         self.cap_key = self.model.config.input_caption_key
 
