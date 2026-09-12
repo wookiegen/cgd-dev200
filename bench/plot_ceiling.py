@@ -48,7 +48,7 @@ for key, label, color, ls, lw, mk in series:
 ax.set_xscale("log"); ax.set_xticks(xpos); ax.set_xticklabels([("0" if s == 0 else f"{s:g}") for s in scales])
 ax.axvline(1.0, color="0.8", lw=0.6); ax.text(1.0, ax.get_ylim()[1], " released", fontsize=6, color="0.5", va="top")
 ax.set_xlabel("control strength at generation (condition scale)"); ax.set_ylabel("canny F1 (pixel space)")
-ax.legend(fontsize=6, frameon=False, loc="lower right")
+ax.legend(fontsize=6, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.80))   # the empty region under the PiD ceiling line at low scales
 fig.tight_layout(); Path(a.out).parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(a.out); fig.savefig(str(Path(a.out).with_suffix(".png")))
 print("wrote", a.out)
