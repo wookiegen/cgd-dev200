@@ -1,6 +1,6 @@
 # bench/ — frozen manifests of the CGD benchmark (bench_v1)
 
-The paper benchmark is specified in the paper repo's `docs/BENCHMARK_v1.md` (v1.7). This directory pins **which images**, in **which order**, with **which conditions and captions**, so that every controller, decoder, and truncation point is evaluated on identical rows. Images, conditions, labels, and latents are **rebuilt** from the public sources with the scripts here and are never committed (LAION-derived, COCO, and ADE20K images cannot be redistributed).
+The paper benchmark is specified in the paper repo's `docs/BENCHMARK_v1.md` (v1.9; the bounding-box layout condition was dropped from the paper on 2026-09-12, so `coco_val5k` and `train/coco_train` below are kept but unused). This directory pins **which images**, in **which order**, with **which conditions and captions**, so that every controller, decoder, and truncation point is evaluated on identical rows. Images, conditions, labels, and latents are **rebuilt** from the public sources with the scripts here and are never committed (LAION-derived, COCO, and ADE20K images cannot be redistributed).
 
 ## Sets
 
@@ -8,11 +8,11 @@ The paper benchmark is specified in the paper repo's `docs/BENCHMARK_v1.md` (v1.
 |---|---|---|---|---|
 | `multigen5k` | 5000 | HF `limingcv/MultiGen-20M_canny_eval`, validation, shard order | canny (`cv2.Canny(gray,100,200)`), depth (`Intel/dpt-large`) | shared by canny and depth: the depth_eval split holds the same 5000 images in the same order (sha256-verified); all 5000 rows kept, 25 byte-identical duplicates marked `dup_group`; `dev200_idx` links to `../dev200/manifest.csv` |
 | `ade20k_val2k` | 2000 | HF `limingcv/Captioned_ADE20K`, validation | seg (palette render of the GT label map) | captions = ControlNet++ `prompt`; label 0 = other/ignore, 1..150 classes; `palette.json` derived from the dataset's own `control_seg` |
-| `coco_val5k` | 5000 | COCO 2017 val + instances/captions | bbox (filled class-color boxes on black, `class_colors.json`) | order = ascending image id; caption = lowest caption annotation id; `boxes.jsonl` lists kept boxes; layout metrics use `has_boxes = 1` rows, FID uses all |
+| `coco_val5k` (unused since 2026-09-12) | 5000 | COCO 2017 val + instances/captions | bbox (filled class-color boxes on black, `class_colors.json`) | order = ascending image id; caption = lowest caption annotation id; `boxes.jsonl` lists kept boxes; layout metrics use `has_boxes = 1` rows, FID uses all |
 | `dreambench750` | 750 | HF `google/dreambooth` | reference image | 30 subjects x 25 prompts; reference = first image per subject; `{0} {1}` -> class name |
 | `train/multigen_train30` | ~36.8k | first 30 shards of HF `limingcv/MultiGen-20M_train` | canny/depth at train time | `blocked` column: 91 eval images were found in these shards |
 | `train/ade20k_train` | 20210 | HF `limingcv/Captioned_ADE20K`, train | seg at train time | `blocked` column |
-| `train/coco_train` | 118287 | COCO 2017 train | bbox at train time | `blocked` column |
+| `train/coco_train` (unused since 2026-09-12) | 118287 | COCO 2017 train | bbox at train time | `blocked` column |
 
 Exact counts, manifest checksums, and the source revisions at build time are in `BENCH.json`. Where the raw data, materialized sets, and model weights live on the group server, and which dataset serves which condition: `DATA.md`. What has been generated and scored, what is running, and what remains: `STATUS.md`.
 

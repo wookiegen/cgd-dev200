@@ -15,6 +15,8 @@ What exists on the group server, what is running unattended, what remains. Paths
 | their PiD decodes at K | `outputs/<ctrl>/<cond>/pid@<K>/` | fluxcn: done + SCORED (block filled in the paper 2026-09-12 02:30 KST; canny 0.656 VAE / 0.655 PiD K=24, depth RMSE 29.9 / 29.9, FID 16.5 / 16.6); easycontrol: done + SCORED (block filled in the paper 2026-09-12 06:00 KST; canny 0.810 VAE / 0.802 PiD K=24, depth RMSE 22.5 / 22.3, seg mIoU 39.3 / 39.6, FID 20.9 / 18.2) |
 | CGD training triplets | `train/<set>/` | NOT built (`make_targets.py`; measured 2026-09-12: 1.3 s/row at `--batch 8`, so ~174k rows = ~60 GPU-hours, ~16 h on 4 GPUs; 24 val rows of multigen_train30 exist from the timing run) |
 
+**2026-09-12 (user): bounding-box layout DROPPED from the paper.** `coco_val5k`, `train/coco_train`, the GroundingDINO scorer, and `results/bench/coco_val5k/` stay in the repo unused (measured for the record: layout SR 72.7 real / 72.1 VAE round trip / 70.9 PiD round trip, so the decoder barely moves it). The COCO 2017 data on disk (`/data/wookiekim/cgd/data/coco2017`, 39 GB) is kept for now and is to be DELETED after the submission is complete.
+
 Completion markers: `done_ref_all.txt`, `done_latents_omini_all.txt`, `done_omini_block.txt`, `done_latents_<ctrl>_<cond>.txt`, `done_easycontrol_block.txt`, `done_fluxcn_block.txt`, `done_queue.txt`. Status lines: `omini_block_status.txt`, `queue_status.txt`, `<ctrl>_block_status.txt`.
 
 ## 2. Results in the repo (`results/bench/`)
@@ -51,9 +53,9 @@ Nothing running at hand-off (2026-09-12 06:00 KST). All three controller blocks 
 | # | Task | Needs | Fills |
 |---|---|---|---|
 | 1 | All three controller blocks filled (2026-09-12). Open: which controller feeds the seg group of tab:recon (row 11 below; EasyControl rows sit in a `%` comment) | user decision | tab:recon seg group |
-| 2 | Train the 3 LoRAs (seg: OminiControl; bbox: OminiControl, EasyControl) with the official recipes on `train/ade20k_train` and `train/coco_train` (drop `blocked`, use `split`), then their latent caches + blocks | ~1 GPU-day each | seg / layout cells of the controller blocks |
+| 2 | Train the OPTIONAL OminiControl seg LoRA (the bbox LoRAs were dropped 2026-09-12 with the layout condition) with the official recipe on `train/ade20k_train` (drop `blocked`, use `split`), then their latent caches + blocks | ~1 GPU-day each | seg / layout cells of the controller blocks |
 | 3 | Conditioned VAE decoder (the 2x2 archetype): train on the OminiControl latents + conditions, score with the harness | small training job | tab:decoder-conditioning |
-| 4 | CGD training triplets (`make_targets.py`, all three sets, full COCO train) | ~60 GPU-hours (1.3 s/row measured; ~16 h on 4 GPUs) | adapter training data |
+| 4 | CGD training triplets (`make_targets.py --set multigen_train30` and `--set ade20k_train`; `coco_train` dropped 2026-09-12) | ~20 GPU-hours (1.3 s/row measured; ~5 h on 4 GPUs) | adapter training data |
 | 5 | Condition-scale sweep for fig:ceiling on dev-200 (`condition_scale` in OminiControl's `generate`) | ~1 GPU-hour | fig:ceiling |
 | 6 | Eyeball the lifted numbers of tab:contextual / tab:subject against the official PDFs | reading | supplementary |
 | 7 | **CGD rows** (every table) and the choice of K (16 or 24; the truncation sweep informs it) | THE METHOD | |
