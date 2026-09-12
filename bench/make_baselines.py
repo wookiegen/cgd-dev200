@@ -64,7 +64,7 @@ L = ["# BASELINES.md: the numbers a CGD variant has to beat", "",
 
 # ---------------------------------------------------------------- A. main benchmark
 L += ["## A. Main benchmark: 512-generation, condition = the 512 map (canny + depth on multigen5k, n = 5000; seg on ade20k_val2k, n = 2000)", "",
-      "| row | Canny F1 @512 ↑ | Canny F1 @2048 ↑ | strict F1 @512 | Depth MSE ↓ | Depth RMSE ↓ | Seg mIoU ↑ | FID ↓ | pFID ↓ | MUSIQ @512 ↑ | MANIQA @512 ↑ | LPIPS vs source ↓ |",
+      "| row | Canny F1 @512 vs c512 (1 px) ↑ | Canny F1 @2048 vs c512 (4 px) ↑ | strict F1 @512 | Depth MSE ↓ | Depth RMSE ↓ | Seg mIoU ↑ | FID ↓ | pFID ↓ | MUSIQ @512 ↑ | MANIQA @512 ↑ | LPIPS vs source ↓ |",
       "|---|---|---|---|---|---|---|---|---|---|---|---|"]
 
 
@@ -92,10 +92,10 @@ L += ["", "Notes: FID / pFID / no-ref / LPIPS come from the CANNY run of each co
       "(scorers resize internally). Paired bootstrap 95% CIs on 5000 images are within ±0.003 F1 (`bench/paired_ci.py`).", ""]
 
 # ---------------------------------------------------------------- B. native condition
-L += ["## B. Native-condition setting: the DECODER receives the 2048 edge map (multigen5k canny, tolerance 1 px at 2048)", "",
+L += ["## B. Scored against c2048, the 2048 edge map (multigen5k canny, tolerance 1 px at 2048)", "",
       "The 2048 condition is Canny of the PiD round trip of the real image (`multigen5k/conditions/canny2048`), so the round trip is the reference (1.0). "
       "Generator input unchanged (512 map). Score with `harness.py --res 2048 --cond-res 2048`.", "",
-      "| row | Canny F1 @2048 vs the 2048 condition ↑ |", "|---|---|"]
+      "| row | Canny F1 @2048 vs c2048 (1 px) ↑ |", "|---|---|"]
 for label, r in [("PiD round trip (reference)", get(M, "canny", "", "pid_roundtrip", 2048, cond_res=2048)),
                  ("Real image, bicubic x4 ‡", get(M, "canny", "", "real", 2048, cond_res=2048, via="ref")),
                  ("VAE round trip, bicubic x4 ‡", get(M, "canny", "", "vae_roundtrip", 2048, cond_res=2048, via="ref"))]:

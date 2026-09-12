@@ -101,7 +101,11 @@ ControlNet 0.305 (vs vanilla PiD K=24 native 0.669 / 0.766 / 0.649). Tool: `benc
 - Paired significance: `bench/paired_ci.py` (paired bootstrap 95% CIs on per-image CSVs; on 5000 images the CIs are within +-0.003).
 - Live state of all runs: `bench/STATUS.md`.
 
-## 7. Native-condition setting (added 2026-09-12; FIRM framing decided the same evening)
+## 7. The second reference map c2048 ("native condition"; added 2026-09-12; FIRM framing decided the same evening)
+
+**Names.** Every eval image has two edge maps: **c512** = Canny of the 512 image (what the generator receives; every main-table row is scored
+against it, 4 px tolerance at 2048) and **c2048** = Canny of the 2048 reference (nobody in the generator sees it; a 2048 output can be
+scored against it at 1 px). "F1 @2048 vs c512" and "F1 @2048 vs c2048" are the two native-resolution numbers of one output.
 
 **Framing (user decision, option 1).** 2048 is the REFERENCE resolution of the benchmark; the 512 view is derived from it. The matched
 view exists only because the VAE decode produces nothing above 512. The cached latents stay as they are: the generator's condition is

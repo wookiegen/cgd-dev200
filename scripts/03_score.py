@@ -144,7 +144,7 @@ def f(v, nd=4, dag=False):
     return f"{v:.{nd}f}" + ("‡" if dag else "")
 
 
-lines = ["| Decoder | n | Canny F1 @512 (matched, tolerant) ↑ | Canny F1 @2048 (tolerant 4 px) ↑ | Canny F1 @2048 vs NATIVE condition (1 px) ↑ | strict F1 @512 (anchor) | LPIPS ↓ | PSNR ↑ | SSIM ↑ | MUSIQ @512 ↑ | MUSIQ @2048 ↑ | s/img ↓ | peak GB ↓ |",
+lines = ["| Decoder | n | Canny F1 @512 vs c512 (1 px) ↑ | Canny F1 @2048 vs c512 (4 px) ↑ | Canny F1 @2048 vs c2048 (1 px) ↑ | strict F1 @512 (anchor) | LPIPS ↓ | PSNR ↑ | SSIM ↑ | MUSIQ @512 ↑ | MUSIQ @2048 ↑ | s/img ↓ | peak GB ↓ |",
          "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
 for _, r in agg.iterrows():
     dag = bool(r.dagger)
