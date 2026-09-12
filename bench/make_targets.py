@@ -28,7 +28,9 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, PngImagePlugin
+
+PngImagePlugin.MAX_TEXT_CHUNK = 256 * 1024 * 1024   # some MultiGen-20M train PNGs carry huge text chunks; PIL's 1 MB default raises ValueError
 
 from common import (OUT_ROOT, RAW_ROOT, REPO_BENCH, canny_condition, crop_boxes, crop_image, crop_label, parquet_rows, render_boxes,
                     render_palette, sha256_bytes, write_json, env_pins)
@@ -63,7 +65,14 @@ sel = [(i, r) for i, r in enumerate(rows) if r["blocked"] != "1" and (a.split ==
 sel = [(i, r) for (i, r) in sel if i % a.nshards == a.shard]
 if a.limit:
     sel = sel[: a.limit]
-todo = {r["sample_id"] for _, r in sel if not (out / "targets" / f"{r['sample_id']}.jpg").exists() or a.dry_run}
+def _done(r):   # resumable: a dry run is complete for a row once its crop + canny stand-in exist; a real run once its target exists
+    s = r["sample_id"]
+    if a.dry_run:
+        return (out / "images512" / f"{s}.png").exists() and (out / "conditions" / "canny" / f"{s}.png").exists()
+    return (out / "targets" / f"{s}.jpg").exists()
+
+
+todo = {r["sample_id"] for _, r in sel if not _done(r)}
 print(f"{SET}: {len(rows)} rows, {len(sel)} selected for shard {a.shard}/{a.nshards}, {len(todo)} to do", flush=True)
 
 # ------------------------------------------------------------------ GT condition helpers per set
