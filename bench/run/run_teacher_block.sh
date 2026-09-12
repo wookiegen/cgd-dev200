@@ -40,5 +40,5 @@ score() { # gpu condition
   done ) 2>&1 | grep -v -i -E "warning|pynvml|Loading checkpoint" > $LOG/teacher_score_roundtrip.log &
 ( CUDA_VISIBLE_DEVICES=${G[3]} python measure_efficiency.py --only-pid ) 2>&1 | grep -v -i -E "warning|pynvml" > $LOG/teacher_efficiency.log &
 wait
-python assemble.py > /dev/null 2>&1
+python assemble.py > /dev/null 2>&1; python make_baselines.py > /dev/null 2>&1
 echo "$(date '+%F %T') TEACHER BLOCK DONE" > $LOG/done_teacher_block.txt
