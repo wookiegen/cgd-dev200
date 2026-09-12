@@ -1,7 +1,7 @@
 """CGD scoring harness (SCORING_HARNESS.md). Scores one method's images on one eval set at one resolution with the frozen scorers.
 
-  python harness.py --method <label> --split <multigen5k|ade20k_val2k|coco_val5k> --gen-dir <dir of <id>.png> --res <512|2048>
-                    [--condition canny,depth | seg | bbox]   (default: all conditions of the split)
+  python harness.py --method <label> --split <multigen5k|ade20k_val2k|coco_val5k|dreambench750> --gen-dir <dir of <id>.png> --res <512|2048>
+                    [--condition canny,depth | seg | bbox | subject]   (default: all conditions of the split; dreambench750 has no paired real image, so recon / fid are skipped there)
                     [--gen-dir-512 <dir>]  precomputed INTER_AREA 512 view of a 2048 gen-dir (else computed on the fly)
                     [--metrics adherence,noref,recon,fid,vlm]   (default: adherence,noref,recon,fid; recon/fid only at res 512; vlm = DeQA, VQ-R1, UniPercept, slow)
                     [--controller <label>] [--limit N] [--out-dir results/bench]
@@ -26,7 +26,8 @@ from PIL import Image
 from common import OUT_ROOT, REPO_BENCH
 import scorers as S
 
-CONDS = {"multigen5k": ["canny", "depth"], "ade20k_val2k": ["seg"], "coco_val5k": ["bbox"]}
+CONDS = {"multigen5k": ["canny", "depth"], "ade20k_val2k": ["seg"], "coco_val5k": ["bbox"], "dreambench750": ["subject"]}
+NO_PAIRED_REAL = {"dreambench750"}   # no paired source image: recon / fid are not defined there
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--method", required=True); ap.add_argument("--split", required=True, choices=list(CONDS))
@@ -40,7 +41,7 @@ a = ap.parse_args()
 
 conds = a.condition.split(",") if a.condition else CONDS[a.split]
 metrics = set(a.metrics.split(","))
-if a.res == 2048:
+if a.res == 2048 or a.split in NO_PAIRED_REAL:
     metrics -= {"recon", "fid"}
 rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))[: a.limit or None]
 gen = Path(a.gen_dir); gen512 = Path(a.gen_dir_512) if a.gen_dir_512 else None
@@ -50,7 +51,7 @@ DEFAULT_METRICS = {"adherence", "noref", "recon", "fid"}
 tag = f"{a.method}@{a.res}"
 if a.controller:                      # results of different controllers must not share a file name
     tag = f"{a.controller}.{tag}"
-file_tag = tag if metrics == (DEFAULT_METRICS - ({"recon", "fid"} if a.res == 2048 else set())) else f"{tag}.{'-'.join(sorted(metrics))}"
+file_tag = tag if metrics == (DEFAULT_METRICS - ({"recon", "fid"} if (a.res == 2048 or a.split in NO_PAIRED_REAL) else set())) else f"{tag}.{'-'.join(sorted(metrics))}"
 if conds != CONDS[a.split]:          # a run restricted to a subset of the split's conditions gets its own file (two condition runs must not overwrite each other)
     file_tag += "." + "-".join(conds)
 
@@ -78,6 +79,7 @@ if "adherence" in metrics:
     if "depth" in conds: sc["depth"] = S.DepthScorer()
     if "seg" in conds: sc["seg"] = S.SegScorer()
     if "bbox" in conds: sc["bbox"] = S.LayoutScorer()
+    if "subject" in conds: sc["subject"] = S.SubjectScorer()
 noref = S.NoRef() if "noref" in metrics else None
 recon = S.Recon() if "recon" in metrics else None
 boxes = {}
@@ -142,6 +144,8 @@ for k, r in enumerate(rows):
         gb = boxes.get(sid, [])
         if gb:
             rec.update({f"bbox_{kk}": v for kk, v in sc["bbox"].score(view, gb).items()})
+    if "subject" in sc:
+        rec.update({f"subject_{kk}": v for kk, v in sc["subject"].score(view, r["subject"], r["prompt"]).items()})
     if noref is not None:
         rec.update(noref.score(view))
     if vlm is not None:
@@ -198,6 +202,7 @@ for c in conds:
         n_inst = sum(x.get("bbox_n_inst", 0) for x in per_image); n_succ = sum(x.get("bbox_n_success", 0) for x in per_image)
         adh = {"sr": 100.0 * n_succ / max(n_inst, 1), "miou": 100.0 * sum(x.get("bbox_sum_iou", 0.0) for x in per_image) / max(n_inst, 1),
                "n_instances": n_inst, "n_images_with_boxes": sum(1 for x in per_image if x.get("bbox_n_inst", 0) > 0)}
+    if c == "subject" and "subject" in sc: adh = {"dino": mean("subject_dino"), "clip_i": mean("subject_clip_i"), "clip_t": mean("subject_clip_t")}
     records.append({"method": a.method, "controller": a.controller, "condition": c, "split": a.split, "res": a.res,
                     "native_res": native, "adherence": adh, "quality": quality, "n": len(per_image),
                     "gen_dir": str(gen), "time_s": round(time.time() - t0, 1)})

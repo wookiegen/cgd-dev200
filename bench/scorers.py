@@ -12,6 +12,8 @@ identical code path for every method. All image inputs are uint8 RGB numpy array
   NoRef        pyiqa musiq-paq2piq, niqe, maniqa, qalign (per image, mean). DeQA / UniPercept / VisualQuality-R1 live in PiD's evaluation
                module and are added by harness.py when --vlm is given.
   Recon        pyiqa psnr, ssim, lpips, dists vs the real 512 source (indicative; only where a paired real image exists).
+  SubjectScorer DreamBench protocol: DINO (facebook/dino-vits16 CLS cosine vs every real image of the subject, mean), CLIP-I
+               (openai/clip-vit-large-patch14 image cosine, mean), CLIP-T (CLIP image vs prompt text cosine); whole images at the 512 view.
   fid / pfid   clean-fid, mode "clean"; pFID = one random 299x299 crop per image with a fixed per-sample seed, at the 512 view.
 """
 from __future__ import annotations
@@ -257,6 +259,47 @@ class Recon:
     def score(self, rgb512: np.ndarray, ref512: np.ndarray) -> dict:
         a, b = to_tensor01(rgb512), to_tensor01(ref512)
         return {k: float(m(a, b)) for k, m in self.m.items()}
+
+
+class SubjectScorer:
+    """DreamBench protocol (DreamBooth; the UNO / OminiControl re-reports): DINO = cosine between the ViT-S/16 CLS embedding of the output and
+    of each real image of the subject, averaged; CLIP-I = the same with CLIP ViT-L/14 image embeddings; CLIP-T = cosine between the CLIP
+    image embedding of the output and the CLIP text embedding of the prompt (class-name prompt, no unique token). Whole images, no cropping.
+    Real images = every image of the subject in the DreamBooth dataset (5 or 6 per subject); embeddings cached per subject."""
+    DINO = "facebook/dino-vits16"; CLIP = "openai/clip-vit-large-patch14"
+
+    def __init__(self, dataset_root: Path | None = None):
+        from transformers import AutoImageProcessor, AutoModel, CLIPModel, CLIPProcessor
+        self.root = Path(dataset_root or os.environ.get("CGD_RAW_ROOT", "/data/wookiekim/cgd/data")) / "dreambench" / "dataset"
+        self.dino = AutoModel.from_pretrained(self.DINO).to(DEVICE).eval(); self.dino_proc = AutoImageProcessor.from_pretrained(self.DINO)
+        self.clip = CLIPModel.from_pretrained(self.CLIP).to(DEVICE).eval(); self.clip_proc = CLIPProcessor.from_pretrained(self.CLIP)
+        self._real = {}; self._text = {}
+
+    @torch.no_grad()
+    def embed(self, imgs: list[np.ndarray]) -> tuple[torch.Tensor, torch.Tensor]:
+        from PIL import Image
+        pil = [Image.fromarray(x) for x in imgs]
+        d = self.dino(**self.dino_proc(images=pil, return_tensors="pt").to(DEVICE)).last_hidden_state[:, 0]
+        c = self.clip.get_image_features(**self.clip_proc(images=pil, return_tensors="pt").to(DEVICE))
+        return torch.nn.functional.normalize(d.float(), dim=-1), torch.nn.functional.normalize(c.float(), dim=-1)
+
+    def real(self, subject: str):
+        if subject not in self._real:
+            from PIL import Image
+            files = sorted(p for p in (self.root / subject).iterdir() if p.suffix.lower() in (".jpg", ".jpeg", ".png"))
+            self._real[subject] = self.embed([np.array(Image.open(p).convert("RGB")) for p in files])
+        return self._real[subject]
+
+    @torch.no_grad()
+    def text(self, prompt: str) -> torch.Tensor:
+        if prompt not in self._text:
+            t = self.clip.get_text_features(**self.clip_proc(text=[prompt], return_tensors="pt", padding=True).to(DEVICE))
+            self._text[prompt] = torch.nn.functional.normalize(t.float(), dim=-1)
+        return self._text[prompt]
+
+    def score(self, out_rgb: np.ndarray, subject: str, prompt: str) -> dict:
+        d, c = self.embed([out_rgb]); rd, rc = self.real(subject)
+        return {"dino": float((d @ rd.T).mean()), "clip_i": float((c @ rc.T).mean()), "clip_t": float((c @ self.text(prompt).T).mean())}
 
 
 def crop299(rgb: np.ndarray, sample_id: str, seed: int = 0) -> np.ndarray:
