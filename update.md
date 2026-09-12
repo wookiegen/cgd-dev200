@@ -44,6 +44,21 @@ Reading: strict F1 at 2048 mostly measures edge thickness (0.15 for a perfect im
 0.55 because fixed Canny thresholds do not fire on interpolated (soft) edges. So the native column requires edges that are SHARP at native
 scale and lie inside the condition's pixel blocks. A decoder that blurs upward will not score; that is intended.
 
+**Why the tolerant F1 of a blind generative decoder drops from the 512 view to native 2048 (dev-200 decomposition, 2026-09-12):**
+
+| row | precision @512 | recall @512 | precision @2048 | recall @2048 | F1 @512 -> @2048 |
+|---|---|---|---|---|---|
+| PiD round trip | 0.898 | 0.936 | 0.745 | 0.891 | 0.916 -> 0.793 |
+| OminiControl + PiD 28/28 | 0.829 | 0.758 | 0.655 | 0.875 | 0.778 -> 0.725 |
+| OminiControl + PiD K=24 | 0.691 | 0.763 | 0.571 | 0.864 | 0.713 -> 0.662 |
+
+Recall does not drop (it even rises: the 2048 output is dense in edges, so most condition blocks have an edge nearby). The whole drop is
+PRECISION: at native resolution 25 to 43 percent of the predicted edge pixels lie farther than one condition pixel from any condition edge,
+i.e. detail the condition never asked for (texture, invented structure). The 512 view hides this because the INTER_AREA downsample averages
+fine texture away. So the native column measures exactly what the paper claims a blind decoder does: it invents detail the condition did not
+specify. A CGD variant should raise PRECISION at 2048 without losing recall. The harness now records `precision`, `recall`, and
+`edge_density` per image and in the JSON (`bench/scorers.py`), so you can see which one you moved.
+
 ## 3. Native-resolution ceiling
 
 The practical ceiling of the native 2048 column is **0.80**, the tolerant F1 of the vanilla PiD round trip (clean latent of the real image,

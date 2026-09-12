@@ -53,14 +53,22 @@ class CannyF1:
         return float(2 * tp / max(2 * tp + fp + fn, 1))
 
     @staticmethod
-    def f1_tolerant(pred: np.ndarray, ref: np.ndarray, tol: int) -> float:
-        """Edge F1 with a matching tolerance of `tol` pixels (BSDS-style): a predicted edge pixel is correct if a reference edge lies within
-        tol pixels, and a reference pixel is recalled if a predicted edge lies within tol pixels."""
+    def pr_tolerant(pred: np.ndarray, ref: np.ndarray, tol: int) -> tuple[float, float]:
+        """Tolerant precision and recall: a predicted edge pixel is correct if a reference edge lies within tol pixels, and a reference pixel
+        is recalled if a predicted edge lies within tol pixels (dilation-based form of the BSDS matching)."""
         if tol <= 0:
-            return CannyF1.f1_strict(pred, ref)
+            tp = np.logical_and(pred, ref).sum()
+            return float(tp / max(pred.sum(), 1)), float(tp / max(ref.sum(), 1))
         k = np.ones((2 * tol + 1, 2 * tol + 1), np.uint8)
         ref_d = cv2.dilate(ref.astype(np.uint8), k) > 0; pred_d = cv2.dilate(pred.astype(np.uint8), k) > 0
-        prec = np.logical_and(pred, ref_d).sum() / max(pred.sum(), 1); rec = np.logical_and(ref, pred_d).sum() / max(ref.sum(), 1)
+        return float(np.logical_and(pred, ref_d).sum() / max(pred.sum(), 1)), float(np.logical_and(ref, pred_d).sum() / max(ref.sum(), 1))
+
+    @staticmethod
+    def f1_tolerant(pred: np.ndarray, ref: np.ndarray, tol: int) -> float:
+        """Edge F1 with a matching tolerance of `tol` pixels (BSDS-style)."""
+        if tol <= 0:
+            return CannyF1.f1_strict(pred, ref)
+        prec, rec = CannyF1.pr_tolerant(pred, ref, tol)
         return float(2 * prec * rec / max(prec + rec, 1e-9))
 
     def score(self, out_rgb: np.ndarray, cond_rgb512: np.ndarray) -> dict:
@@ -76,7 +84,11 @@ class CannyF1:
             ref = cv2.resize(e.astype(np.float32), (res, res), interpolation=cv2.INTER_AREA) > 0
         pred = self.edges(out_rgb)
         tol = max(1, res // cres)
-        return {"f1": self.f1_tolerant(pred, ref, tol), "f1_strict": self.f1_strict(pred, ref), "tol_px": tol}
+        prec, rec = self.pr_tolerant(pred, ref, tol)
+        # precision falls when the output carries edges the condition never specified (invented detail); recall falls when condition edges are
+        # missing or too soft to be detected. The 512 -> 2048 drop of the blind decoders is a precision effect (metric_checks/pr_decomposition).
+        return {"f1": float(2 * prec * rec / max(prec + rec, 1e-9)), "f1_strict": self.f1_strict(pred, ref), "tol_px": tol,
+                "precision": prec, "recall": rec, "edge_density": float(pred.mean())}
 
 
 # ----------------------------------------------------------------------------- depth
