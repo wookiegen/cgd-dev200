@@ -80,3 +80,22 @@ ControlNet 0.305 (vs vanilla PiD K=24 native 0.669 / 0.766 / 0.649). Tool: `benc
 - Dev-200 scorer: `scripts/03_score.py` (`canny_f1_*` tolerant, `canny_f1s_*` strict).
 - Paired significance: `bench/paired_ci.py` (paired bootstrap 95% CIs on per-image CSVs; on 5000 images the CIs are within +-0.003).
 - Live state of all runs: `bench/STATUS.md`.
+
+## 7. Native-condition track (added 2026-09-12, later the same day)
+
+A second setting, supplementary in the paper: the DECODER receives the edge condition at the output resolution (2048), while the
+generator keeps the 512 map. A latent-space controller cannot consume a 2048 map; a pixel-space decoder can. This is a strength of CGD we
+keep, in addition to the default 512-condition protocol above (which remains the headline).
+
+- **Eval conditions**: `multigen5k/conditions/canny2048/<sid>.png` = Canny(100, 200) of the vanilla-PiD round trip of the real image
+  (`bench/build_native_conditions.py`). The controllers' input is unchanged, so every cached latent and decode is reused.
+- **Scoring**: `harness.py ... --res 2048 --cond-res 2048` (tolerance one condition pixel = 1 px at 2048; file tag `.cond2048`). The PiD
+  round trip is the reference and scores 1.0 by construction; dagger rows via `tools_upsampled_ref.py --cond-res 2048`. No FID against it.
+- **Caveat (in the paper)**: the reference is synthesized by the blind decoder, so the track measures recovery of decoder-consistent native
+  structure that the condition specifies, not agreement with a photograph. A real >= 2048 photo set would lift this; future work.
+- **Training**: `make_targets.py` writes both `conditions/canny` (512 view of the target) and `conditions/canny2048` (target at 2048).
+  Sample one of the two per example (p = 0.5) so ONE decoder accepts a condition at either scale; the 512 form is nearest-upsampled inside
+  the decoder when the injection point is at 2048. Section 5 above stays valid for the default protocol: never feed a 2048-extracted map
+  when the setting is "512 condition"; in the native-condition setting the 2048 map IS the condition, by definition.
+- **Paper table**: `tab:native-cond` (supplementary): per controller {VAE decode (dagger), vanilla PiD K, CGD with the 512 condition, CGD
+  with the 2048 condition}; the difference between the two CGD rows is the value of condition resolution.

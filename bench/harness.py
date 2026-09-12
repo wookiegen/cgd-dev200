@@ -38,6 +38,7 @@ ap.add_argument("--controller", default=""); ap.add_argument("--limit", type=int
 ap.add_argument("--out-dir", default=str(REPO_BENCH.parent / "results" / "bench"))
 ap.add_argument("--vlm-batch", type=int, default=16, help="images per forward for the VLM scorers (metrics keyword 'vlm': DeQA, VisualQuality-R1, UniPercept IAA/IQA via PiD's evaluation module)")
 ap.add_argument("--subset500", action="store_true", help="score only the manifest rows with subset500 == 1 (file tag gets '.subset500'; FID against the same subset of real images)")
+ap.add_argument("--cond-res", type=int, default=512, help="canny only: resolution of the condition used as the scoring reference; 2048 = the native-condition track (conditions/canny2048, tolerance one condition pixel = 1 px at 2048; file tag '.cond2048')")
 a = ap.parse_args()
 
 conds = a.condition.split(",") if a.condition else CONDS[a.split]
@@ -60,6 +61,9 @@ if conds != CONDS[a.split]:          # a run restricted to a subset of the split
     file_tag += "." + "-".join(conds)
 if a.subset500:
     file_tag += ".subset500"
+if a.cond_res != 512:
+    file_tag += f".cond{a.cond_res}"
+CANNY_DIR = "canny" if a.cond_res == 512 else f"canny{a.cond_res}"
 
 # probe native resolution
 probe = np.array(Image.open(gen / f"{rows[0]['sample_id']}.png"))
@@ -138,7 +142,7 @@ for k, r in enumerate(rows):
     view = load_view(sid)
     rec = {"sample_id": sid}
     if "canny" in sc:
-        cond = np.array(Image.open(bench / "conditions" / "canny" / f"{sid}.png").convert("RGB"))
+        cond = np.array(Image.open(bench / "conditions" / CANNY_DIR / f"{sid}.png").convert("RGB"))
         rec.update({f"canny_{kk}": v for kk, v in sc["canny"].score(view, cond).items()})
     if "depth" in sc:
         ref = np.load(bench / "conditions" / "depth_raw" / f"{sid}.npy").astype(np.float32)
@@ -201,7 +205,7 @@ if crop_dir_gen is not None:
 records = []
 for c in conds:
     adh = {}
-    if c == "canny" and "canny" in sc: adh = {"f1": mean("canny_f1"), "f1_strict": mean("canny_f1_strict"), "tol_px": int(max(1, a.res // 512))}
+    if c == "canny" and "canny" in sc: adh = {"f1": mean("canny_f1"), "f1_strict": mean("canny_f1_strict"), "tol_px": int(max(1, a.res // a.cond_res)), "cond_res": a.cond_res}
     if c == "depth" and "depth" in sc: adh = {"mse": mean("depth_mse"), "rmse": mean("depth_rmse")}
     if c == "seg" and "seg" in sc: adh = {"miou": sc["seg"].dataset_miou(), "miou_img_mean": mean("seg_miou_img")}
     if c == "bbox" and "bbox" in sc:

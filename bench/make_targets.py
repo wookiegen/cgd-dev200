@@ -53,7 +53,7 @@ a = ap.parse_args()
 
 SET = a.set
 out = OUT_ROOT / "train" / SET
-subdirs = ["images512", "latents", "targets", "conditions/canny", "conditions/depth", "conditions/depth_raw"]
+subdirs = ["images512", "latents", "targets", "conditions/canny", "conditions/canny2048", "conditions/depth", "conditions/depth_raw"]
 subdirs += ["conditions/seg"] if SET == "ade20k_train" else ["conditions/bbox"] if SET == "coco_train" else []
 for d in subdirs:
     (out / d).mkdir(parents=True, exist_ok=True)
@@ -217,7 +217,8 @@ def flush(buf):
         Image.fromarray(y).save(out / "targets" / f"{s}.jpg", quality=a.jpeg_quality, subsampling=0)
         y512 = cv2.resize(y, (512, 512), interpolation=cv2.INTER_AREA)   # the scorer's matched view
         y512_pil = Image.fromarray(y512)
-        canny_condition(y512_pil).save(out / "conditions" / "canny" / f"{s}.png")
+        canny_condition(y512_pil).save(out / "conditions" / "canny" / f"{s}.png")            # 512 condition (default track)
+        canny_condition(Image.fromarray(y)).save(out / "conditions" / "canny2048" / f"{s}.png")  # native condition (2026-09-12 track): thin edges of the target at 2048
         if not a.no_depth:
             d, u8 = depth512(y512_pil)
             np.save(out / "conditions" / "depth_raw" / f"{s}.npy", d.astype(np.float16))
@@ -239,7 +240,8 @@ flush(buf)
 write_json(REPO_BENCH / "train" / SET / ("TARGETS_VERSION.json" if not a.dry_run else "DRYRUN_VERSION.json"), {
     "set": SET, "targets": f"vanilla PiD ({a.pid_ckpt_type if not a.dry_run else 'n/a'}, {a.steps} steps, seed {a.seed}, cfg 1) decode of the CLEAN FLUX latent of the 512 crop, 2048x2048, JPEG q{a.jpeg_quality}",
     "latent": "FLUX.1-dev VAE posterior mean, diffusers scaled space ((z - shift) * scaling), fp16", "conditions": {
-        "canny": "cv2.Canny(gray(INTER_AREA 512 view of the target), 100, 200)", "depth": "Intel/dpt-large on the 512 view of the target; png min-max 8-bit, raw float16 npy",
+        "canny": "cv2.Canny(gray(INTER_AREA 512 view of the target), 100, 200)", "canny2048": "cv2.Canny(gray(target at 2048), 100, 200): the native-condition form (2026-09-12); training samples either form per example",
+        "depth": "Intel/dpt-large on the 512 view of the target; png min-max 8-bit, raw float16 npy",
         "seg": "GT ADE20K label map, v1.7 crop, ade20k_val2k/palette.json" if SET == "ade20k_train" else None,
         "bbox": "GT COCO boxes, v1.7 crop, coco_val5k/class_colors.json" if SET == "coco_train" else None},
     "dry_run": a.dry_run, "env": env_pins()})

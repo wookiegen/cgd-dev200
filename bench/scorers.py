@@ -68,10 +68,14 @@ class CannyF1:
         `f1_strict` = pixel-exact F1 (the ControlNet++ convention at 512; kept as the anchor to published numbers). The strict score at
         2048 mostly measures the 4-px-thick nearest-upsampled reference against thin re-extracted edges (a bicubic upsample of the REAL
         image scores 0.15 strict), which is why it is not the paper metric at native resolution."""
-        res = out_rgb.shape[0]
-        ref = resize((cond_rgb512[..., 0] > 0).astype(np.uint8), res, cv2.INTER_NEAREST) > 0
+        res = out_rgb.shape[0]; cres = cond_rgb512.shape[0]
+        e = (cond_rgb512[..., 0] > 0).astype(np.uint8)
+        if cres <= res:        # condition coarser than (or equal to) the output: nearest resample, one condition pixel = res // cres output pixels
+            ref = resize(e, res, cv2.INTER_NEAREST) > 0
+        else:                  # condition finer than the output (native-condition track scored at the 512 view): a block with any edge is an edge
+            ref = cv2.resize(e.astype(np.float32), (res, res), interpolation=cv2.INTER_AREA) > 0
         pred = self.edges(out_rgb)
-        tol = max(1, res // 512)
+        tol = max(1, res // cres)
         return {"f1": self.f1_tolerant(pred, ref, tol), "f1_strict": self.f1_strict(pred, ref), "tol_px": tol}
 
 
