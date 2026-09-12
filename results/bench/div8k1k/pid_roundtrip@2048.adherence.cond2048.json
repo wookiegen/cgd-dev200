@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pid_roundtrip",
+  "controller": "",
+  "condition": "canny",
+  "split": "div8k1k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "",
+  "adherence": {
+   "f1": 0.7045797914762566,
+   "f1_strict": 0.2651456951030955,
+   "tol_px": 1,
+   "cond_res": 2048,
+   "precision": 0.6488131029086113,
+   "recall": 0.7869634910446192,
+   "edge_density": 0.10944922375679016
+  },
+  "quality": {},
+  "n": 1000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip/div8k1k",
+  "time_s": 227.2
+ }
+]

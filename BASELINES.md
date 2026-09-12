@@ -85,6 +85,21 @@ Generation at 512 (FLUX.1-dev + OminiControl canny LoRA, 28 steps, seed 0): 5.11
 | OminiControl + PiD student | 16 | 0.546 | 0.571 | 0.432 | 29.85 | 74.8 | 0.599 |
 | OminiControl + PiD teacher | 16 | 0.528 | 0.540 | 0.367 | 29.57 | 73.0 | 0.582 |
 
+## F2. Validation of the c2048 column on REAL 2048 photographs (DIV8K split div8k1k, OminiControl canny; the real image is the reference at 1.0)
+
+| row | Canny F1 @512 vs c512 (1 px) ↑ | Canny F1 @2048 vs c512 (4 px) ↑ | Canny F1 @2048 vs c2048 (1 px) ↑ | FID ↓ | pFID ↓ | MUSIQ @512 ↑ | LPIPS ↓ |
+|---|---|---|---|---|---|---|---|
+| Real image, 2048 native (the reference of the c2048 column) | 1.000 | 0.820 | 1.000 |  |  | 74.0 | 0.000 |
+| Real image, 512 view upsampled (interpolation route) | 1.000 | 0.551‡ | 0.351‡ |  |  | 74.0 | 0.000 |
+| VAE round trip | 0.941 | 0.529‡ | 0.315‡ | 2.30 | 6.07 | 74.0 | 0.024 |
+| PiD round trip (student) | 0.915 | 0.813 | 0.705 | 6.82 | 12.89 | 74.3 | 0.060 |
+| OminiControl + VAE decode | 0.784 | 0.275‡ | 0.117‡ | 44.96 | 50.08 | 72.9 | 0.459 |
+| OminiControl + vanilla PiD, K=28 | 0.797 | 0.762 | 0.562 | 43.07 | 45.59 | 73.4 | 0.448 |
+| OminiControl + vanilla PiD, K=24 | 0.749 | 0.720 | 0.539 | 42.93 | 45.53 | 73.9 | 0.456 |
+| OminiControl + vanilla PiD, K=16 | 0.622 | 0.648 | 0.481 | 51.01 | 53.96 | 75.1 | 0.523 |
+
+Reading: on multigen5k the c2048 map is synthesized by the PiD round trip (so that round trip scores 1.0 there); here c2048 is the edge map of the REAL 2048 photograph, so the round trip's c2048 value is its true native fidelity and the real image is the 1.0. The 2048 / c512 value of the real 2048 image is the natural ceiling of that column on real photographs.
+
 ## G. Efficiency (one H200, median per image)
 
 | output | pipeline | gen res | gen steps | dec steps | latency s | peak GB |

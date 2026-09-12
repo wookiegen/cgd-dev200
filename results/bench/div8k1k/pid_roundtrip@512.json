@@ -1,0 +1,35 @@
+[
+ {
+  "method": "pid_roundtrip",
+  "controller": "",
+  "condition": "canny",
+  "split": "div8k1k",
+  "res": 512,
+  "native_res": 2048,
+  "subset": "",
+  "adherence": {
+   "f1": 0.9154055111394194,
+   "f1_strict": 0.6024032089179081,
+   "tol_px": 1,
+   "cond_res": 512,
+   "precision": 0.8898700164157684,
+   "recall": 0.9436404232130242,
+   "edge_density": 0.14214335250854493
+  },
+  "quality": {
+   "musiq": 74.26843497467041,
+   "niqe": 4.193367970020852,
+   "maniqa": 0.6235688197016716,
+   "qalign": 4.549005859375,
+   "psnr": 26.810336025238037,
+   "ssim": 0.8330221053044555,
+   "lpips": 0.06024680482503027,
+   "dists": 0.05512165623903274,
+   "fid": 6.818687932208661,
+   "pfid": 12.887539850971393
+  },
+  "n": 1000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip/div8k1k",
+  "time_s": 607.3
+ }
+]

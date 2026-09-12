@@ -1,0 +1,24 @@
+[
+ {
+  "method": "real2048",
+  "controller": "",
+  "condition": "canny",
+  "split": "div8k1k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "",
+  "adherence": {
+   "f1": 1.0,
+   "f1_strict": 1.0,
+   "tol_px": 1,
+   "cond_res": 2048,
+   "precision": 1.0,
+   "recall": 1.0,
+   "edge_density": 0.09310223054885865
+  },
+  "quality": {},
+  "n": 1000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/div8k1k/images2048",
+  "time_s": 188.9
+ }
+]

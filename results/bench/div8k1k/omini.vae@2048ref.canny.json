@@ -1,0 +1,19 @@
+[
+ {
+  "method": "vae",
+  "controller": "omini",
+  "condition": "canny",
+  "split": "div8k1k",
+  "res": 2048,
+  "native_res": 512,
+  "via": "cubic_x4_upsample_REFERENCE_not_native",
+  "adherence": {
+   "f1": 0.2750323195529473,
+   "f1_strict": 0.04518496305136378,
+   "tol_px": 4,
+   "cond_res": 512
+  },
+  "n": 1000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini_div8k/canny/vae@28"
+ }
+]

@@ -8,7 +8,7 @@ read -r -a G <<< "${GPUS:-0 1 2 3}"; NG=${#G[@]}
 LOG=/data/wookiekim/cgd/data/_logs; B=/data/wookiekim/cgd/data/bench
 cd /data/wookiekim/cgd/cgd-dev200/bench
 echo "$(date '+%F %T') native route: generating at 2048 on GPUs ${G[*]}" > $LOG/native_route_status.txt
-for ctrl in omini easycontrol fluxcn; do
+for ctrl in easycontrol fluxcn omini; do   # informative controllers first (OminiControl collapsed at 2048 on dev-200)
   for c in canny depth; do
     for ((k=0; k<NG; k++)); do
       CUDA_VISIBLE_DEVICES=${G[$k]} python make_latents.py --controller $ctrl --condition $c --size 2048 --subset500 --out-tag ${ctrl}_2048 --capture-steps 24 --nshards $NG --shard $k 2>&1 \

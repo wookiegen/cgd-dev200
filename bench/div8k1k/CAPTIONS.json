@@ -1,0 +1,17 @@
+{
+  "captioner": "Qwen/Qwen2.5-VL-7B-Instruct",
+  "decoding": "greedy, max 64 new tokens",
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "input": "the 512 image",
+  "n": 1000,
+  "prompt": "Write one sentence that describes this photograph as a caption for an image generator: the main subject, the setting, and the lighting or style. Plain text, no quotes, do not start with 'The image' or 'This image'."
+}

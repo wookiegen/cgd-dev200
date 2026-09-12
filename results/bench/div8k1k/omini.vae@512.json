@@ -1,0 +1,35 @@
+[
+ {
+  "method": "vae",
+  "controller": "omini",
+  "condition": "canny",
+  "split": "div8k1k",
+  "res": 512,
+  "native_res": 512,
+  "subset": "",
+  "adherence": {
+   "f1": 0.7842455652583237,
+   "f1_strict": 0.34375538529751737,
+   "tol_px": 1,
+   "cond_res": 512,
+   "precision": 0.8772337880578338,
+   "recall": 0.733043017012473,
+   "edge_density": 0.11080068969726563
+  },
+  "quality": {
+   "musiq": 72.87882465362549,
+   "niqe": 4.676055290402192,
+   "maniqa": 0.5333998115062714,
+   "qalign": 4.3144296875,
+   "psnr": 13.10405173254013,
+   "ssim": 0.42150154794975037,
+   "lpips": 0.4585476904511452,
+   "dists": 0.2670503875017166,
+   "fid": 44.962547400661265,
+   "pfid": 50.07826847020317
+  },
+  "n": 1000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini_div8k/canny/vae@28",
+  "time_s": 436.8
+ }
+]

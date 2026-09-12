@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pid_k16",
+  "controller": "omini",
+  "condition": "canny",
+  "split": "div8k1k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "",
+  "adherence": {
+   "f1": 0.480721160301394,
+   "f1_strict": 0.1681021593623422,
+   "tol_px": 1,
+   "cond_res": 2048,
+   "precision": 0.4317389295564256,
+   "recall": 0.5980574663386625,
+   "edge_density": 0.1249624629020691
+  },
+  "quality": {},
+  "n": 1000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini_div8k/canny/pid@16",
+  "time_s": 175.1
+ }
+]

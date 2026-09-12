@@ -1,0 +1,33 @@
+[
+ {
+  "method": "real",
+  "controller": "",
+  "condition": "canny",
+  "split": "div8k1k",
+  "res": 512,
+  "native_res": 512,
+  "subset": "",
+  "adherence": {
+   "f1": 1.0,
+   "f1_strict": 1.0,
+   "tol_px": 1,
+   "cond_res": 512,
+   "precision": 1.0,
+   "recall": 1.0,
+   "edge_density": 0.13395684051513673
+  },
+  "quality": {
+   "musiq": 74.04110048294068,
+   "niqe": 3.8799296482692833,
+   "maniqa": 0.5508647818267346,
+   "qalign": 4.333708984375,
+   "psnr": 80.0,
+   "ssim": 1.0,
+   "lpips": 0.0,
+   "dists": -1.2058019638061524e-07
+  },
+  "n": 1000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/div8k1k/images",
+  "time_s": 483.0
+ }
+]
