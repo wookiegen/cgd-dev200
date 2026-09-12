@@ -59,7 +59,7 @@ Nothing running at hand-off (2026-09-12 06:00 KST). All three controller blocks 
 | 7 | **CGD rows** (every table) and the choice of K (16 or 24; the truncation sweep informs it) | THE METHOD | |
 | 8 | Subject track (DreamBench, released subject LoRAs) | low priority | tab:subject |
 | 9 | 1024 side comparison (QUEUED, not launched): EasyControl + FLUX ControlNet generated at 1024, VAE-decoded, downsampled to 512, scored on `subset500` (tests the 512-resolution caveat; side comparison only) | ~4 GPU-hours, after the blocks | supplementary table |
-| 11 | Which controller the seg group of the paper's reconstruction table (and the seg cells of the 2x2) uses: OminiControl (needs the seg LoRA) or EasyControl (released seg LoRA, decodes done) | decision | tab:recon / 2x2 seg cells |
+| 11 | DECIDED 2026-09-12: the seg group of the paper's reconstruction table uses EasyControl's released seg LoRA now (filled, red-flagged in the paper). Training an OminiControl seg LoRA (task 2) stays optional for a single controller across tables; it would also fill the OminiControl seg cells of tab:main and the 2x2 | optional GPU-day | tab:main / 2x2 OminiControl seg cells |
 | 10 | Checkpoint consistency: vanilla PiD rows use the 2K checkpoint, a trained CGD will be v1.5-based (only undistilled FLUX checkpoint); re-decode vanilla rows with v1.5 distilled (~8 GPU-hours per block) or keep 2K as headline; decide with the method | decision | tab:main PiD rows |
 
 Rules that bit us: never let two generator processes write the same set without disjoint shards (a race produced six corrupt PNGs, since regenerated); every decoder reads the cached latents, never regenerates; the harness refuses to upsample.
