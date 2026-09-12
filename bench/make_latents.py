@@ -35,9 +35,13 @@ ap.add_argument("--capture-steps", default="16,24")
 ap.add_argument("--omini", default=os.environ.get("OMINI_ROOT", str(OUT_ROOT.parent.parent / "OminiControl")))
 ap.add_argument("--easycontrol", default=os.environ.get("EASYCONTROL_ROOT", str(OUT_ROOT.parent.parent / "EasyControl")))
 ap.add_argument("--out-tag", default=None, help="override the output directory name (default = controller)")
+ap.add_argument("--size", type=int, default=512, help="generation resolution (OPEN_QUESTIONS 11 side comparison: 1024 for EasyControl / ControlNet); the 512 condition is resized to it (nearest for canny / seg, bicubic for depth)")
+ap.add_argument("--subset500", action="store_true", help="only the manifest rows with subset500 == 1")
 a = ap.parse_args()
 
 rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))
+if a.subset500:
+    rows = [r for r in rows if r.get("subset500") == "1"]
 rows = [r for i, r in enumerate(rows) if i % a.nshards == a.shard][: a.limit or None]
 cond_dir = OUT_ROOT / a.split / "conditions" / a.condition
 tag = a.out_tag or a.controller
@@ -46,7 +50,8 @@ d_vae = OUT_ROOT / "outputs" / tag / a.condition / "vae@28"
 for d in [d_lat, d_vae]:
     d.mkdir(parents=True, exist_ok=True)
 log = OUT_ROOT / "latents" / tag / f"log_{a.condition}_{a.split}_shard{a.shard}.jsonl"
-dev = "cuda"; H = W = 512
+dev = "cuda"; H = W = a.size
+COND_RESAMPLE = Image.BICUBIC if a.condition == "depth" else Image.NEAREST
 VSF = 8   # FLUX VAE downsampling factor for _unpack_latents (EasyControl's vendored pipeline reports a different vae_scale_factor convention)
 steps_cap = [int(x) for x in a.capture_steps.split(",")]
 from diffusers.pipelines import FluxPipeline  # noqa: E402
@@ -110,6 +115,8 @@ for r in rows:
     if pt.exists() and (d_vae / f"{sid}.png").exists():
         continue
     cond = Image.open(cond_dir / f"{sid}.png").convert("RGB")
+    if cond.size != (W, H):
+        cond = cond.resize((W, H), COND_RESAMPLE)
     g = torch.Generator(device=dev).manual_seed(a.seed)
     captured = {}
 
@@ -127,7 +134,7 @@ for r in rows:
     torch.cuda.synchronize(); t_gen = time.time() - t1
     rec = {"latent": lat.half().cpu(), "sigma": float(pipe.scheduler.sigmas[-1].item()), "capture_steps": steps_cap, "caption": r["caption"],
            "seed": a.seed, "steps": a.steps, "guidance": a.guidance, "controller": a.controller, "condition": a.condition, "sample_id": sid,
-           "t_gen_s": t_gen, "settings": settings}
+           "size": a.size, "t_gen_s": t_gen, "settings": settings}
     for K, (x, sg) in captured.items():
         rec[f"xt{K}"] = FluxPipeline._unpack_latents(x, H, W, VSF).half().cpu(); rec[f"sigma{K}"] = sg
     torch.save(rec, pt)

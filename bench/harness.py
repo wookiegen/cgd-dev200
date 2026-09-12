@@ -37,13 +37,17 @@ ap.add_argument("--condition", default=None); ap.add_argument("--metrics", defau
 ap.add_argument("--controller", default=""); ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--out-dir", default=str(REPO_BENCH.parent / "results" / "bench"))
 ap.add_argument("--vlm-batch", type=int, default=16, help="images per forward for the VLM scorers (metrics keyword 'vlm': DeQA, VisualQuality-R1, UniPercept IAA/IQA via PiD's evaluation module)")
+ap.add_argument("--subset500", action="store_true", help="score only the manifest rows with subset500 == 1 (file tag gets '.subset500'; FID against the same subset of real images)")
 a = ap.parse_args()
 
 conds = a.condition.split(",") if a.condition else CONDS[a.split]
 metrics = set(a.metrics.split(","))
 if a.res == 2048 or a.split in NO_PAIRED_REAL:
     metrics -= {"recon", "fid"}
-rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))[: a.limit or None]
+rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))
+if a.subset500:
+    rows = [r for r in rows if r.get("subset500") == "1"]
+rows = rows[: a.limit or None]
 gen = Path(a.gen_dir); gen512 = Path(a.gen_dir_512) if a.gen_dir_512 else None
 bench = OUT_ROOT / a.split
 out_dir = Path(a.out_dir) / a.split; out_dir.mkdir(parents=True, exist_ok=True)
@@ -54,6 +58,8 @@ if a.controller:                      # results of different controllers must no
 file_tag = tag if metrics == (DEFAULT_METRICS - ({"recon", "fid"} if (a.res == 2048 or a.split in NO_PAIRED_REAL) else set())) else f"{tag}.{'-'.join(sorted(metrics))}"
 if conds != CONDS[a.split]:          # a run restricted to a subset of the split's conditions gets its own file (two condition runs must not overwrite each other)
     file_tag += "." + "-".join(conds)
+if a.subset500:
+    file_tag += ".subset500"
 
 # probe native resolution
 probe = np.array(Image.open(gen / f"{rows[0]['sample_id']}.png"))
@@ -183,7 +189,7 @@ if crop_dir_gen is not None:
             Image.fromarray(load_view(r["sample_id"])).save(view_dir / f"{r['sample_id']}.png")
     real_dir = bench / "images"
     if a.method != "real":
-        if a.limit:   # FID over a subset: compare against the same subset of real images
+        if a.limit or a.subset500:   # FID over a subset: compare against the same subset of real images
             sub = Path(tempfile.mkdtemp(prefix="realsub_"))
             for r in rows:
                 shutil.copy(real_dir / f"{r['sample_id']}.png", sub / f"{r['sample_id']}.png")
