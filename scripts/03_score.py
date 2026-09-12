@@ -4,7 +4,8 @@
 Adherence (the signal):  Canny F1 between cv2.Canny(gray(output), 100, 200) and the input condition.
    - matched 512 view : output at 512 (VAE native; PiD via the INTER_AREA downsample) vs the 512 condition
    - native 2048      : 2048 output vs the condition resampled to 2048 with NEAREST (BENCHMARK v1.1 rule);
-                        for the 512-native VAE row this is a REFERENCE computed on a bilinear x4 upsample of its output
+                        for the 512-native VAE row this is a REFERENCE computed on a BICUBIC x4 upsample of its output (the paper's
+                        dagger convention for 512-native rows; the interpolation route to 2048, not a native output)
    TWO F1 variants (BENCHMARK v1.8, 2026-09-12 update of this loop): `canny_f1_*` = F1 with a matching tolerance of ONE CONDITION PIXEL
    (1 px at 512, 4 px at 2048; BSDS-style dilation) = the paper metric and THE GATE at both resolutions; `canny_f1s_*` = the strict
    pixel-exact F1 of the original loop, kept as the 512 anchor (its 2048 value mostly measures the 4-px-thick resampled reference).
@@ -73,8 +74,8 @@ for idx in ids:
         cond_hr = cv2.resize(cond512.astype(np.uint8), (HR, HR), interpolation=cv2.INTER_NEAREST) > 0
         if H == HR:
             e_hr = canny(nat); r["native_via"] = "native"
-        else:   # 512-native decoders (VAE): REFERENCE value on a bilinear x4 upsample; not a claim (see README)
-            e_hr = canny(cv2.resize(nat, (HR, HR), interpolation=cv2.INTER_LINEAR)); r["native_via"] = "bilinear_x4"
+        else:   # 512-native decoders (VAE): REFERENCE value on a BICUBIC x4 upsample (the paper's dagger convention, 2026-09-12; was bilinear); not a claim
+            e_hr = canny(cv2.resize(nat, (HR, HR), interpolation=cv2.INTER_CUBIC)); r["native_via"] = "bicubic_x4"
         r["canny_f1_native"] = f1_tol(e_hr, cond_hr, HR // 512); r["canny_f1s_native"] = f1(e_hr, cond_hr)
         with torch.no_grad():
             r["lpips"] = float(M["lpips"](tens(view512), tens(src)))
@@ -111,10 +112,10 @@ names = {"omini_vae": "OminiControl + VAE decode (512, native)",
          "omini_pid": "OminiControl + vanilla PiD (final latent, 2048)",
          "omini_pid_et24": "OminiControl + vanilla PiD, early-terminated at 24/28 (2048)",
          "omini_pid_et16": "OminiControl + vanilla PiD, early-terminated at 16/28 (2048)"}
-lines = ["| Decoder | n | Canny F1 @512 (matched, tolerant) ↑ | Canny F1 @2048 (native, tolerant; VAE row via bilinear x4) ↑ | strict F1 @512 (anchor) ↑ | strict F1 @2048 (metric-dominated) | LPIPS ↓ | PSNR ↑ | SSIM ↑ | MUSIQ @512 (matched) ↑ | MUSIQ (native) ↑ | decode s/img ↓ | peak mem GB ↓ |",
+lines = ["| Decoder | n | Canny F1 @512 (matched, tolerant) ↑ | Canny F1 @2048 (native, tolerant; VAE row = bicubic x4 reference) ↑ | strict F1 @512 (anchor) ↑ | strict F1 @2048 (metric-dominated) | LPIPS ↓ | PSNR ↑ | SSIM ↑ | MUSIQ @512 (matched) ↑ | MUSIQ (native) ↑ | decode s/img ↓ | peak mem GB ↓ |",
          "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
 for _, r in agg.iterrows():
-    f1n = f"{r.canny_f1_native:.4f}" + (" (bilinear x4)" if r.native_res == 512 else "")
+    f1n = f"{r.canny_f1_native:.4f}" + (" (bicubic x4 ref.)" if r.native_res == 512 else "")
     lines.append(f"| {names.get(r.variant, r.variant)} | {int(r.n)} | {r.canny_f1_512:.4f} | {f1n} | {r.canny_f1s_512:.4f} | {r.canny_f1s_native:.4f} | {r.lpips:.4f} | {r.psnr:.2f} | {r.ssim:.4f} | {r.musiq_512:.2f} | {r.musiq_native:.2f} | {r.decode_s} | {r.peak_mem_gb} |")
 gen_line = f"\nGeneration (FLUX.1-dev + OminiControl canny LoRA, 28 steps @512, seed 0): {lat.get('gen_s', float('nan')):.2f} s/img, shared by every row.\n" if "gen_s" in lat else ""
 open(os.path.join(res, "dev200_summary.md"), "w").write("\n".join(lines) + "\n" + gen_line)

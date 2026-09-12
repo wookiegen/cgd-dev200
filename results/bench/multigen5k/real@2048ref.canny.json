@@ -1,0 +1,18 @@
+[
+ {
+  "method": "real",
+  "controller": "",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 512,
+  "via": "cubic_x4_upsample_REFERENCE_not_native",
+  "adherence": {
+   "f1": 0.5473920623258469,
+   "f1_strict": 0.15273336358409598,
+   "tol_px": 4
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/multigen5k/images"
+ }
+]
