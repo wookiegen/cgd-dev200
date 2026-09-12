@@ -1,0 +1,30 @@
+[
+ {
+  "method": "condvae",
+  "controller": "omini",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "subset": "",
+  "adherence": {
+   "mse": 715.3634897930518,
+   "rmse": 23.81774064995378
+  },
+  "quality": {
+   "musiq": 72.21330468139648,
+   "niqe": 4.930955572490195,
+   "maniqa": 0.4513625787571073,
+   "qalign": 4.1132044921875,
+   "psnr": 11.374161614513397,
+   "ssim": 0.3814014136672671,
+   "lpips": 0.6180685863524675,
+   "dists": 0.3013984206676483,
+   "fid": 20.498421941267054,
+   "pfid": 21.297953732713154
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/depth/condvae",
+  "time_s": 2541.6
+ }
+]

@@ -27,6 +27,7 @@ ap.add_argument("--seed", type=int, default=0)
 ap.add_argument("--pid-ckpt-type", default="2k", help="2k = released 4-step distilled student (main tables); teacher = PiD_v1pt5 undistilled (BENCHMARK v1.11)")
 ap.add_argument("--out-name", default=None, help="output folder prefix (default: pid for the student, pidt for the teacher) -> outputs/<ctrl>/<cond>/<out-name>@<K>")
 ap.add_argument("--subset500", action="store_true", help="decode only the manifest rows with subset500 == 1 (multigen5k)")
+ap.add_argument("--split", default="multigen5k", help="manifest used by --subset500")
 a = ap.parse_args()
 TEACHER = a.pid_ckpt_type == "teacher"
 steps = a.steps if a.steps is not None else (25 if TEACHER else 4)
@@ -38,7 +39,7 @@ files = sorted(glob.glob(str(d_lat / "*.pt")))
 if a.subset500:
     import csv
     from common import REPO_BENCH
-    keep = {r["sample_id"] for r in csv.DictReader(open(REPO_BENCH / "multigen5k" / "manifest.csv")) if r.get("subset500") == "1"}
+    keep = {r["sample_id"] for r in csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")) if r.get("subset500") == "1"}
     files = [f for f in files if os.path.splitext(os.path.basename(f))[0] in keep]
 files = [f for i, f in enumerate(files) if i % a.nshards == a.shard][: a.limit or None]
 ks = [int(k) for k in a.ks.split(",")]

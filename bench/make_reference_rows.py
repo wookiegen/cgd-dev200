@@ -23,7 +23,7 @@ from PIL import Image
 from common import OUT_ROOT, REPO_BENCH
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--split", required=True, choices=["multigen5k", "ade20k_val2k", "coco_val5k"])
+ap.add_argument("--split", required=True, choices=["multigen5k", "ade20k_val2k", "coco_val5k", "lsdir1k"])
 ap.add_argument("--shard", type=int, default=0); ap.add_argument("--nshards", type=int, default=1)
 ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--no-pid", action="store_true"); ap.add_argument("--no-vae", action="store_true")

@@ -26,7 +26,7 @@ from PIL import Image
 from common import OUT_ROOT, REPO_BENCH
 import scorers as S
 
-CONDS = {"multigen5k": ["canny", "depth"], "ade20k_val2k": ["seg"], "coco_val5k": ["bbox"], "dreambench750": ["subject"]}
+CONDS = {"multigen5k": ["canny", "depth"], "ade20k_val2k": ["seg"], "coco_val5k": ["bbox"], "dreambench750": ["subject"], "lsdir1k": ["canny"]}
 NO_PAIRED_REAL = {"dreambench750"}   # no paired source image: recon / fid are not defined there
 
 ap = argparse.ArgumentParser()
