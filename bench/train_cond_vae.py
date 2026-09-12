@@ -18,8 +18,10 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image, PngImagePlugin
 from safetensors.torch import save_file
+
+PngImagePlugin.MAX_TEXT_CHUNK = 256 * 1024 * 1024   # the crops inherit large iCCP chunks from the MultiGen sources
 
 from common import OUT_ROOT, REPO_BENCH
 from cond_vae import CondVAEDecoder, cond_to_tensor

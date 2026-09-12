@@ -9,8 +9,10 @@ import time
 
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image, PngImagePlugin
 from transformers import DPTForDepthEstimation, DPTImageProcessor
+
+PngImagePlugin.MAX_TEXT_CHUNK = 256 * 1024 * 1024   # the crops inherit large iCCP chunks from the MultiGen sources
 
 from common import OUT_ROOT
 

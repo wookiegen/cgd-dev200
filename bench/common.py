@@ -18,7 +18,9 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, PngImagePlugin
+
+PngImagePlugin.MAX_TEXT_CHUNK = 256 * 1024 * 1024   # MultiGen-20M PNGs (and crops saved from them) carry iCCP / text chunks above PIL's 1 MB default
 
 REPO_BENCH = Path(__file__).resolve().parent                     # cgd-dev200/bench  (manifests, pins)
 RAW_ROOT = Path(os.environ.get("CGD_RAW_ROOT", "/data/wookiekim/cgd/data"))          # downloaded sources
