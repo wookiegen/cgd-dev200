@@ -4,11 +4,11 @@ For colleagues and their coding agents. This file records the evaluation decisio
 judged the way the paper will judge it. The authoritative spec is the paper repo's `docs/BENCHMARK_v1.md` (v1.9.1) and the experiments
 draft's subsubsection "Scoring Protocol Across Resolutions"; this is the working summary.
 
-**한 줄 요약.** 기본 설정에서 condition은 항상 512입니다. 평가는 512 matched view와 native 2048에서 따로 하며, edge F1은 "condition 픽셀 1개"
-tolerance (512에서 1px, 2048에서 4px)를 씁니다. dev-200 게이트도 이 지표로 바뀌었습니다 (`git pull` 후 `scripts/03_score.py` 재실행). native
-2048의 실질적 상한은 1.0이 아니라 PiD round trip의 0.80입니다. 여기에 더해 **native-condition track** (Section 7)이 추가되었습니다: 디코더에만
-2048 condition을 주는 두 번째 설정으로, 학습 시 512 / 2048 두 형태를 반반 섞어 하나의 디코더가 둘 다 받을 수 있게 합니다. 논문의 헤드라인은
-여전히 512-condition 프로토콜입니다.
+**한 줄 요약.** 기준 해상도는 2048이고 512 view는 거기서 내린 것입니다. edge map은 두 개입니다: c512(512 이미지의 Canny, 생성기 입력)와
+c2048(2048 reference의 Canny, 생성기는 못 봄). 모든 행에 edge 열이 세 개 있습니다: 512 vs c512 (1px), 2048 vs c512 (4px), 2048 vs c2048 (1px).
+tolerance는 항상 "condition 픽셀 1개"입니다. CGD는 c512로 디코딩한 행과 c2048로 디코딩한 행을 둘 다 냅니다. dev-200 게이트는 tolerant F1
+기준으로 바뀌었습니다 (`git pull` 후 `scripts/03_score.py` 재실행). 2048 vs c512 열의 실질적 상한은 PiD round trip의 0.80이고, 2048 vs c2048
+열의 기준은 round trip 1.0입니다.
 
 ## 1. What changed in the dev loop
 
@@ -101,7 +101,7 @@ ControlNet 0.305 (vs vanilla PiD K=24 native 0.669 / 0.766 / 0.649). Tool: `benc
 - Paired significance: `bench/paired_ci.py` (paired bootstrap 95% CIs on per-image CSVs; on 5000 images the CIs are within +-0.003).
 - Live state of all runs: `bench/STATUS.md`.
 
-## 7. The second reference map c2048 ("native condition"; added 2026-09-12; FIRM framing decided the same evening)
+## 7. The second reference map c2048 (added 2026-09-12; FIRM framing decided the same evening)
 
 **Names.** Every eval image has two edge maps: **c512** = Canny of the 512 image (what the generator receives; every main-table row is scored
 against it, 4 px tolerance at 2048) and **c2048** = Canny of the 2048 reference (nobody in the generator sees it; a 2048 output can be
@@ -109,7 +109,7 @@ scored against it at 1 px). "F1 @2048 vs c512" and "F1 @2048 vs c2048" are the t
 
 **Framing (user decision, option 1).** 2048 is the REFERENCE resolution of the benchmark; the 512 view is derived from it. The matched
 view exists only because the VAE decode produces nothing above 512. The cached latents stay as they are: the generator's condition is
-Canny of the REAL 512 image, the native condition is Canny of the PiD round trip at 2048; the two agree at the 512 view at F1 0.92 (the
+Canny of the REAL 512 image (c512), the 2048 map c2048 is Canny of the PiD round trip at 2048; the two agree at the 512 view at F1 0.92 (the
 round trip's own 512 score), stated in the paper. No regeneration.
 
 A second setting, supplementary in the paper: the DECODER receives the edge condition at the output resolution (2048), while the
@@ -125,13 +125,13 @@ keep, in addition to the default 512-condition protocol above (which remains the
 - **Training**: `make_targets.py` writes both `conditions/canny` (512 view of the target) and `conditions/canny2048` (target at 2048).
   Sample one of the two per example (p = 0.5) so ONE decoder accepts a condition at either scale; the 512 form is nearest-upsampled inside
   the decoder when the injection point is at 2048. Section 5 above stays valid for the default protocol: never feed a 2048-extracted map
-  when the setting is "512 condition"; in the native-condition setting the 2048 map IS the condition, by definition.
+  for the `_c512` row; for the `_c2048` row the 2048 map IS the condition, by definition.
 - **Paper table**: since v1.12 the c2048 score is the THIRD edge column of the MAIN table (512 / c512, 2048 / c512, 2048 / c2048), for every
   row incl. both CGD rows; the former separate table is gone. `BASELINES.md` Table A has the same three columns.
 
-**Baseline numbers against the native condition (tolerance 1 px at 2048; `results/bench/multigen5k/*.cond2048*.json`):**
+**Baseline numbers against c2048 (tolerance 1 px at 2048; `results/bench/multigen5k/*.cond2048*.json`):**
 
-| row | canny F1 @2048 vs native condition |
+| row | canny F1 @2048 vs c2048 (1 px) |
 |---|---|
 | PiD round trip (the reference) | 1.000 |
 | real image, bicubic x4 (dagger) | 0.306 |

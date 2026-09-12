@@ -37,7 +37,7 @@ cd cgd-dev200/bench
 CUDA_VISIBLE_DEVICES=0 python eval_variant.py --name <내이름_v1> --gen-dir <2048 PNG 폴더> --controller omini --condition canny --k 24 [--subset500]
 ```
 
-이 한 줄이 512 view, native 2048, native-condition까지 모두 채점하고, `BASELINES.md`의 VAE decode / vanilla PiD 행과의 차이, paired
+이 한 줄이 512 vs c512, 2048 vs c512, 2048 vs c2048 세 열을 모두 채점하고, `BASELINES.md`의 VAE decode / vanilla PiD 행과의 차이, paired
 bootstrap 95% 신뢰구간, 그리고 게이트 PASS / FAIL을 출력합니다 (`results/variants/<이름>/REPORT.md`). 빠르게 보려면 `--subset500`
 (500장)으로 먼저 돌리세요. 5000장에서는 F1 차이 0.005면 유의합니다. dev-200 루프(`scripts/03_score.py`)는 그대로 쓰되, 그 숫자는 논문에
 쓰지 않습니다.
@@ -46,7 +46,7 @@ bootstrap 95% 신뢰구간, 그리고 게이트 PASS / FAIL을 출력합니다 (
 
 - 학습 타깃은 2048 PiD 디코드이고, condition은 두 형태를 저장합니다: 타깃을 512로 내려서 뽑은 것과 타깃 자체(2048)에서 뽑은 것. 둘을
   반반 섞어 학습하면 한 디코더가 둘 다 받습니다. 디코더 내부에서 512 map을 늘려 써야 하면 edge는 nearest, depth는 bicubic입니다.
-- native-condition 설정을 위해 `make_targets.py`는 타깃의 2048 Canny(`conditions/canny2048`)도 저장합니다. 학습 때 512 형태와 2048 형태를
+- c2048 형태를 위해 `make_targets.py`는 타깃의 2048 Canny(`conditions/canny2048`)도 저장합니다. 학습 때 512 형태와 2048 형태를
   예시마다 반반 섞으면 하나의 디코더가 둘 다 받습니다.
 - **CGD는 두 가지 condition으로 모두 평가합니다.** 같은 latent를 512 condition으로 디코딩한 결과(`<이름>_c512`, vanilla PiD와의 동일 조건
   비교)와 2048 condition으로 디코딩한 결과(`<이름>_c2048`, pixel-space 디코더만 쓸 수 있는 입력) 둘 다 내고 둘 다 채점하세요. condition은
