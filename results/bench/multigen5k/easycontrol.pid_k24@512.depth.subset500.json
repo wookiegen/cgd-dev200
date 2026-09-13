@@ -1,0 +1,30 @@
+[
+ {
+  "method": "pid_k24",
+  "controller": "easycontrol",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "mse": 591.4273546134725,
+   "rmse": 21.820407889203224
+  },
+  "quality": {
+   "musiq": 73.94483462524414,
+   "niqe": 4.1208960680249405,
+   "maniqa": 0.551647835969925,
+   "qalign": 4.49372265625,
+   "psnr": 10.452470879554749,
+   "ssim": 0.37718120903381136,
+   "lpips": 0.5849077865481377,
+   "dists": 0.2777222948074341,
+   "fid": 89.98955340052026,
+   "pfid": 94.0561056664265
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/depth/pid@24",
+  "time_s": 826.4
+ }
+]
