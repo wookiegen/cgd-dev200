@@ -1,0 +1,35 @@
+[
+ {
+  "method": "vae",
+  "controller": "easycontrol_2048",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "f1": 0.25751788725315294,
+   "f1_strict": 0.08563164202970545,
+   "tol_px": 1,
+   "cond_res": 512,
+   "precision": 0.5151566447413678,
+   "recall": 0.19611890842807495,
+   "edge_density": 0.031221900939941406
+  },
+  "quality": {
+   "musiq": 70.84270226287842,
+   "niqe": 5.555621614436503,
+   "maniqa": 0.4426472533941269,
+   "qalign": 4.001638671875,
+   "psnr": 10.458141477584839,
+   "ssim": 0.36127388579307274,
+   "lpips": 0.6682720602154731,
+   "dists": 0.33286240899562836,
+   "fid": 100.12601299762315,
+   "pfid": 104.78812444706017
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol_2048/canny/vae@28",
+  "time_s": 945.9
+ }
+]

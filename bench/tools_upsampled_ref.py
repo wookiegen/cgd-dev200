@@ -25,12 +25,16 @@ ap.add_argument("--res", type=int, default=2048); ap.add_argument("--interp", de
 ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--cond-res", type=int, default=512, help="2048 = score against the native-condition track's conditions/canny2048 (tol 1 px)")
 ap.add_argument("--split", default="multigen5k")
+ap.add_argument("--subset500", action="store_true", help="only manifest rows with subset500 == 1 (file tag gets .subset500)")
 a = ap.parse_args()
 INTERP = {"cubic": cv2.INTER_CUBIC, "linear": cv2.INTER_LINEAR, "lanczos": cv2.INTER_LANCZOS4}[a.interp]
-rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))[: a.limit or None]
+rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))
+if a.subset500:
+    rows = [r for r in rows if r.get("subset500") == "1"]
+rows = rows[: a.limit or None]
 gen = Path(a.gen_dir); cond_dir = OUT_ROOT / a.split / "conditions" / ("canny" if a.cond_res == 512 else f"canny{a.cond_res}")
 out_dir = REPO_BENCH.parent / "results" / "bench" / a.split; out_dir.mkdir(parents=True, exist_ok=True)
-tag = (f"{a.controller}." if a.controller else "") + f"{a.method}@{a.res}ref" + ("" if a.cond_res == 512 else f".cond{a.cond_res}")
+tag = (f"{a.controller}." if a.controller else "") + f"{a.method}@{a.res}ref" + (".subset500" if a.subset500 else "") + ("" if a.cond_res == 512 else f".cond{a.cond_res}")
 sc = CannyF1(); per = []; t0 = time.time()
 for k, r in enumerate(rows):
     sid = r["sample_id"]
@@ -42,7 +46,7 @@ for k, r in enumerate(rows):
     if (k + 1) % 500 == 0:
         print(f"  [{k+1}/{len(rows)}] {time.time()-t0:.0f}s", flush=True)
 rec = {"method": a.method, "controller": a.controller, "condition": "canny", "split": a.split, "res": a.res, "native_res": 512,
-       "via": f"{a.interp}_x{a.res // 512}_upsample_REFERENCE_not_native", "adherence": {"f1": float(np.mean([p["canny_f1"] for p in per])),
+       "via": f"{a.interp}_x{a.res // 512}_upsample_REFERENCE_not_native", "subset": "subset500" if a.subset500 else "", "adherence": {"f1": float(np.mean([p["canny_f1"] for p in per])),
        "f1_strict": float(np.mean([p["canny_f1_strict"] for p in per])), "tol_px": max(1, a.res // a.cond_res), "cond_res": a.cond_res}, "n": len(per), "gen_dir": str(gen)}
 json.dump([rec], open(out_dir / f"{tag}.canny.json", "w"), indent=1)
 with open(out_dir / f"{tag}.canny_per_image.csv", "w", newline="") as f:

@@ -1,0 +1,24 @@
+[
+ {
+  "method": "vae",
+  "controller": "fluxcn_2048",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "mse": 1388.6199152516049,
+   "rmse": 34.70765556622601
+  },
+  "quality": {
+   "musiq": 58.46058887481689,
+   "niqe": 7.007753714413043,
+   "maniqa": 0.3325891543030739,
+   "qalign": 2.811826171875
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn_2048/depth/vae@28",
+  "time_s": 978.3
+ }
+]

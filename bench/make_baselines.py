@@ -92,6 +92,24 @@ L += ["", "Notes: FID / pFID / no-ref / LPIPS come from the CANNY run of each co
       "EasyControl (released seg LoRA); OminiControl's seg adapter is optional (red text in the paper). Depth and seg are flat across resolutions by construction "
       "(scorers resize internally). Paired bootstrap 95% CIs on 5000 images are within ±0.003 F1 (`bench/paired_ci.py`).", ""]
 
+# ---------------------------------------------------------------- A2. native route (controllers generating at 2048 directly + VAE; subset500; v1.11 / v1.13)
+if any(k[2].endswith("_2048") for k in recs):
+    L += ["## A2. Native route: the controller generates at 2048 DIRECTLY (FLUX at 4 MP) + VAE decode, subset500 (vs the 512 generation on the same 500 images)", "",
+          "| row | Canny F1 @512 view vs c512 ↑ | Canny F1 @2048 vs c512 (4 px) ↑ | Canny F1 @2048 vs c2048 (1 px) ↑ | Depth RMSE ↓ | MUSIQ @512 ↑ | MUSIQ @2048 ↑ | FID @512 ↓ |", "|---|---|---|---|---|---|---|---|"]
+    for ctrl, name in CTRL.items():
+        for tag, lab, res in [("", "512 generation + VAE decode", 512), ("_2048", "2048 generation + VAE decode (native route)", 2048)]:
+            c5 = get(M, "canny", ctrl + tag, "vae", 512, subset="subset500"); c20 = get(M, "canny", ctrl + tag, "vae", 2048, subset="subset500")
+            cn = get(M, "canny", ctrl + tag, "vae", 2048, cond_res=2048, subset="subset500"); d5 = get(M, "depth", ctrl + tag, "vae", 512, subset="subset500")
+            if c5 or c20:
+                L.append(f"| {name}: {lab} | {A(c5, 'f1')} | {A(c20, 'f1') if c20 else dag(get(M, 'canny', ctrl, 'vae', 2048, subset='subset500', via='ref'))} | "
+                         f"{A(cn, 'f1') if cn else dag(get(M, 'canny', ctrl, 'vae', 2048, cond_res=2048, subset='subset500', via='ref'))} | {A(d5, 'rmse', 2)} | {Q(c5, 'musiq')} | {Q(c20, 'musiq')} | {Q(c5, 'fid', 1)} |")
+        p24 = get(M, "canny", ctrl, "pid_k24", 512, subset="subset500")
+        if p24:
+            L.append(f"| {name}: 512 generation + vanilla PiD K=24 (pixel-decoder route) | {A(p24, 'f1')} | {A(get(M, 'canny', ctrl, 'pid_k24', 2048, subset='subset500'), 'f1')} | "
+                     f"{A(get(M, 'canny', ctrl, 'pid_k24', 2048, cond_res=2048, subset='subset500'), 'f1')} | {A(get(M, 'depth', ctrl, 'pid_k24', 512, subset='subset500'), 'rmse', 2)} | {Q(p24, 'musiq')} | {Q(get(M, 'canny', ctrl, 'pid_k24', 2048, subset='subset500'), 'musiq')} | {Q(p24, 'fid', 1)} |")
+    L += ["", "Reading: at 4 MP the controllers drift from the condition (FLUX and its adapters are trained at <= 1 MP); OminiControl's token-concat LoRA collapses to near-black condition-tracing textures. "
+          "Generation at 2048 takes 36 s/img alone (42 s with four concurrent jobs) vs ~3 s for 512 generation + PiD.", ""]
+
 # (former Table B, the c2048 scores, is now the third edge column of Table A; v1.12)
 
 # ---------------------------------------------------------------- C. subject
