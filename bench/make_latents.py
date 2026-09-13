@@ -37,6 +37,7 @@ ap.add_argument("--easycontrol", default=os.environ.get("EASYCONTROL_ROOT", str(
 ap.add_argument("--out-tag", default=None, help="override the output directory name (default = controller)")
 ap.add_argument("--size", type=int, default=512, help="generation resolution (OPEN_QUESTIONS 11 side comparison: 1024 for EasyControl / ControlNet); the 512 condition is resized to it (nearest for canny / seg, bicubic for depth)")
 ap.add_argument("--subset500", action="store_true", help="only the manifest rows with subset500 == 1")
+ap.add_argument("--omini-lora", default=None, help="OminiControl: path of a LoRA .safetensors trained by us (bench/omini_seg) instead of the released Yuanshi/OminiControl adapter")
 a = ap.parse_args()
 
 rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))
@@ -61,8 +62,13 @@ if a.controller == "omini":
     sys.path.insert(0, a.omini)
     from omini.pipeline.flux_omini import Condition, generate  # noqa: E402
     pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16).to(dev)
-    LORA = {"canny": "experimental/canny.safetensors", "depth": "experimental/depth.safetensors"}[a.condition]
-    pipe.load_lora_weights("Yuanshi/OminiControl", weight_name=LORA, adapter_name=a.condition); pipe.set_adapters([a.condition])
+    if a.omini_lora:   # our own adapter (e.g. the ADE20K segmentation LoRA, bench/omini_seg/train_seg.py)
+        LORA = a.omini_lora
+        pipe.load_lora_weights(os.path.dirname(LORA), weight_name=os.path.basename(LORA), adapter_name=a.condition)
+    else:
+        LORA = {"canny": "experimental/canny.safetensors", "depth": "experimental/depth.safetensors"}[a.condition]
+        pipe.load_lora_weights("Yuanshi/OminiControl", weight_name=LORA, adapter_name=a.condition)
+    pipe.set_adapters([a.condition])
     settings = {"lora": LORA}
 
     def run(prompt, cond, g, cb):

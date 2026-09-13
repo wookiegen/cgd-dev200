@@ -19,6 +19,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--condition", required=True); ap.add_argument("--controller", default="omini"); ap.add_argument("--split", default="multigen5k")
 ap.add_argument("--ckpt", default=None); ap.add_argument("--batch", type=int, default=8); ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--out-name", default="condvae")
+ap.add_argument("--k", type=int, default=28, help="which cached latent to decode: 28 = the clean x0 ('latent'), 24 / 16 = the truncated x_t ('xt24' / 'xt16'; the re-noised archetype)")
 a = ap.parse_args()
 ckpt = a.ckpt or str(OUT_ROOT.parent / "cond_vae" / a.condition / "best.safetensors")
 d_lat = OUT_ROOT / "latents" / a.controller / a.condition
@@ -31,11 +32,12 @@ from diffusers import AutoencoderKL  # noqa: E402
 vae = AutoencoderKL.from_pretrained("black-forest-labs/FLUX.1-dev", subfolder="vae").to(dev).eval()
 SF, SH = vae.config.scaling_factor, vae.config.shift_factor
 model = load_cond_vae(vae, ckpt, dev).eval()
-print(f"condvae {a.controller}/{a.condition}: {len(files)} latents, ckpt {ckpt}", flush=True)
+print(f"condvae {a.controller}/{a.condition}: {len(files)} latents (K = {a.k}), ckpt {ckpt} -> {out}", flush=True)
 t0 = time.time()
 for i in range(0, len(files), a.batch):
     fs = files[i:i + a.batch]; ids = [os.path.splitext(os.path.basename(f))[0] for f in fs]
-    lats = torch.cat([torch.load(f, map_location="cpu")["latent"].float() for f in fs]).to(dev)
+    KEY = "latent" if a.k == 28 else f"xt{a.k}"
+    lats = torch.cat([torch.load(f, map_location="cpu")[KEY].float() for f in fs]).to(dev)
     conds = [np.array(Image.open(cond_dir / f"{s}.png").convert("RGB")) for s in ids]
     with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16):
         y = model(lats / SF + SH, cond_to_tensor(conds, dev)).float().clamp(-1, 1)

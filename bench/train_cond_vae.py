@@ -27,7 +27,7 @@ from common import OUT_ROOT, REPO_BENCH
 from cond_vae import CondVAEDecoder, cond_to_tensor
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--condition", required=True, choices=["canny", "depth"])
+ap.add_argument("--condition", required=True, choices=["canny", "depth", "seg"])
 ap.add_argument("--set", default="multigen_train30")
 ap.add_argument("--steps", type=int, default=6000); ap.add_argument("--batch", type=int, default=4); ap.add_argument("--accum", type=int, default=2)
 ap.add_argument("--lr", type=float, default=5e-5, help="decoder lr"); ap.add_argument("--lr-branch", type=float, default=1e-4)
@@ -36,18 +36,20 @@ ap.add_argument("--val-every", type=int, default=500); ap.add_argument("--n-val"
 ap.add_argument("--out", default=None); ap.add_argument("--resume", action="store_true"); ap.add_argument("--seed", type=int, default=0)
 ap.add_argument("--freeze-decoder", action="store_true", help="train only the condition branch + injections")
 ap.add_argument("--mode", default="add", choices=["add", "mod"], help="injection archetype: add = feature fusion (default), mod = SPADE-style modulation")
+ap.add_argument("--renoise", action="store_true", help="matched-data variant (BENCHMARK v1.15): the input latent is re-noised like CGD's training pairs, z_t = (1 - s) z + s eps in the diffusers-scaled space, s = 0 w.p. --p-clean else U(0, --sigma-max)")
+ap.add_argument("--p-clean", type=float, default=0.25); ap.add_argument("--sigma-max", type=float, default=0.5848, help="FLUX sigma after K = 16 of 28 steps (sigma16 in the cached latents; sigma24 = 0.2383)")
 a = ap.parse_args()
 
 dev = "cuda"; torch.manual_seed(a.seed); random.seed(a.seed); np.random.seed(a.seed)
 OUT = Path(a.out or (OUT_ROOT.parent / "cond_vae" / a.condition)); OUT.mkdir(parents=True, exist_ok=True)
 T = OUT_ROOT / "train" / a.set
-cond_dir = T / "conditions" / "canny" if a.condition == "canny" else T / "conditions_real" / "depth"
+cond_dir = {"canny": T / "conditions" / "canny", "depth": T / "conditions_real" / "depth", "seg": T / "conditions" / "seg"}[a.condition]
 
 rows = [r for r in csv.DictReader(open(REPO_BENCH / "train" / a.set / "manifest.csv")) if r["blocked"] != "1"]
 have = lambda r: (T / "images512" / f"{r['sample_id']}.png").exists() and (cond_dir / f"{r['sample_id']}.png").exists()  # noqa: E731
 train_rows = [r for r in rows if r["split"] == "train" and have(r)]
 val_rows = [r for r in rows if r["split"] == "val" and have(r)][: a.n_val]
-print(f"{a.condition} ({a.mode}, decoder {'frozen' if a.freeze_decoder else 'finetuned'}): {len(train_rows)} train rows, {len(val_rows)} val rows from {T} -> {OUT}", flush=True)
+print(f"{a.condition} ({a.mode}, decoder {'frozen' if a.freeze_decoder else 'finetuned'}, {'RE-NOISED input' if a.renoise else 'clean input'}): {len(train_rows)} train rows, {len(val_rows)} val rows from {T} -> {OUT}", flush=True)
 assert len(train_rows) > 1000, "training crops / conditions missing (run make_targets.py --dry-run and precompute_real_depth.py first)"
 
 
@@ -96,6 +98,17 @@ def encode(x):
     return z.float()
 
 
+@torch.no_grad()
+def renoise(z):
+    """Re-noise the UNSCALED latent the way FLUX's flow sees it: scale, interpolate with Gaussian noise at a random sigma, unscale."""
+    B = z.shape[0]
+    sig = torch.rand(B, device=z.device) * a.sigma_max
+    sig = torch.where(torch.rand(B, device=z.device) < a.p_clean, torch.zeros_like(sig), sig).view(B, 1, 1, 1)
+    zs = (z - SH) * SF
+    zt = (1 - sig) * zs + sig * torch.randn_like(zs)
+    return zt / SF + SH
+
+
 # ------------------------------------------------------------------ validation: recon on val rows + paper metric on the canny dev-200
 dev200 = {}
 for r in csv.DictReader(open(REPO_BENCH / "multigen5k" / "manifest.csv")):
@@ -105,7 +118,7 @@ dev_ids = sorted(dev200.values())
 lat_dir = OUT_ROOT / "latents" / "omini" / a.condition
 bench_cond = OUT_ROOT / "multigen5k" / "conditions" / a.condition
 import scorers as S  # noqa: E402
-paper_scorer = S.CannyF1() if a.condition == "canny" else S.DepthScorer()
+paper_scorer = S.CannyF1() if a.condition == "canny" else (S.DepthScorer() if a.condition == "depth" else None)   # seg: no dev-200 metric (validated by L1 / LPIPS; scored on ade20k_val2k afterwards)
 
 
 @torch.no_grad()
@@ -118,28 +131,31 @@ def validate():
             y = model(encode(x), c).float().clamp(-1, 1)
         l1s.append((y - x).abs().mean().item()); lps.append(lpips((y + 1) / 2, (x + 1) / 2).mean().item())
     out["val_l1"] = float(np.mean(l1s)); out["val_lpips"] = float(np.mean(lps))
-    vals = []
-    for i in range(0, len(dev_ids), 8):
-        ids = dev_ids[i:i + 8]
-        lats = torch.cat([torch.load(lat_dir / f"{s}.pt", map_location="cpu")["latent"].float() for s in ids]).to(dev)
-        z = lats / SF + SH
-        conds = [np.array(Image.open(bench_cond / f"{s}.png").convert("RGB")) for s in ids]
-        with torch.autocast("cuda", dtype=torch.bfloat16):
-            y = model(z, cond_to_tensor(conds, dev)).float().clamp(-1, 1)
-        imgs = ((y.permute(0, 2, 3, 1).cpu().numpy() + 1) / 2 * 255).round().clip(0, 255).astype(np.uint8)
-        for s, im, cd in zip(ids, imgs, conds):
-            if a.condition == "canny":
-                vals.append(paper_scorer.score(im, cd)["f1"])
-            else:
-                ref = np.load(OUT_ROOT / "multigen5k" / "conditions" / "depth_raw" / f"{s}.npy").astype(np.float32)
-                vals.append(paper_scorer.score(im, ref)["rmse"])
-    out["dev200_" + ("canny_f1" if a.condition == "canny" else "depth_rmse")] = float(np.mean(vals))
+    for key, suf in (([("latent", ""), ("xt24", "_k24"), ("xt16", "_k16")] if a.renoise else [("latent", "")]) if paper_scorer is not None else []):   # paper metric at x0 (and at the truncated latents for the re-noised variant)
+        vals = []
+        for i in range(0, len(dev_ids), 8):
+            ids = dev_ids[i:i + 8]
+            lats = torch.cat([torch.load(lat_dir / f"{s}.pt", map_location="cpu")[key].float() for s in ids]).to(dev)
+            z = lats / SF + SH
+            conds = [np.array(Image.open(bench_cond / f"{s}.png").convert("RGB")) for s in ids]
+            with torch.autocast("cuda", dtype=torch.bfloat16):
+                y = model(z, cond_to_tensor(conds, dev)).float().clamp(-1, 1)
+            imgs = ((y.permute(0, 2, 3, 1).cpu().numpy() + 1) / 2 * 255).round().clip(0, 255).astype(np.uint8)
+            for s, im, cd in zip(ids, imgs, conds):
+                if a.condition == "canny":
+                    vals.append(paper_scorer.score(im, cd)["f1"])
+                else:
+                    ref = np.load(OUT_ROOT / "multigen5k" / "conditions" / "depth_raw" / f"{s}.npy").astype(np.float32)
+                    vals.append(paper_scorer.score(im, ref)["rmse"])
+        out["dev200_" + ("canny_f1" if a.condition == "canny" else "depth_rmse") + suf] = float(np.mean(vals))
     model.train(); return out
 
 
 def better(m, b):
     if b is None:
         return True
+    if paper_scorer is None:
+        return m["val_l1"] < b["val_l1"]
     k = "dev200_canny_f1" if a.condition == "canny" else "dev200_depth_rmse"
     return m[k] > b[k] if a.condition == "canny" else m[k] < b[k]
 
@@ -158,6 +174,8 @@ for step in range(step0 + 1, a.steps + 1):
         pairs = [load_pair(train_rows[j], random.random() < 0.5) for j in order[ptr:ptr + a.batch]]; ptr += a.batch
         x, c = batch_tensors(pairs)
         z = encode(x)
+        if a.renoise:
+            z = renoise(z)
         with torch.autocast("cuda", dtype=torch.bfloat16):
             y = model(z, c)
         y = y.float()

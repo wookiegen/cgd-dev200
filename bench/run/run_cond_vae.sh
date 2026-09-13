@@ -6,9 +6,11 @@
 #     VARIANT=mod EXTRA="--freeze-decoder --lr-branch 1e-4 --mode mod"   SPADE-style modulation, frozen decoder      (the second TYPE)
 #     VARIANT=ft  EXTRA="--lr 1e-5 --lr-branch 1e-4"                     additive injection, decoder finetuned at a safe lr (robustness)
 #   Checkpoints cond_vae/<cond>[_<VARIANT>]/, decodes outputs/omini/<cond>/condvae[_<VARIANT>]/, method label condvae[_<VARIANT>].
+#     VARIANT=rn  EXTRA="--freeze-decoder --lr-branch 1e-4 --renoise" KS="28 24 16"   matched-data archetype (re-noised input), decoded at x0 and x_t@24 / @16
 #   Marker: _logs/done_condvae_<cond>[_<VARIANT>].txt
 set -u
 COND=$1; STEPS=${2:-6000}; V=${VARIANT:-}; SUF=${V:+_$V}
+SPLIT=multigen5k; SMET=""; [ "$COND" = seg ] && { SPLIT=ade20k_val2k; SMET="--metrics adherence,recon,fid"; }   # seg: trained on ade20k_train (pass --set ade20k_train in EXTRA), scored on ade20k_val2k
 LOG=/data/wookiekim/cgd/data/_logs; B=/data/wookiekim/cgd/data/bench; CK=/data/wookiekim/cgd/data/cond_vae/${COND}${SUF}
 cd /data/wookiekim/cgd/cgd-dev200/bench
 echo "$(date '+%F %T') condvae $COND${SUF}: start (GPU $CUDA_VISIBLE_DEVICES; EXTRA=${EXTRA:-})" > $LOG/condvae_${COND}${SUF}_status.txt
@@ -18,9 +20,12 @@ if [ "$COND" = "depth" ]; then
 fi
 python train_cond_vae.py --condition $COND --steps $STEPS --batch 8 --accum 1 --out $CK ${EXTRA:-} 2>&1 | grep -v -i -E "warning|pynvml" > $LOG/condvae_${COND}${SUF}_train.log
 echo "$(date '+%F %T') training done; decoding" >> $LOG/condvae_${COND}${SUF}_status.txt
-python decode_cond_vae.py --condition $COND --controller omini --ckpt $CK/best.safetensors --out-name condvae${SUF} 2>&1 | grep -v -i -E "warning|pynvml" > $LOG/condvae_${COND}${SUF}_decode.log
-echo "$(date '+%F %T') decode done; scoring" >> $LOG/condvae_${COND}${SUF}_status.txt
-python harness.py --method condvae${SUF} --controller omini --split multigen5k --condition $COND --gen-dir $B/outputs/omini/$COND/condvae${SUF} --res 512 2>&1 \
-  | grep -v -i -E "warning|pynvml|Loading checkpoint" > $LOG/condvae_${COND}${SUF}_score.log
+for K in ${KS:-28}; do   # KS="28 24 16" for the re-noised archetype: decode the clean x0 and the truncated x_t@24 / @16 (labels condvae_<V>, condvae_<V>_k24, condvae_<V>_k16)
+  KSUF=""; [ "$K" = 28 ] || KSUF="_k$K"
+  python decode_cond_vae.py --condition $COND --controller omini --split $SPLIT --ckpt $CK/best.safetensors --out-name condvae${SUF}${KSUF} --k $K 2>&1 | grep -v -i -E "warning|pynvml" > $LOG/condvae_${COND}${SUF}${KSUF}_decode.log
+  echo "$(date '+%F %T') decode K=$K done; scoring" >> $LOG/condvae_${COND}${SUF}_status.txt
+  python harness.py --method condvae${SUF}${KSUF} --controller omini --split $SPLIT --condition $COND --gen-dir $B/outputs/omini/$COND/condvae${SUF}${KSUF} --res 512 $SMET 2>&1 \
+    | grep -v -i -E "warning|pynvml|Loading checkpoint" > $LOG/condvae_${COND}${SUF}${KSUF}_score.log
+done
 python assemble.py > /dev/null 2>&1
 echo "$(date '+%F %T') CONDVAE $COND${SUF} DONE" > $LOG/done_condvae_${COND}${SUF}.txt
