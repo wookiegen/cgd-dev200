@@ -14,7 +14,7 @@ until [ -f $L/done_dryrun_crops_ade20k_train.txt ]; do sleep 60; done
 st "crops ready: $(cat $L/done_dryrun_crops_ade20k_train.txt); training on GPU ${G[0]}"
 cd $OM && CUDA_VISIBLE_DEVICES=${G[0]} OMINI_CONFIG=$REPO/bench/omini_seg/seg_512.yaml PYTHONPATH=$REPO/bench/omini_seg WANDB_MODE=disabled TOKENIZERS_PARALLELISM=true \
   accelerate launch --main_process_port 41359 -m train_seg 2>&1 | grep -v -i -E "warning|pynvml|deprecat" > $L/omini_seg_train.log
-RUN=$(ls -td /data/wookiekim/cgd/data/omini_seg/runs/*/ | head -1); CKDIR=$(ls -d $RUN/ckpt/* | sort -t/ -k9 -n | tail -1)
+RUN=$(ls -td /data/wookiekim/cgd/data/omini_seg/runs/* | head -1); CKDIR=$(ls -d $RUN/ckpt/* | awk -F/ '{print $NF" "$0}' | sort -n | tail -1 | cut -d" " -f2)   # highest step number (Lightning stops before the final save, so this is the last saved one)
 LORA=$CKDIR/default.safetensors; st "training done; adapter $LORA"
 [ -f "$LORA" ] || { st "ERROR: no adapter found"; exit 1; }
 echo "$LORA" > /data/wookiekim/cgd/data/omini_seg/SEG_LORA_PATH.txt
