@@ -34,6 +34,7 @@ Notes: FID / pFID / no-ref / LPIPS come from the CANNY run of each controller (i
 
 | row | Canny F1 @512 view vs c512 ↑ | Canny F1 @2048 vs c512 (4 px) ↑ | Canny F1 @2048 vs c2048 (1 px) ↑ | Depth RMSE ↓ | MUSIQ @512 ↑ | MUSIQ @2048 ↑ | FID @512 ↓ |
 |---|---|---|---|---|---|---|---|
+| OminiControl: 2048 generation + VAE decode (native route) | 0.042 | 0.059 | 0.032 | 59.70 | 52.6 | 56.0 | 240.2 |
 | OminiControl: 512 generation + vanilla PiD K=24 (pixel-decoder route) | 0.716 | 0.669 | 0.510 | 23.04 | 73.1 | 72.9 | 79.5 |
 | EasyControl: 512 generation + VAE decode | 0.810 | 0.444‡ | 0.160‡ | 21.96 | 73.2 |  | 78.3 |
 | EasyControl: 2048 generation + VAE decode (native route) | 0.258 | 0.210 | 0.109 | 49.95 | 70.8 | 64.6 | 100.1 |

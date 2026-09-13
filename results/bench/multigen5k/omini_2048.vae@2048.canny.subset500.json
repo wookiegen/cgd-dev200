@@ -1,0 +1,29 @@
+[
+ {
+  "method": "vae",
+  "controller": "omini_2048",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "f1": 0.05889630534160339,
+   "f1_strict": 0.015034295779106175,
+   "tol_px": 4,
+   "cond_res": 512,
+   "precision": 0.9442831478780284,
+   "recall": 0.0477792679296276,
+   "edge_density": 0.009090831756591797
+  },
+  "quality": {
+   "musiq": 56.01127452850342,
+   "niqe": 9.834612121075372,
+   "maniqa": 0.25260331758856774,
+   "qalign": 1.373896484375
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini_2048/canny/vae@28",
+  "time_s": 401.0
+ }
+]

@@ -1,0 +1,24 @@
+[
+ {
+  "method": "vae",
+  "controller": "omini_2048",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "mse": 3750.9479047785076,
+   "rmse": 59.11829268925878
+  },
+  "quality": {
+   "musiq": 54.39322891998291,
+   "niqe": 19.640575434315238,
+   "maniqa": 0.4052153405547142,
+   "qalign": 1.4634140625
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini_2048/depth/vae@28",
+  "time_s": 520.7
+ }
+]
