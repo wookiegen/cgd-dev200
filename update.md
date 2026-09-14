@@ -168,3 +168,8 @@ with the 2048 condition (the difference = the value of condition resolution).
   and will show whether EasyControl / the ControlNet survive 2048. **Teacher rows landed:** the undistilled teacher scores slightly BELOW
   the student in adherence at every K (final latent 0.7636 / 0.7114 vs 0.7781 / 0.7253; K=24 0.6938 / 0.6654 vs 0.7133 / 0.6620) at
   17.5 s vs 0.96 s per decode; a teacher-based CGD is gated against the TEACHER rows (README table, BASELINES.md Section E).
+- **OminiControl segmentation adapter (2026-09-14).** Trained by us with OminiControl's official spatial recipe on ADE20K train (rank 4,
+  9000 optimizer steps); weights at `/data/wookiekim/cgd/data/omini_seg/runs/20260913-132813/ckpt/18000/default.safetensors`
+  (`make_latents.py --controller omini --condition seg --omini-lora <path>`). ade20k_val2k: mIoU 43.9 (VAE decode), 43.4 (PiD K=24),
+  above EasyControl's released adapter (39.3). Segmentation latents for the paper live under `latents/omini/seg/`; the seg rows are in
+  `BASELINES.md` Section A. The dev-200 loop itself stays canny-only.
