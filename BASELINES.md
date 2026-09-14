@@ -56,7 +56,7 @@ Reading: at 4 MP the controllers drift from the condition (FLUX and its adapters
 | additive, decoder finetuned lr 1e-5 | x0 | 0.770 | 0.387 | 0.460 | 17.3 | 18.5 | 23.83 | 20.5 |  |
 | additive, RE-NOISED training | x0 | 0.783 | 0.436 | 0.427 | 17.8 | 22.0 | 23.78 | 21.2 |  |
 | additive, RE-NOISED training | x_t@24 | 0.805 | 0.440 | 0.333 | 52.5 | 50.1 | 24.91 | 63.0 |  |
-| additive, RE-NOISED training | x_t@16 | 0.675 | 0.328 | 0.230 | 235.0 | 332.1 |  |  |  |
+| additive, RE-NOISED training | x_t@16 | 0.675 | 0.328 | 0.230 | 235.0 | 332.1 | 44.21 | 283.1 |  |
 | modulated, RE-NOISED training | x0 | 0.787 | 0.427 | 0.436 | 16.5 | 21.4 | 23.70 | 20.3 |  |
 | modulated, RE-NOISED training | x_t@24 | 0.797 | 0.411 | 0.359 | 46.6 | 49.7 | 23.45 | 47.0 |  |
 | modulated, RE-NOISED training | x_t@16 | 0.848 | 0.353 | 0.242 | 201.9 | 251.8 | 33.62 | 263.0 |  |
