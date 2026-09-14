@@ -52,7 +52,7 @@ Reading: at 4 MP the controllers drift from the condition (FLUX and its adapters
 | VAE decode (blind, reference) | x0 | 0.771 | 0.358 | 0.503 | 17.2 | 20.4 | 23.85 | 20.4 | 43.9 |
 | vanilla PiD (blind, generative) | x_t@24 | 0.719 | 0.295 | 0.650 | 18.1 | 19.3 | 23.63 | 20.0 | 43.4 |
 | additive, frozen decoder (clean-latent training) | x0 | 0.769 | 0.397 | 0.464 | 17.2 | 19.1 | 23.82 | 20.5 | 43.8 |
-| modulated, frozen decoder | x0 | 0.766 | 0.442 | 0.471 | 17.0 | 18.9 | 23.83 | 20.4 |  |
+| modulated, frozen decoder | x0 | 0.766 | 0.442 | 0.471 | 17.0 | 18.9 | 23.83 | 20.4 | 43.8 |
 | additive, decoder finetuned lr 1e-5 | x0 | 0.770 | 0.387 | 0.460 | 17.3 | 18.5 | 23.83 | 20.5 |  |
 | additive, RE-NOISED training | x0 | 0.783 | 0.436 | 0.427 | 17.8 | 22.0 | 23.78 | 21.2 |  |
 | additive, RE-NOISED training | x_t@24 | 0.805 | 0.440 | 0.333 | 52.5 | 50.1 | 24.91 | 63.0 |  |
