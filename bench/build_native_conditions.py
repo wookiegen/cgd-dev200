@@ -18,9 +18,11 @@ import numpy as np
 from common import OUT_ROOT, REPO_BENCH, env_pins, write_json
 
 ap = argparse.ArgumentParser(); ap.add_argument("--split", default="multigen5k"); ap.add_argument("--workers", type=int, default=32)
+ap.add_argument("--src-name", default="pid_roundtrip_s7", help="round-trip folder under outputs/ref used as the 2048 reference (BENCHMARK v1.16: pid_roundtrip_s7 = decoder seed 7, a seed no evaluated row uses, so no row shares the reference's sampler noise; v1.10 to v1.15 used pid_roundtrip = seed 0, kept as conditions/canny2048_seed0)")
+ap.add_argument("--out-name", default="canny2048")
 a = ap.parse_args()
-src = OUT_ROOT / "outputs" / "ref" / "pid_roundtrip" / a.split
-out = OUT_ROOT / a.split / "conditions" / "canny2048"; out.mkdir(parents=True, exist_ok=True)
+src = OUT_ROOT / "outputs" / "ref" / a.src_name / a.split
+out = OUT_ROOT / a.split / "conditions" / a.out_name; out.mkdir(parents=True, exist_ok=True)
 rows = list(csv.DictReader(open(REPO_BENCH / a.split / "manifest.csv")))
 
 
@@ -38,7 +40,7 @@ def one(sid):
 with Pool(a.workers) as pool:
     n = sum(pool.map(one, [r["sample_id"] for r in rows], chunksize=16))
 write_json(REPO_BENCH / a.split / "NATIVE_CONDITION_VERSION.json", {
-    "condition": "canny2048", "source": "cv2.Canny(gray, 100, 200) of the vanilla-PiD round trip of the real 512 image (outputs/ref/pid_roundtrip, 2048, 4-step 2K distilled checkpoint, sigma 0, seed 0)",
+    "condition": a.out_name, "source": f"cv2.Canny(gray, 100, 200) of the vanilla-PiD round trip of the real 512 image (outputs/ref/{a.src_name}, 2048, 4-step 2K distilled checkpoint, sigma 0; seed 7 since BENCHMARK v1.16 = a decoder seed no evaluated row uses, so the reference shares no sampler noise with any row; seed 0 before)",
     "purpose": "native-condition track: the decoder receives the condition at the output resolution; scoring tolerance = one condition pixel = 1 px at 2048",
     "controllers_input": "unchanged: conditions/canny (512, Canny of the real image)", "n": len(rows), "env": env_pins()})
 print(f"{a.split}: {n} new canny2048 conditions -> {out}")
