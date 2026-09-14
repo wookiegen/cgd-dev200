@@ -1,0 +1,35 @@
+[
+ {
+  "method": "pidt_k16",
+  "controller": "easycontrol",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "f1": 0.6493492993369586,
+   "f1_strict": 0.238870338130358,
+   "tol_px": 1,
+   "cond_res": 512,
+   "precision": 0.695027289365096,
+   "recall": 0.6202037344142893,
+   "edge_density": 0.08293745422363281
+  },
+  "quality": {
+   "musiq": 73.83078386688233,
+   "niqe": 4.239511961447009,
+   "maniqa": 0.5872079358696938,
+   "qalign": 4.5901953125,
+   "psnr": 11.65319117450714,
+   "ssim": 0.4207919964912502,
+   "lpips": 0.5007104322910308,
+   "dists": 0.24394343984127045,
+   "fid": 79.1394921677707,
+   "pfid": 84.43170002125049
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/canny/pidt@16",
+  "time_s": 335.1
+ }
+]

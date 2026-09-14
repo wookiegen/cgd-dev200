@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pidt_k24",
+  "controller": "easycontrol",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "mse": 579.8423531990777,
+   "rmse": 21.623039453336958
+  },
+  "quality": {
+   "musiq": 68.31042461395263,
+   "niqe": 6.251050677284043,
+   "maniqa": 0.30321365451812743,
+   "qalign": 4.46443359375
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/depth/pidt@24",
+  "time_s": 440.7
+ }
+]

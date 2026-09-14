@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pidt_k28",
+  "controller": "easycontrol",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "mse": 584.3988558993715,
+   "rmse": 21.71498393843447
+  },
+  "quality": {
+   "musiq": 66.90546807098389,
+   "niqe": 6.726009488628503,
+   "maniqa": 0.2839116562604904,
+   "qalign": 4.3637890625
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/depth/pidt@28",
+  "time_s": 427.7
+ }
+]

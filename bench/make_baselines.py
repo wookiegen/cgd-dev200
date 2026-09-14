@@ -148,19 +148,21 @@ if dv.exists():
 # ---------------------------------------------------------------- F. teacher (subset500 paired)
 has_t = any(k[3].startswith("pidt") for k in recs)
 if has_t:
-    L += ["## F. Student vs teacher on subset500 (paired; the teacher is the checkpoint CGD trains on)", "",
+    L += ["## F. Student vs teacher on subset500, all three controllers (paired; the teacher is the checkpoint CGD trains on)", "",
           "| decoder | K | Canny F1 @512 | Canny F1 @2048 | Canny F1 @2048 vs 2048 cond | Depth RMSE | MUSIQ @512 | LPIPS |", "|---|---|---|---|---|---|---|---|"]
     for who, lab in [("pid", "student"), ("pidt", "teacher")]:
         r = get(M, "canny", "", f"{who}_roundtrip", 512, subset="subset500"); r2 = get(M, "canny", "", f"{who}_roundtrip", 2048, subset="subset500")
         if r:
             L.append(f"| round trip, {lab} | n/a | {A(r, 'f1')} | {A(r2, 'f1')} |  | {A(get(M, 'depth', '', f'{who}_roundtrip', 512, subset='subset500'), 'rmse', 2)} | {Q(r, 'musiq')} | {Q(r, 'lpips', 3)} |")
-    for K in (28, 24, 16):
-        for who, lab in [("pid", "student"), ("pidt", "teacher")]:
-            r = get(M, "canny", "omini", f"{who}_k{K}", 512, subset="subset500")
-            if r:
-                L.append(f"| OminiControl + PiD {lab} | {K} | {A(r, 'f1')} | {A(get(M, 'canny', 'omini', f'{who}_k{K}', 2048, subset='subset500'), 'f1')} | "
-                         f"{A(get(M, 'canny', 'omini', f'{who}_k{K}', 2048, cond_res=2048, subset='subset500'), 'f1')} | {A(get(M, 'depth', 'omini', f'{who}_k{K}', 512, subset='subset500'), 'rmse', 2)} | {Q(r, 'musiq')} | {Q(r, 'lpips', 3)} |")
-    L.append("")
+    for ctrl, cname in CTRL.items():   # 2026-09-14: all three controllers (EasyControl / ControlNet teacher rows = item 5)
+        for K in (28, 24, 16):
+            for who, lab in [("pid", "student"), ("pidt", "teacher")]:
+                r = get(M, "canny", ctrl, f"{who}_k{K}", 512, subset="subset500")
+                if r:
+                    L.append(f"| {cname} + PiD {lab} | {K} | {A(r, 'f1')} | {A(get(M, 'canny', ctrl, f'{who}_k{K}', 2048, subset='subset500'), 'f1')} | "
+                             f"{A(get(M, 'canny', ctrl, f'{who}_k{K}', 2048, cond_res=2048, subset='subset500'), 'f1')} | {A(get(M, 'depth', ctrl, f'{who}_k{K}', 512, subset='subset500'), 'rmse', 2)} | {Q(r, 'musiq')} | {Q(r, 'lpips', 3)} |")
+    L += ["", "Reading: the teacher sits at or slightly below the student at the matched view under every controller and falls further behind at native resolution, most against c2048, "
+          "whose reference is the STUDENT round trip (decoder-family-specific map). Teacher decode 12.7 s vs 1.0 s.", ""]
 
 # ---------------------------------------------------------------- F2. DIV8K real high-resolution validation (v1.13; when present)
 LS = "div8k1k"

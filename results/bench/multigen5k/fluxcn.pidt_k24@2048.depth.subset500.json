@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pidt_k24",
+  "controller": "fluxcn",
+  "condition": "depth",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "subset500",
+  "adherence": {
+   "mse": 1039.8148098469649,
+   "rmse": 29.292869059625264
+  },
+  "quality": {
+   "musiq": 60.959289375305175,
+   "niqe": 5.611763077108104,
+   "maniqa": 0.21203027042746544,
+   "qalign": 3.721091796875
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn/depth/pidt@24",
+  "time_s": 503.5
+ }
+]
