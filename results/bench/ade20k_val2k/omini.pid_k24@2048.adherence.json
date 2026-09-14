@@ -1,0 +1,19 @@
+[
+ {
+  "method": "pid_k24",
+  "controller": "omini",
+  "condition": "seg",
+  "split": "ade20k_val2k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "",
+  "adherence": {
+   "miou": 43.33733052803825,
+   "miou_img_mean": 38.26987109735954
+  },
+  "quality": {},
+  "n": 2000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/seg/pid@24",
+  "time_s": 585.4
+ }
+]

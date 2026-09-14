@@ -1,0 +1,26 @@
+[
+ {
+  "method": "pid_k16",
+  "controller": "omini",
+  "condition": "seg",
+  "split": "ade20k_val2k",
+  "res": 512,
+  "native_res": 2048,
+  "subset": "",
+  "adherence": {
+   "miou": 37.4963227936059,
+   "miou_img_mean": 29.11743274879602
+  },
+  "quality": {
+   "psnr": 11.409552043914795,
+   "ssim": 0.39021380884320356,
+   "lpips": 0.6082456356436015,
+   "dists": 0.2875868159532547,
+   "fid": 32.57199548797553,
+   "pfid": 44.915549322856634
+  },
+  "n": 2000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/seg/pid@16",
+  "time_s": 569.0
+ }
+]

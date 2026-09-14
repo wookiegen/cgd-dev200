@@ -1,0 +1,26 @@
+[
+ {
+  "method": "vae",
+  "controller": "omini",
+  "condition": "seg",
+  "split": "ade20k_val2k",
+  "res": 512,
+  "native_res": 512,
+  "subset": "",
+  "adherence": {
+   "miou": 43.87261027937645,
+   "miou_img_mean": 40.56685761247135
+  },
+  "quality": {
+   "psnr": 10.850905843734742,
+   "ssim": 0.4043332344268557,
+   "lpips": 0.5828511394709349,
+   "dists": 0.2608847371339798,
+   "fid": 30.108130512628577,
+   "pfid": 31.48513111146758
+  },
+  "n": 2000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/seg/vae@28",
+  "time_s": 361.3
+ }
+]
