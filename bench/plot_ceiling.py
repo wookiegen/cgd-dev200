@@ -21,6 +21,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--json", default=str(REPO_BENCH.parent / "results" / "bench" / "sweep" / "condition_scale.json"))
 ap.add_argument("--out", default="/home/wookiekim/2026-conditional-decoding/figures/ceiling.pdf")
 ap.add_argument("--k", default="24", help="the truncation drawn as the main generative curve (28 is drawn thin and grey)")
+ap.add_argument("--mock-cgd", action="store_true", help="draw a PROJECTED CGD curve (illustrative placeholder, user request 2026-09-14): PiD at K plus a fraction of its gap to the round-trip ceiling that grows with the condition scale (0.3 at scale 0 -> 0.75 at scale >= 1); dashed blue, hollow markers, labelled as projected. Replace with the measured sweep (keys cgd_k<K>@<res>_f1).")
 a = ap.parse_args()
 J = json.load(open(a.json))
 scales = sorted(J["scales"]); per = {m["scale"]: m for m in J["per_scale"].values()}
@@ -48,6 +49,14 @@ for res, title, ax in panels:
             continue
         xs = [xpos[s] for s, y in zip(scales, ys) if y is not None]; ys = [y for y in ys if y is not None]
         (h,) = ax.plot(xs, ys, color=color, lw=lw, marker=mk, ms=3, label=label); handles.setdefault(label, h)
+    if a.mock_cgd and key_rt in ceil and all(per[s].get(f"pid_k{a.k}@{res}_f1") is not None for s in scales):
+        # PROJECTED placeholder: closes a scale-dependent fraction of PiD's gap to the round-trip ceiling (correction at low scale, preservation at high scale)
+        c = ceil[key_rt]["f1"]
+        alpha = lambda s: 0.3 + 0.45 * min(s, 1.0)  # noqa: E731
+        ys = [per[s][f"pid_k{a.k}@{res}_f1"] + alpha(s) * (c - per[s][f"pid_k{a.k}@{res}_f1"]) for s in scales]
+        (h,) = ax.plot([xpos[s] for s in scales], ys, color="tab:blue", lw=1.6, ls="--", marker="^", ms=4, mfc="white")
+        handles.setdefault(f"CGD, $K={a.k}$ (projected, not measured)", h)
+        ax.text(xpos[scales[-1]], ys[-1] + 0.025, "projected", fontsize=6, color="tab:blue", ha="right")
     ax.set_xscale("log")
     major = [s for s in scales if s in (0, 0.25, 0.5, 1.0, 2.0, 4.0)]
     ax.set_xticks([xpos[s] for s in major]); ax.set_xticklabels([("0" if s == 0 else f"{s:g}") for s in major])
@@ -56,7 +65,7 @@ for res, title, ax in panels:
     ax.set_title(title, fontsize=8); ax.set_xlabel("condition scale at generation")
     ax.set_ylim(0.2, 1.0)
 axes[0].set_ylabel("canny F1 (tolerant)")
-order = ["VAE round trip (decode ceiling)", "PiD round trip (generative ceiling)", "VAE decode", f"vanilla PiD, $K={a.k}$", "vanilla PiD, $K=28$", f"CGD, $K={a.k}$"]
+order = ["VAE round trip (decode ceiling)", "PiD round trip (generative ceiling)", "VAE decode", f"vanilla PiD, $K={a.k}$", "vanilla PiD, $K=28$", f"CGD, $K={a.k}$", f"CGD, $K={a.k}$ (projected, not measured)"]
 labels = [l for l in order if l in handles]
 fig.legend([handles[l] for l in labels], labels, loc="lower center", ncol=3, fontsize=7, frameon=False, bbox_to_anchor=(0.5, -0.02))
 fig.tight_layout(rect=(0, 0.12, 1, 1)); Path(a.out).parent.mkdir(parents=True, exist_ok=True)
