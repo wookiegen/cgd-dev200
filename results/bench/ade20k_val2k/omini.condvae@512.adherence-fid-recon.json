@@ -1,0 +1,26 @@
+[
+ {
+  "method": "condvae",
+  "controller": "omini",
+  "condition": "seg",
+  "split": "ade20k_val2k",
+  "res": 512,
+  "native_res": 512,
+  "subset": "",
+  "adherence": {
+   "miou": 43.7901486616469,
+   "miou_img_mean": 40.47513351619084
+  },
+  "quality": {
+   "psnr": 10.787508818149567,
+   "ssim": 0.40484043114493934,
+   "lpips": 0.5832413700371981,
+   "dists": 0.26144475653767585,
+   "fid": 30.22193847998136,
+   "pfid": 32.24596930533568
+  },
+  "n": 2000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/seg/condvae",
+  "time_s": 369.4
+ }
+]

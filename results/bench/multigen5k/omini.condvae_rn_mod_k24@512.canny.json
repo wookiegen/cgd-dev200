@@ -1,0 +1,35 @@
+[
+ {
+  "method": "condvae_rn_mod_k24",
+  "controller": "omini",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 512,
+  "native_res": 512,
+  "subset": "",
+  "adherence": {
+   "f1": 0.7971215177742426,
+   "f1_strict": 0.41067854476163373,
+   "tol_px": 1,
+   "cond_res": 512,
+   "precision": 0.9259251044566136,
+   "recall": 0.7120992808046654,
+   "edge_density": 0.07120309524536132
+  },
+  "quality": {
+   "musiq": 70.51647364501953,
+   "niqe": 3.9889759257346564,
+   "maniqa": 0.35852756994068624,
+   "qalign": 3.1833162109375,
+   "psnr": 12.122055210542678,
+   "ssim": 0.4413568323620135,
+   "lpips": 0.5210901441454887,
+   "dists": 0.3068960794568062,
+   "fid": 46.5577282164316,
+   "pfid": 49.69464748276749
+  },
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/condvae_rn_mod_k24",
+  "time_s": 2071.7
+ }
+]

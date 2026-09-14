@@ -112,6 +112,22 @@ if any(k[2].endswith("_2048") for k in recs):
 
 # (former Table B, the c2048 scores, is now the third edge column of Table A; v1.12)
 
+# ---------------------------------------------------------------- B. decoder archetypes (aware / deterministic): the conditioned VAE decoder family
+arch = [k for k in recs if k[3].startswith("condvae")]
+if arch:
+    L += ["## B. Conditioned VAE decoder archetypes (aware / deterministic cell of the paper's 2x2; OminiControl latents, 512 view)", "",
+          "| decoder | input latent | Canny F1 ↑ | strict F1 | MANIQA ↑ | FID ↓ | pFID ↓ | Depth RMSE ↓ | Depth FID ↓ | Seg mIoU ↑ |", "|---|---|---|---|---|---|---|---|---|---|"]
+    def arow(label, m, k):
+        c = get(M, "canny", "omini", m, 512); d = get(M, "depth", "omini", m, 512); sg = get(ADE, "seg", "omini", m, 512)
+        if c or d or sg:
+            L.append(f"| {label} | {k} | {A(c, 'f1')} | {A(c, 'f1_strict')} | {Q(c, 'maniqa', 3)} | {Q(c, 'fid', 1)} | {Q(c, 'pfid', 1)} | {A(d, 'rmse', 2)} | {Q(d, 'fid', 1)} | {A(sg, 'miou', 1)} |")
+    arow("VAE decode (blind, reference)", "vae", "x0"); arow("vanilla PiD (blind, generative)", "pid_k24", "x_t@24")
+    arow("additive, frozen decoder (clean-latent training)", "condvae", "x0"); arow("modulated, frozen decoder", "condvae_mod", "x0"); arow("additive, decoder finetuned lr 1e-5", "condvae_ft", "x0")
+    for v, lab in [("rn", "additive, RE-NOISED training"), ("rn_mod", "modulated, RE-NOISED training")]:
+        arow(lab, f"condvae_{v}", "x0"); arow(lab, f"condvae_{v}_k24", "x_t@24"); arow(lab, f"condvae_{v}_k16", "x_t@16")
+    L += ["", "Reading: on clean latents the condition is redundant (no adherence gain, any injection). Trained on re-noised latents and fed the truncated x_t, the deterministic "
+          "decoder beats vanilla PiD on adherence but its FID / MANIQA collapse (it blurs and traces the condition): adherence traded for detail, never both (the paper's second pillar).", ""]
+
 # ---------------------------------------------------------------- C. subject
 L += ["## C. Subject (DreamBench, 750 pairs, OminiControl subject LoRA, 512 view)", "", "| row | DINO ↑ | CLIP-I ↑ | CLIP-T ↑ | MUSIQ ↑ |", "|---|---|---|---|---|"]
 for label, m in [("VAE decode", "vae"), ("vanilla PiD, K=28", "pid_k28"), ("vanilla PiD, K=24 (to beat)", "pid_k24"), ("vanilla PiD, K=16", "pid_k16")]:

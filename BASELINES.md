@@ -45,6 +45,24 @@ Notes: FID / pFID / no-ref / LPIPS come from the CANNY run of each controller (i
 
 Reading: at 4 MP the controllers drift from the condition (FLUX and its adapters are trained at <= 1 MP); OminiControl's token-concat LoRA collapses to near-black condition-tracing textures. Generation at 2048 takes 36 s/img alone (42 s with four concurrent jobs) vs ~3 s for 512 generation + PiD.
 
+## B. Conditioned VAE decoder archetypes (aware / deterministic cell of the paper's 2x2; OminiControl latents, 512 view)
+
+| decoder | input latent | Canny F1 ↑ | strict F1 | MANIQA ↑ | FID ↓ | pFID ↓ | Depth RMSE ↓ | Depth FID ↓ | Seg mIoU ↑ |
+|---|---|---|---|---|---|---|---|---|---|
+| VAE decode (blind, reference) | x0 | 0.771 | 0.358 | 0.503 | 17.2 | 20.4 | 23.85 | 20.4 | 43.9 |
+| vanilla PiD (blind, generative) | x_t@24 | 0.719 | 0.295 | 0.650 | 18.1 | 19.3 | 23.63 | 20.0 | 43.4 |
+| additive, frozen decoder (clean-latent training) | x0 | 0.769 | 0.397 | 0.464 | 17.2 | 19.1 | 23.82 | 20.5 | 43.8 |
+| modulated, frozen decoder | x0 | 0.766 | 0.442 | 0.471 | 17.0 | 18.9 | 23.83 | 20.4 |  |
+| additive, decoder finetuned lr 1e-5 | x0 | 0.770 | 0.387 | 0.460 | 17.3 | 18.5 | 23.83 | 20.5 |  |
+| additive, RE-NOISED training | x0 | 0.783 | 0.436 | 0.427 | 17.8 | 22.0 | 23.78 | 21.2 |  |
+| additive, RE-NOISED training | x_t@24 | 0.805 | 0.440 | 0.333 | 52.5 | 50.1 | 24.91 | 63.0 |  |
+| additive, RE-NOISED training | x_t@16 | 0.675 | 0.328 | 0.230 | 235.0 | 332.1 |  |  |  |
+| modulated, RE-NOISED training | x0 | 0.787 | 0.427 | 0.436 | 16.5 | 21.4 | 23.70 | 20.3 |  |
+| modulated, RE-NOISED training | x_t@24 | 0.797 | 0.411 | 0.359 | 46.6 | 49.7 | 23.45 | 47.0 |  |
+| modulated, RE-NOISED training | x_t@16 | 0.848 | 0.353 | 0.242 | 201.9 | 251.8 | 33.62 | 263.0 |  |
+
+Reading: on clean latents the condition is redundant (no adherence gain, any injection). Trained on re-noised latents and fed the truncated x_t, the deterministic decoder beats vanilla PiD on adherence but its FID / MANIQA collapse (it blurs and traces the condition): adherence traded for detail, never both (the paper's second pillar).
+
 ## C. Subject (DreamBench, 750 pairs, OminiControl subject LoRA, 512 view)
 
 | row | DINO ↑ | CLIP-I ↑ | CLIP-T ↑ | MUSIQ ↑ |
