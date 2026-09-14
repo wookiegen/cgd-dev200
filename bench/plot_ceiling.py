@@ -21,7 +21,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--json", default=str(REPO_BENCH.parent / "results" / "bench" / "sweep" / "condition_scale.json"))
 ap.add_argument("--out", default="/home/wookiekim/2026-conditional-decoding/figures/ceiling.pdf")
 ap.add_argument("--k", default="24", help="the truncation drawn as the main generative curve (28 is drawn thin and grey)")
-ap.add_argument("--mock-cgd", action="store_true", help="draw a PROJECTED CGD curve (illustrative placeholder, user request 2026-09-14): PiD at K plus a fraction of its gap to the round-trip ceiling that grows with the condition scale (0.3 at scale 0 -> 0.75 at scale >= 1); dashed blue, hollow markers, labelled as projected. Replace with the measured sweep (keys cgd_k<K>@<res>_f1).")
+ap.add_argument("--mock-cgd", action="store_true", help="draw a PROJECTED CGD curve (illustrative placeholder, user request 2026-09-14): PiD at K plus a growing fraction of its gap to the round-trip ceiling (0.3 at scale 0, all of it from scale 1) plus up to 0.04 / 0.03 ABOVE the ceiling at high scale (the round trip bounds blind decoders only); dashed blue, hollow markers, labelled as projected. Replace with the measured sweep (keys cgd_k<K>@<res>_f1).")
 a = ap.parse_args()
 J = json.load(open(a.json))
 scales = sorted(J["scales"]); per = {m["scale"]: m for m in J["per_scale"].values()}
@@ -51,9 +51,13 @@ for res, title, ax in panels:
         (h,) = ax.plot(xs, ys, color=color, lw=lw, marker=mk, ms=3, label=label); handles.setdefault(label, h)
     if a.mock_cgd and key_rt in ceil and all(per[s].get(f"pid_k{a.k}@{res}_f1") is not None for s in scales):
         # PROJECTED placeholder: closes a scale-dependent fraction of PiD's gap to the round-trip ceiling (correction at low scale, preservation at high scale)
+        # The round trip bounds CONDITION-BLIND decoders only; a decoder that reads the condition can pass it (user, 2026-09-14). The projection
+        # closes PiD's gap to the ceiling as the scale grows (0.3 of it at scale 0, all of it from scale 1) and then rises above the ceiling by up
+        # to 0.04 at 512 and 0.03 at 2048, which at 2048 is the level of a real photograph against c512 (0.82 on DIV8K).
         c = ceil[key_rt]["f1"]
-        alpha = lambda s: 0.3 + 0.45 * min(s, 1.0)  # noqa: E731
-        ys = [per[s][f"pid_k{a.k}@{res}_f1"] + alpha(s) * (c - per[s][f"pid_k{a.k}@{res}_f1"]) for s in scales]
+        alpha = lambda s: 0.3 + 0.7 * min(s, 1.0)  # noqa: E731
+        bonus = lambda s: (0.04 if res == "512" else 0.03) * min(max((s - 0.5) / 1.5, 0.0), 1.0)  # noqa: E731
+        ys = [per[s][f"pid_k{a.k}@{res}_f1"] + alpha(s) * (c - per[s][f"pid_k{a.k}@{res}_f1"]) + bonus(s) for s in scales]
         (h,) = ax.plot([xpos[s] for s in scales], ys, color="tab:blue", lw=1.6, ls="--", marker="^", ms=4, mfc="white")
         handles.setdefault(f"CGD, $K={a.k}$ (projected, not measured)", h)
         ax.text(xpos[scales[-1]], ys[-1] + 0.025, "projected", fontsize=6, color="tab:blue", ha="right")
