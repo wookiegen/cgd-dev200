@@ -8,17 +8,17 @@
   "native_res": 2048,
   "subset": "subset500",
   "adherence": {
-   "f1": 0.34697839331902114,
-   "f1_strict": 0.1164104226863575,
+   "f1": 0.34621962826527297,
+   "f1_strict": 0.11570283839140535,
    "tol_px": 1,
    "cond_res": 2048,
-   "precision": 0.5675625085666356,
-   "recall": 0.26467836161569563,
+   "precision": 0.5668482690494396,
+   "recall": 0.2637525159952819,
    "edge_density": 0.030216666221618654
   },
   "quality": {},
   "n": 500,
   "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/canny/pidt@24",
-  "time_s": 114.3
+  "time_s": 110.4
  }
 ]

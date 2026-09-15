@@ -9,8 +9,8 @@
   "via": "cubic_x2_upsample_REFERENCE_not_native",
   "subset": "subset500",
   "adherence": {
-   "f1": 0.31852278272872386,
-   "f1_strict": 0.10371741077238951,
+   "f1": 0.31835779368357975,
+   "f1_strict": 0.10362757844409903,
    "tol_px": 1,
    "cond_res": 2048
   },

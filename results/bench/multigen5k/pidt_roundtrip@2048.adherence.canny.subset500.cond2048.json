@@ -8,17 +8,17 @@
   "native_res": 2048,
   "subset": "subset500",
   "adherence": {
-   "f1": 0.6213137073961975,
-   "f1_strict": 0.24062901630455105,
+   "f1": 0.6152899558769932,
+   "f1_strict": 0.23359051004836087,
    "tol_px": 1,
    "cond_res": 2048,
-   "precision": 0.7754567734481628,
-   "recall": 0.543359319422906,
+   "precision": 0.769356907918062,
+   "recall": 0.5380638338839326,
    "edge_density": 0.05331724739074707
   },
   "quality": {},
   "n": 500,
   "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pidt_roundtrip/multigen5k",
-  "time_s": 114.2
+  "time_s": 112.3
  }
 ]

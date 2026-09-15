@@ -78,6 +78,7 @@
 | multigen5k | canny | pid_k28 | omini | 512 | 512 |  |  | 5000 | 0.7852 |  |  |  |  | 16.06 | 17.59 | 72.27 | 4.884 | 0.6221 | 4.341 | 4.014 | 73.091 | 71.614 | 4.449 | 12.00 | 0.4280 | 0.5040 | 0.2714 |
 | multigen5k | canny | vae | omini | 512 | 512 |  |  | 5000 | 0.7712 |  |  |  |  | 17.18 | 20.39 | 71.76 | 4.823 | 0.5032 | 4.123 | 3.704 | 67.639 | 66.694 | 4.295 | 12.09 | 0.4389 | 0.5092 | 0.2872 |
 | multigen5k | canny | pid_roundtrip |  | 2048 | 512 |  |  | 5000 | 0.8004 |  |  |  |  |  |  | 70.63 | 3.571 | 0.3395 | 4.502 | 4.023 | 74.073 | 72.578 | 4.516 |  |  |  |  |
+| multigen5k | canny | pid_roundtrip_s7 |  | 2048 | 512 |  |  | 5000 | 0.8004 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | multigen5k | canny | pid_k16 | easycontrol | 2048 | 512 |  |  | 5000 | 0.6582 |  |  |  |  |  |  | 73.73 | 3.175 | 0.4327 | 4.731 | 4.367 | 76.706 | 77.959 | 4.718 |  |  |  |  |
 | multigen5k | canny | pid_k24 | easycontrol | 2048 | 512 |  |  | 5000 | 0.7660 |  |  |  |  |  |  | 72.20 | 3.744 | 0.4030 | 4.587 | 4.225 | 73.948 | 75.133 | 4.612 |  |  |  |  |
 | multigen5k | canny | pid_k28 | easycontrol | 2048 | 512 |  |  | 5000 | 0.7700 |  |  |  |  |  |  | 70.27 | 4.078 | 0.3372 | 4.548 | 4.183 | 70.402 | 72.645 | 4.521 |  |  |  |  |
@@ -150,49 +151,50 @@
 | multigen5k | canny | vae | easycontrol_1024 | 2048 | 512 | subset500 | upsampled_ref | 500 | 0.6971 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | multigen5k | canny | vae | fluxcn | 2048 | 512 | subset500 | upsampled_ref | 500 | 0.2929 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | multigen5k | canny | vae | fluxcn_1024 | 2048 | 512 | subset500 | upsampled_ref | 500 | 0.1985 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_roundtrip |  | 2048 | 2048 |  |  | 5000 | 1.0000 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k16 | easycontrol | 2048 | 2048 |  |  | 5000 | 0.4626 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k24 | easycontrol | 2048 | 2048 |  |  | 5000 | 0.4755 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k28 | easycontrol | 2048 | 2048 |  |  | 5000 | 0.4246 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k16 | fluxcn | 2048 | 2048 |  |  | 5000 | 0.4342 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k24 | fluxcn | 2048 | 2048 |  |  | 5000 | 0.4891 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k28 | fluxcn | 2048 | 2048 |  |  | 5000 | 0.4661 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k16 | omini | 2048 | 2048 |  |  | 5000 | 0.4351 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k24 | omini | 2048 | 2048 |  |  | 5000 | 0.5138 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k28 | omini | 2048 | 2048 |  |  | 5000 | 0.5474 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_roundtrip |  | 2048 | 2048 |  |  | 5000 | 0.7082 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_roundtrip_s7 |  | 2048 | 2048 |  |  | 5000 | 1.0000 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k16 | easycontrol | 2048 | 2048 |  |  | 5000 | 0.4375 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k24 | easycontrol | 2048 | 2048 |  |  | 5000 | 0.4501 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k28 | easycontrol | 2048 | 2048 |  |  | 5000 | 0.4047 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k16 | fluxcn | 2048 | 2048 |  |  | 5000 | 0.4119 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k24 | fluxcn | 2048 | 2048 |  |  | 5000 | 0.4593 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k28 | fluxcn | 2048 | 2048 |  |  | 5000 | 0.4333 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k16 | omini | 2048 | 2048 |  |  | 5000 | 0.4129 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k24 | omini | 2048 | 2048 |  |  | 5000 | 0.4848 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k28 | omini | 2048 | 2048 |  |  | 5000 | 0.5098 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | multigen5k | canny | real |  | 2048 | 2048 |  | upsampled_ref | 5000 | 0.3061 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | multigen5k | canny | vae_roundtrip |  | 2048 | 2048 |  | upsampled_ref | 5000 | 0.2964 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | vae | easycontrol | 2048 | 2048 |  | upsampled_ref | 5000 | 0.1562 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | vae | fluxcn | 2048 | 2048 |  | upsampled_ref | 5000 | 0.1296 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | vae | omini | 2048 | 2048 |  | upsampled_ref | 5000 | 0.1144 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_roundtrip |  | 2048 | 2048 | subset500 |  | 500 | 0.6213 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k16 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.4601 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k24 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.4767 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k28 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.4281 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_k16 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.3701 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_k24 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.3470 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_k28 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.3347 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | vae | easycontrol_2048 | 2048 | 2048 | subset500 |  | 500 | 0.1091 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k16 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.4297 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k24 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.4833 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k28 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.4596 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_k16 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.3804 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_k24 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.3750 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_k28 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.3224 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | vae | fluxcn_2048 | 2048 | 2048 | subset500 |  | 500 | 0.0654 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k16 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4319 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k24 | omini | 2048 | 2048 | subset500 |  | 500 | 0.5101 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_k28 | omini | 2048 | 2048 | subset500 |  | 500 | 0.5443 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_s1_k24 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4827 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pid_s2_k24 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4805 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_k16 | omini | 2048 | 2048 | subset500 |  | 500 | 0.3667 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_k24 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4580 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | pidt_k28 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4957 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | vae | easycontrol | 2048 | 2048 |  | upsampled_ref | 5000 | 0.1561 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | vae | fluxcn | 2048 | 2048 |  | upsampled_ref | 5000 | 0.1298 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | vae | omini | 2048 | 2048 |  | upsampled_ref | 5000 | 0.1143 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_roundtrip |  | 2048 | 2048 | subset500 |  | 500 | 0.6153 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k16 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.4346 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k24 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.4506 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k28 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.4077 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_k16 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.3694 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_k24 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.3462 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_k28 | easycontrol | 2048 | 2048 | subset500 |  | 500 | 0.3342 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | vae | easycontrol_2048 | 2048 | 2048 | subset500 |  | 500 | 0.1093 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k16 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.4079 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k24 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.4535 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k28 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.4266 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_k16 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.3802 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_k24 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.3749 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_k28 | fluxcn | 2048 | 2048 | subset500 |  | 500 | 0.3221 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | vae | fluxcn_2048 | 2048 | 2048 | subset500 |  | 500 | 0.0656 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k16 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4107 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k24 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4818 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_k28 | omini | 2048 | 2048 | subset500 |  | 500 | 0.5074 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_s1_k24 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4831 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pid_s2_k24 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4810 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_k16 | omini | 2048 | 2048 | subset500 |  | 500 | 0.3665 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_k24 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4578 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | pidt_k28 | omini | 2048 | 2048 | subset500 |  | 500 | 0.4951 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | multigen5k | canny | vae | omini_2048 | 2048 | 2048 | subset500 |  | 500 | 0.0323 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | multigen5k | canny | vae | easycontrol | 2048 | 2048 | subset500 | upsampled_ref | 500 | 0.1597 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | vae | easycontrol_1024 | 2048 | 2048 | subset500 | upsampled_ref | 500 | 0.3185 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | vae | fluxcn | 2048 | 2048 | subset500 | upsampled_ref | 500 | 0.1260 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| multigen5k | canny | vae | fluxcn_1024 | 2048 | 2048 | subset500 | upsampled_ref | 500 | 0.0873 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | vae | easycontrol_1024 | 2048 | 2048 | subset500 | upsampled_ref | 500 | 0.3184 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | vae | fluxcn | 2048 | 2048 | subset500 | upsampled_ref | 500 | 0.1262 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| multigen5k | canny | vae | fluxcn_1024 | 2048 | 2048 | subset500 | upsampled_ref | 500 | 0.0878 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | multigen5k | depth | pid_roundtrip |  | 512 | 512 |  |  | 5000 |  | 62.40 | 6.18 |  |  | 1.88 | 3.78 | 72.95 | 4.090 | 0.5793 | 4.439 |  |  |  |  | 28.43 | 0.8571 | 0.0537 | 0.0561 |
 | multigen5k | depth | real |  | 512 | 512 |  |  | 5000 |  | 0.00 | 0.03 |  |  |  |  | 72.78 | 3.615 | 0.4977 | 4.306 |  |  |  |  |  |  |  |  |
 | multigen5k | depth | vae_roundtrip |  | 512 | 512 |  |  | 5000 |  | 10.82 | 2.54 |  |  | 0.64 | 1.56 | 72.73 | 3.783 | 0.4846 | 4.443 |  |  |  |  | 32.17 | 0.9233 | 0.0193 | 0.0160 |

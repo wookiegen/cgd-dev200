@@ -7,9 +7,10 @@
   "res": 2048,
   "native_res": 512,
   "via": "cubic_x4_upsample_REFERENCE_not_native",
+  "subset": "",
   "adherence": {
-   "f1": 0.29643957500697077,
-   "f1_strict": 0.11899404236352425,
+   "f1": 0.2963982864414497,
+   "f1_strict": 0.11899254835807992,
    "tol_px": 1,
    "cond_res": 2048
   },

@@ -1,0 +1,20 @@
+[
+ {
+  "method": "pid_roundtrip",
+  "controller": "",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "adherence": {
+   "f1": 1.0,
+   "f1_strict": 1.0,
+   "tol_px": 1,
+   "cond_res": 2048
+  },
+  "quality": {},
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip/multigen5k",
+  "time_s": 1209.7
+ }
+]

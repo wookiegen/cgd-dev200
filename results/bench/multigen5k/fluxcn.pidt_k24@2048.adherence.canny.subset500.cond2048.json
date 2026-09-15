@@ -8,17 +8,17 @@
   "native_res": 2048,
   "subset": "subset500",
   "adherence": {
-   "f1": 0.37502629077178024,
-   "f1_strict": 0.1278013676897018,
+   "f1": 0.37487367192290194,
+   "f1_strict": 0.12764230531901918,
    "tol_px": 1,
    "cond_res": 2048,
-   "precision": 0.4848236413113256,
-   "recall": 0.3333784138770696,
+   "precision": 0.4854500107581614,
+   "recall": 0.33322015812389155,
    "edge_density": 0.04798591947555542
   },
   "quality": {},
   "n": 500,
   "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/fluxcn/canny/pidt@24",
-  "time_s": 112.7
+  "time_s": 113.0
  }
 ]

@@ -6,15 +6,19 @@
   "split": "multigen5k",
   "res": 2048,
   "native_res": 2048,
+  "subset": "",
   "adherence": {
-   "f1": 0.43505745378223654,
-   "f1_strict": 0.21186210567500183,
+   "f1": 0.41285235255541486,
+   "f1_strict": 0.14200399875278943,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "precision": 0.3688349984243417,
+   "recall": 0.5391850447760136,
+   "edge_density": 0.10343274331092835
   },
   "quality": {},
   "n": 5000,
   "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/pid@16",
-  "time_s": 1100.7
+  "time_s": 1019.9
  }
 ]

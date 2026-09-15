@@ -24,8 +24,10 @@ def variant(fname, rec):
     return cond_res, subset, via
 
 
+# 2026-09-15: archive dirs (_archive_*) are excluded above; they sort before the live splits and their
+# superseded values would win the merge below, silently masking rescored records.
 recs = {}
-for f in sorted(glob.glob(str(R / "*" / "*@*.json"))):
+for f in sorted([f for f in glob.glob(str(R / "*" / "*@*.json")) if not Path(f).parent.name.startswith("_")]):
     for rec in json.load(open(f)):
         cond_res, subset, via = variant(Path(f).name, rec)
         key = (rec["split"], rec["condition"], rec.get("controller", ""), rec["method"], rec["res"], cond_res, subset, via)

@@ -23,7 +23,10 @@ def variant(fname: str, rec: dict) -> tuple:
     return cond_res, subset, via
 
 
-for f in sorted(glob.glob(str(R / "*" / "*@*.json"))):      # default records first, then metric-subset files (e.g. *.vlm.json) merge into them
+# 2026-09-15: skip archive dirs such as _archive_c2048_seed0/ — they match this glob and sort before the live
+# splits, so their superseded values won the merge and silently masked the rescored records.
+RECORDS = [f for f in glob.glob(str(R / "*" / "*@*.json")) if not Path(f).parent.name.startswith("_")]
+for f in sorted(RECORDS):      # default records first, then metric-subset files (e.g. *.vlm.json) merge into them
     for rec in json.load(open(f)):
         cond_res, subset, via = variant(Path(f).name, rec)
         key = (rec["split"], rec["method"], rec.get("controller", ""), rec["res"], rec["condition"], cond_res, subset, via)

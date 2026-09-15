@@ -1,0 +1,20 @@
+[
+ {
+  "method": "vae",
+  "controller": "easycontrol",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 512,
+  "via": "cubic_x4_upsample_REFERENCE_not_native",
+  "subset": "subset500",
+  "adherence": {
+   "f1": 0.15970594464347568,
+   "f1_strict": 0.050586449026320084,
+   "tol_px": 1,
+   "cond_res": 2048
+  },
+  "n": 500,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/easycontrol/canny/vae@28"
+ }
+]

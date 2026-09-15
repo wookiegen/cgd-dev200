@@ -8,17 +8,17 @@
   "native_res": 2048,
   "subset": "subset500",
   "adherence": {
-   "f1": 0.48054127345699904,
-   "f1_strict": 0.1661862824406447,
+   "f1": 0.4809915848785005,
+   "f1_strict": 0.16621540987205796,
    "tol_px": 1,
    "cond_res": 2048,
-   "precision": 0.4174727100516678,
-   "recall": 0.6349499792078048,
+   "precision": 0.41783016615762486,
+   "recall": 0.6349638677134685,
    "edge_density": 0.10818487405776978
   },
   "quality": {},
   "n": 500,
   "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/pid_s2@24",
-  "time_s": 97.8
+  "time_s": 101.5
  }
 ]

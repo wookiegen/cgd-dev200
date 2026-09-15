@@ -1,0 +1,24 @@
+[
+ {
+  "method": "pid_roundtrip_s7",
+  "controller": "",
+  "condition": "canny",
+  "split": "multigen5k",
+  "res": 2048,
+  "native_res": 2048,
+  "subset": "",
+  "adherence": {
+   "f1": 1.0,
+   "f1_strict": 1.0,
+   "tol_px": 1,
+   "cond_res": 2048,
+   "precision": 1.0,
+   "recall": 1.0,
+   "edge_density": 0.07288834733963012
+  },
+  "quality": {},
+  "n": 5000,
+  "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip_s7/multigen5k",
+  "time_s": 1285.2
+ }
+]
