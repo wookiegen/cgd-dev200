@@ -7,7 +7,9 @@ For every non-blocked row of bench/train/<set>/manifest.csv:
   4. conditions at 512 from the target's area-downsampled view (ControlNet convention, consistent with y by construction):
        conditions/canny/<id>.png       cv2.Canny(gray(area512(y)), 100, 200), 3-channel
        conditions/depth/<id>.png       DPT-Large on area512(y), 8-bit min-max;  conditions/depth_raw/<id>.npy float16 raw
-     and, from the GT annotation of the source (coarse structures, unchanged by the decode):
+     and, from the GT annotation of the source, NOT re-extracted from the target: a blind decode moves edges (round-trip F1 1.000 -> 0.917)
+     but leaves semantic regions in place (mIoU 53.66 -> 53.46), and re-extracting would swap a human annotation for the evaluation
+     segmenter's own prediction, which is both a different distribution from the evaluation condition and an invitation to game that scorer:
        conditions/seg/<id>.png         ADE20K palette render of the cropped label map   (ade20k_train)
        conditions/bbox/<id>.png        class-color boxes on black after the crop         (coco_train)
 The input latent used at TRAIN time (z0 re-noised to tau) is sampled in the training loop, not stored.
