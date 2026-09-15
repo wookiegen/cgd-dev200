@@ -2,8 +2,8 @@
 
 Two panels share the x axis (OminiControl condition_scale, log axis; 0 = condition suppressed, drawn at the left; 1 = released setting):
   left  = the matched 512 view,   right = the native 2048 output.
-Each panel draws few lines in distinct colours: the VAE decode (black, 512 panel only), vanilla PiD at K = 24 (orange), vanilla PiD at
-K = 28 (thin grey), and CGD at K = 24 (blue) when its keys (cgd_k24@512_f1 / @2048_f1) exist in the JSON. Dotted horizontal lines are the
+Each panel draws few lines in distinct colours: the VAE decode (black, 512 panel only), vanilla PiD at the reference K = 28 (green) and at the
+operating K = 16 (orange), and CGD at the operating K (blue) when its keys (cgd_k24@512_f1 / @2048_f1) exist in the JSON. Dotted horizontal lines are the
 decoder-only ceilings on the same 200 real images: the VAE round trip (512 panel) and the PiD round trip at the panel's resolution.
 One shared legend sits below the panels. Usage: python plot_ceiling.py [--out /home/wookiekim/2026-conditional-decoding/figures/ceiling.pdf]
 """
@@ -20,7 +20,8 @@ from common import REPO_BENCH
 ap = argparse.ArgumentParser()
 ap.add_argument("--json", default=str(REPO_BENCH.parent / "results" / "bench" / "sweep" / "condition_scale.json"))
 ap.add_argument("--out", default="/home/wookiekim/2026-conditional-decoding/figures/ceiling.pdf")
-ap.add_argument("--k", default="24", help="the truncation drawn as the main generative curve (28 is drawn thin and grey)")
+ap.add_argument("--k", default="16", help="the OPERATING truncation point, drawn as the main generative curve (BENCHMARK v1.17: K = 16)")
+ap.add_argument("--k-ref", dest="k_ref", default="28", help="the reference truncation drawn alongside it; the gap between the two is the truncation cost")
 ap.add_argument("--mock-cgd", action="store_true", help="draw a PROJECTED CGD curve (illustrative placeholder, user request 2026-09-14): PiD at K plus a growing fraction of its gap to the round-trip ceiling (about none at scale 0, all of it from scale 1) plus up to 0.04 / 0.03 ABOVE the ceiling at high scale (the round trip bounds blind decoders only); dashed blue, hollow markers, labelled as projected. Replace with the measured sweep (keys cgd_k<K>@<res>_f1).")
 a = ap.parse_args()
 J = json.load(open(a.json))
@@ -32,9 +33,11 @@ ceil = J.get("ceilings_dev200", {})
 plt.rcParams.update({"font.size": 8, "axes.spines.top": False, "axes.spines.right": False})
 fig, axes = plt.subplots(1, 2, figsize=(6.4, 2.6), dpi=200, sharey=True)
 panels = [("512", "matched 512 view", axes[0]), ("2048", "native 2048 output", axes[1])]
+# 2026-09-15: K = 16 is the operating point, so BOTH truncation curves are first-class (user): the gap between the
+# fully denoised latent (K = 28) and the operating point is the truncation cost, read straight off the figure.
 series = [("vae", "VAE decode", "0.1", 1.6, "o"),
+          (f"pid_k{a.k_ref}", f"vanilla PiD, $K={a.k_ref}$ (full latent)", "tab:green", 1.4, "v"),
           (f"pid_k{a.k}", f"vanilla PiD, $K={a.k}$", "tab:orange", 1.6, "s"),
-          ("pid_k28", "vanilla PiD, $K=28$", "0.6", 0.9, None),
           (f"cgd_k{a.k}", f"CGD, $K={a.k}$", "tab:blue", 1.6, "^")]
 handles = {}
 for res, title, ax in panels:
@@ -69,7 +72,7 @@ for res, title, ax in panels:
     ax.set_title(title, fontsize=8); ax.set_xlabel("condition scale at generation")
     ax.set_ylim(0.2, 1.0)
 axes[0].set_ylabel("canny F1 (tolerant)")
-order = ["VAE round trip (decode ceiling)", "PiD round trip (generative ceiling)", "VAE decode", f"vanilla PiD, $K={a.k}$", "vanilla PiD, $K=28$", f"CGD, $K={a.k}$", f"CGD, $K={a.k}$ (projected, not measured)"]
+order = ["VAE round trip (decode ceiling)", "PiD round trip (generative ceiling)", "VAE decode", f"vanilla PiD, $K={a.k_ref}$ (full latent)", f"vanilla PiD, $K={a.k}$", f"CGD, $K={a.k}$", f"CGD, $K={a.k}$ (projected, not measured)"]
 labels = [l for l in order if l in handles]
 fig.legend([handles[l] for l in labels], labels, loc="lower center", ncol=3, fontsize=7, frameon=False, bbox_to_anchor=(0.5, -0.02))
 fig.tight_layout(rect=(0, 0.12, 1, 1)); Path(a.out).parent.mkdir(parents=True, exist_ok=True)
