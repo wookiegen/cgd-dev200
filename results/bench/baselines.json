@@ -4249,6 +4249,19 @@
   "quality": {},
   "n": 5000
  },
+ "multigen5k|canny||pid_roundtrip|2048|2048|subset500|": {
+  "adherence": {
+   "f1": 0.7067541820806276,
+   "f1_strict": 0.2780622973395242,
+   "tol_px": 1,
+   "cond_res": 2048,
+   "precision": 0.707818043079842,
+   "recall": 0.7062867827257533,
+   "edge_density": 0.0708372859954834
+  },
+  "quality": {},
+  "n": 500
+ },
  "multigen5k|canny||pid_roundtrip|2048|512||": {
   "adherence": {
    "f1": 0.8003723149319996,
@@ -4419,6 +4432,19 @@
    "precision": 0.7550039710799873,
    "recall": 0.8907823812109403,
    "edge_density": 0.07288834733963012
+  },
+  "quality": {},
+  "n": 5000
+ },
+ "multigen5k|canny||pid_roundtrip_s7|512|512||": {
+  "adherence": {
+   "f1": 0.9170786042632167,
+   "f1_strict": 0.6372909634874809,
+   "tol_px": 1,
+   "cond_res": 512,
+   "precision": 0.9018243909926336,
+   "recall": 0.9335626543743658,
+   "edge_density": 0.10230121688842773
   },
   "quality": {},
   "n": 5000
