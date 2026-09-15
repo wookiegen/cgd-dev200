@@ -81,16 +81,20 @@ $CGD_ROOT/
   data/multigen_canny_eval/   the HF dataset
 ```
 
-**Paths that are ours, not yours.** Two more variables point at data this repo does not ship, and both default to the path they
-have on our group server, so set them if you are elsewhere:
+**The shared data.** The benchmark sets and raw datasets are too large to ship in git, so they live on the team share
+`/shared4/Project_Archive/2026-conditional-decoding/`, NFS-mounted on every group machine. Two variables point at them and
+**both already default to the share**, so a fresh clone needs no configuration:
 
-| variable | what it points at | used by | needed for the quick start? |
+| variable | what it points at | default | needed for the quick start? |
 |---|---|---|---|
-| `CGD_BENCH_ROOT` | the materialized paper benchmark (round trips, `canny2048`, cached decodes) | `bench/common.py`, `scripts/03_score.py` | no — the three reference rows are simply omitted, with a note, and your own decoder rows are still scored |
-| `CGD_RAW_ROOT` | downloaded raw datasets (MultiGen, ADE20K, DIV8K, DreamBench) | `bench/common.py` | no — only the `bench/build_*.py` set builders use it |
+| `CGD_BENCH_ROOT` | materialized benchmark sets: round trips, `canny2048`, cached latents and decodes | `…/2026-conditional-decoding/bench` | no — without it the three reference rows are omitted, with a note, and your own decoder rows are still scored |
+| `CGD_RAW_ROOT` | the downloaded source datasets (MultiGen, ADE20K, DIV8K, DreamBench, Subjects200K) | `…/2026-conditional-decoding/data` | no — only the `bench/build_*.py` set builders read it |
 
-The quick start needs neither: it rebuilds the 200 images from the HF dataset above and scores what you generate. The full
-paper benchmark under `bench/` does, and those sets are built on our server; ask the maintainer for the shared path.
+On `gen02`, where the data was produced, the same tree exists locally and is faster to read:
+```bash
+export CGD_BENCH_ROOT=/data/wookiekim/cgd/data/bench
+export CGD_RAW_ROOT=/data/wookiekim/cgd/data
+```
 
 Two further places carry our absolute paths on purpose. Every record in `results/` stores the `gen_dir` it was produced from,
 which is provenance rather than configuration and is never read back. `bench/run/*.sh` are our server orchestration scripts,

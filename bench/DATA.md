@@ -1,6 +1,10 @@
 # DATA.md — what is downloaded, where it lives on the group server, and what it is for
 
-Everything the CGD benchmark and the adapter training need was downloaded on 2026-09-09 and is shared on the group server. **Do not re-download**: point your environment at the paths below. Sizes are as measured; HF revisions are the commit at download time (`refs/main` in the cache, or `BENCH.json` for datasets).
+Everything the CGD benchmark and the adapter training need was downloaded on 2026-09-09 and is mirrored to the team share
+`/shared4/Project_Archive/2026-conditional-decoding/`, which is NFS-mounted on every group machine. **Do not re-download.**
+`bench/common.py` now defaults to the share, so a fresh clone works with no configuration; the `/data/...` paths below are the
+local originals on the machine that produced them, and are faster there. On that machine:
+`export CGD_BENCH_ROOT=/data/wookiekim/cgd/data/bench CGD_RAW_ROOT=/data/wookiekim/cgd/data`. Sizes are as measured; HF revisions are the commit at download time (`refs/main` in the cache, or `BENCH.json` for datasets).
 
 ## 0. Environment on the group server
 
@@ -8,8 +12,9 @@ Everything the CGD benchmark and the adapter training need was downloaded on 202
 |---|---|
 | Container | `wookiekim_tfso` (diffusers 0.37.1, transformers 4.57.1, numpy 1.26.4 = PiD's pins; pyiqa, clean-fid, icecream, torchmetrics + lightning-utilities installed with `--no-deps`; no flash_attn, so the harness falls back to SDPA for VisualQuality-R1) |
 | HF cache (models + datasets) | `/data/wookiekim/.cache/huggingface/hub` (the container sets `HF_HOME=/data/wookiekim/.cache/huggingface`) |
-| Raw datasets | `/data/wookiekim/cgd/data/<name>/` (`$CGD_RAW_ROOT`, default in `bench/common.py`) |
-| Materialized benchmark sets | `/data/wookiekim/cgd/data/bench/<set>/` (`$CGD_BENCH_ROOT`) |
+| Raw datasets (`$CGD_RAW_ROOT`) | share (default): `/shared4/Project_Archive/2026-conditional-decoding/data/<name>/` — local: `/data/wookiekim/cgd/data/<name>/` |
+| Materialized benchmark sets (`$CGD_BENCH_ROOT`) | share (default): `/shared4/Project_Archive/2026-conditional-decoding/bench/<set>/` — local: `/data/wookiekim/cgd/data/bench/<set>/` |
+| NOT on the share | `coco2017/` (39 GB): the layout condition was dropped in BENCHMARK v1.9 and this tree is to be deleted after submission |
 | PiD repo + checkpoints | `/data/wookiekim/cgd/PiD` (`$PID_ROOT`), checkpoints under `checkpoints/` |
 | OminiControl, EasyControl clones | `/data/wookiekim/cgd/OminiControl`, `/data/wookiekim/cgd/EasyControl` |
 | Download / build logs | `/data/wookiekim/cgd/data/_logs/` |

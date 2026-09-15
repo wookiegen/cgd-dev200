@@ -22,7 +22,8 @@ from scorers import CannyF1  # the paper's scorer (tolerant + strict), bench/sco
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--repo", default=REPO)
-ap.add_argument("--bench-root", default=os.environ.get("CGD_BENCH_ROOT", "/data/wookiekim/cgd/data/bench"), help="materialized paper benchmark (round trips, canny2048)")
+ap.add_argument("--bench-root", default=os.environ.get("CGD_BENCH_ROOT", "/shared4/Project_Archive/2026-conditional-decoding/bench"),
+                help="materialized paper benchmark (round trips, canny2048); defaults to the team share, override with CGD_BENCH_ROOT=/data/wookiekim/cgd/data/bench on the machine that holds the local copy")
 ap.add_argument("--variants", default="omini_vae,omini_vae_gen2048,omini_pid,omini_pid_et24,omini_pid_et16,omini_pidt,omini_pidt_et24,omini_pidt_et16")
 a = ap.parse_args()
 dev = os.path.join(a.repo, "dev200"); outs = os.path.join(a.repo, "outputs"); res = os.path.join(a.repo, "results"); os.makedirs(res, exist_ok=True)

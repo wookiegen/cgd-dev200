@@ -23,8 +23,11 @@ from PIL import Image, PngImagePlugin
 PngImagePlugin.MAX_TEXT_CHUNK = 256 * 1024 * 1024   # MultiGen-20M PNGs (and crops saved from them) carry iCCP / text chunks above PIL's 1 MB default
 
 REPO_BENCH = Path(__file__).resolve().parent                     # cgd-dev200/bench  (manifests, pins)
-RAW_ROOT = Path(os.environ.get("CGD_RAW_ROOT", "/data/wookiekim/cgd/data"))          # downloaded sources
-OUT_ROOT = Path(os.environ.get("CGD_BENCH_ROOT", "/data/wookiekim/cgd/data/bench"))  # materialized sets
+# Defaults are the TEAM SHARE (NFS, mounted on every group machine), so a fresh clone resolves to real data with no
+# configuration. On the machine that produced the data, export the local paths instead: same tree, no NFS round trip.
+#   export CGD_BENCH_ROOT=/data/wookiekim/cgd/data/bench   CGD_RAW_ROOT=/data/wookiekim/cgd/data
+RAW_ROOT = Path(os.environ.get("CGD_RAW_ROOT", "/shared4/Project_Archive/2026-conditional-decoding/data"))     # downloaded sources
+OUT_ROOT = Path(os.environ.get("CGD_BENCH_ROOT", "/shared4/Project_Archive/2026-conditional-decoding/bench"))  # materialized sets
 SIZE = 512
 SUBSET500_SEED = 500
 
