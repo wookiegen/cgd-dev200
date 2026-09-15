@@ -81,6 +81,21 @@ $CGD_ROOT/
   data/multigen_canny_eval/   the HF dataset
 ```
 
+**Paths that are ours, not yours.** Two more variables point at data this repo does not ship, and both default to the path they
+have on our group server, so set them if you are elsewhere:
+
+| variable | what it points at | used by | needed for the quick start? |
+|---|---|---|---|
+| `CGD_BENCH_ROOT` | the materialized paper benchmark (round trips, `canny2048`, cached decodes) | `bench/common.py`, `scripts/03_score.py` | no — the three reference rows are simply omitted, with a note, and your own decoder rows are still scored |
+| `CGD_RAW_ROOT` | downloaded raw datasets (MultiGen, ADE20K, DIV8K, DreamBench) | `bench/common.py` | no — only the `bench/build_*.py` set builders use it |
+
+The quick start needs neither: it rebuilds the 200 images from the HF dataset above and scores what you generate. The full
+paper benchmark under `bench/` does, and those sets are built on our server; ask the maintainer for the shared path.
+
+Two further places carry our absolute paths on purpose. Every record in `results/` stores the `gen_dir` it was produced from,
+which is provenance rather than configuration and is never read back. `bench/run/*.sh` are our server orchestration scripts,
+hardcoded to the group container; read them for the exact commands, but do not expect them to run elsewhere.
+
 External code (cloned, not vendored):
 ```bash
 cd $CGD_ROOT
