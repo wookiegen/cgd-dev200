@@ -13,5 +13,5 @@
   },
   "n": 5000,
   "purpose": "native-condition track: the decoder receives the condition at the output resolution; scoring tolerance = one condition pixel = 1 px at 2048",
-  "source": "cv2.Canny(gray, 100, 200) of the vanilla-PiD round trip of the real 512 image (outputs/ref/pid_roundtrip, 2048, 4-step 2K distilled checkpoint, sigma 0, seed 0)"
+  "source": "cv2.Canny(gray, 100, 200) of the vanilla-PiD round trip of the real 512 image (outputs/ref/pid_roundtrip_s7, 2048, 4-step 2K distilled checkpoint, sigma 0; seed 7 since BENCHMARK v1.16 = a decoder seed no evaluated row uses, so the reference shares no sampler noise with any row; seed 0 before)"
 }

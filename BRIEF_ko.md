@@ -27,7 +27,7 @@
   나오는지 보여주는 것이고, native 출력이 아닙니다.
 - **depth, seg, subject**는 스코어러가 내부에서 크기를 맞추므로 해상도에 무관합니다. 512 view 값만 보면 됩니다.
 - **c2048 열 (표 A의 세 번째 edge 열).** 2048 출력을 2048 edge map(c2048)에 대해 1px tolerance로 잰 점수이고, 모든 행에 있습니다. 디코더에 2048 condition을 주는 설정은 여기서 강점이 드러납니다. 2048 condition은 진짜 이미지의 PiD round trip에서
-  뽑은 Canny이고(`multigen5k/conditions/canny2048`), 그래서 round trip이 기준(1.0)입니다. tolerance는 1px. 여기서 vanilla PiD K=24는
+  뽑은 Canny이고(`multigen5k/conditions/canny2048`), v1.16부터 이 맵은 평가에 쓰이지 않는 디코더 시드 7의 round trip에서 뽑습니다. 따라서 어떤 평가 행도 자기 기준과 샘플러 노이즈를 공유하지 않고, 시드 0 round trip은 이 열에서 0.708(이 열의 샘플러 노이즈 바닥)이며 1.0은 시드 7 round trip뿐입니다. tolerance는 1px. 여기서 vanilla PiD K=24는
   0.51, 보간 경로는 0.11에서 0.31이므로 condition-aware 디코더의 여지가 가장 큽니다. 생성기 입력은 그대로 512 condition입니다.
 
 ## 3. 어떻게 점수를 내나

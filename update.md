@@ -155,7 +155,7 @@ with the 2048 condition (the difference = the value of condition resolution).
 - **Do not `pip install` into the container without `--no-deps`** (a plain install upgraded torch to 2.14 on 2026-09-12 and broke new
   processes until restored to 2.5.1+cu121).
 - **Real high-resolution validation QUEUED (2026-09-12 night; BENCHMARK v1.13; DIV8K, since LSDIR has no images at 2048).** On multigen5k the second reference map c2048 is
-  synthesized (Canny of the PiD round trip), so the round trip is its 1.0. To check that the c2048 column behaves the same against a
+  synthesized (Canny of the PiD round trip), so a round trip at a held-out decoder seed defines it and the reported seed-0 round trip scores 0.708, the column's sampler-noise floor. To check that the c2048 column behaves the same against a
   photographic map, a split `div8k1k` is built from DIV8K (1000 photographs with a short side >= 2048, area-downsampled to a short side of 2048 and
   center-cropped; INTER_AREA 512 view; c512 = Canny(512 image), c2048 = Canny(real 2048 crop); captions by Qwen2.5-VL-7B). There the REAL image
   is the 1.0 of the c2048 column and the PiD round trip is a row. Same generator, decoders, scorers; OminiControl canny only. Scripts:
@@ -173,3 +173,19 @@ with the 2048 condition (the difference = the value of condition resolution).
   (`make_latents.py --controller omini --condition seg --omini-lora <path>`). ade20k_val2k: mIoU 43.9 (VAE decode), 43.4 (PiD K=24),
   above EasyControl's released adapter (39.3). Segmentation latents for the paper live under `latents/omini/seg/`; the seg rows are in
   `BASELINES.md` Section A. The dev-200 loop itself stays canny-only.
+
+## 2026-09-15: two protocol changes colleagues must know
+
+1. **BENCHMARK v1.16, the c2048 reference is seed-decoupled.** The 2048 edge map is now Canny of a PiD round trip decoded at
+   **seed 7**, a seed no evaluated row uses. Before, it came from a seed-0 round trip while every evaluated row also used seed 0,
+   so a row shared sampler noise with its own reference and gained about +0.03 in that column (measured: 0.510 at seed 0 versus
+   0.483 and 0.481 at seeds 1 and 2). **Consequence: that column's attainable maximum is 0.708, not 1.0**, because two independent
+   decodes of one latent agree only that far. All records are rescored; `git pull` and re-run `scripts/03_score.py`. Superseded
+   values are kept under `results/bench/_archive_c2048_seed0/`.
+2. **BENCHMARK v1.17, the truncation point is K = 16.** The gate row is now K=16, not K=24: on dev-200 a variant must beat
+   **0.5378** tolerant F1 at the 512 view and **0.5562** at native 2048 (vs c512), MUSIQ not lower and LPIPS not worse than that
+   same row; a teacher-based variant is measured against 0.5194 / 0.5296. Run `eval_variant.py` with `--k 16`.
+
+**Known defect, being fixed:** `eval_variant.py` pairs per-image records by filename and that filter never matches the seg or
+subject records, so a seg or subject verdict from it is meaningless. Canny and depth verdicts are sound. Its adherence checks are
+strict greater-than at both resolutions, so a tie fails.

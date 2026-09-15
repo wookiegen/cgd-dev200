@@ -62,7 +62,7 @@ L = ["# BASELINES.md: the numbers a CGD variant has to beat", "",
      "latents (seed 0, 28 steps, guidance 3.5, 512 generation). Metric conventions: BENCHMARK v1.16 / `update.md`. "
      "Canny F1 = tolerant F1 (one condition pixel: 1 px at the 512 view, 4 px at native 2048); strict = pixel-exact (512 anchor). "
      "‡ = bicubic x4 upsample of a 512-native output (the interpolation route, NOT a native output). PiD = released 4-step distilled student; "
-     "teacher = undistilled v1.5 (25 steps, CFG 5). K/28 = generator steps before the decoder takes over (K = 24 is the table setting).", ""]
+     "teacher = undistilled v1.5 (25 steps, CFG 5). K/28 = generator steps before the decoder takes over (K = 16 is the operating point since BENCHMARK v1.17; K = 24 rows are kept for comparison).", ""]
 
 # ---------------------------------------------------------------- A. main benchmark
 L += ["## A. Main benchmark: 512-generation, condition = the 512 map (canny + depth on multigen5k, n = 5000; seg on ade20k_val2k, n = 2000)", "",
@@ -85,7 +85,7 @@ for ctrl, name in CTRL.items():
     L.append(f"| **{name}** | | | | | | | | | | | | |")
     row(f"&nbsp;&nbsp;+ VAE decode (the controller as published)", get(M, "canny", ctrl, "vae", 512), None, get(M, "depth", ctrl, "vae", 512), get(ADE, "seg", ctrl, "vae", 512), dagger=get(M, "canny", ctrl, "vae", 2048, via="ref"), nat_dagger=get(M, "canny", ctrl, "vae", 2048, cond_res=2048, via="ref"))
     for K in (28, 24, 16):
-        row(f"&nbsp;&nbsp;+ vanilla PiD, K={K}" + (" **(the row to beat at K=24)**" if K == 24 else ""), get(M, "canny", ctrl, f"pid_k{K}", 512), get(M, "canny", ctrl, f"pid_k{K}", 2048), get(M, "depth", ctrl, f"pid_k{K}", 512), get(ADE, "seg", ctrl, f"pid_k{K}", 512), nat=get(M, "canny", ctrl, f"pid_k{K}", 2048, cond_res=2048))
+        row(f"&nbsp;&nbsp;+ vanilla PiD, K={K}" + (" **(the row to beat: K=16 is the operating point)**" if K == 16 else ""), get(M, "canny", ctrl, f"pid_k{K}", 512), get(M, "canny", ctrl, f"pid_k{K}", 2048), get(M, "depth", ctrl, f"pid_k{K}", 512), get(ADE, "seg", ctrl, f"pid_k{K}", 512), nat=get(M, "canny", ctrl, f"pid_k{K}", 2048, cond_res=2048))
         if get(M, "canny", ctrl, f"pidt_k{K}", 512) or get(M, "canny", ctrl, f"pidt_k{K}", 512, subset="subset500"):
             r5 = get(M, "canny", ctrl, f"pidt_k{K}", 512) or get(M, "canny", ctrl, f"pidt_k{K}", 512, subset="subset500")
             sub = "" if get(M, "canny", ctrl, f"pidt_k{K}", 512) else "subset500"

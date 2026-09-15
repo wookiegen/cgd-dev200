@@ -1,4 +1,8 @@
-"""One-command evaluation of a decoder VARIANT under the paper protocol (BENCHMARK v1.11), with the verdict against BASELINES.md.
+"""
+WARNING (2026-09-15): seg and subject pairing is BROKEN — the per-image filter never matches those records, so a seg or
+subject verdict is meaningless; canny and depth only until fixed. The gate is now K = 16 (BENCHMARK v1.17): pass --k 16.
+The adherence comparisons are strict > at both resolutions, so a tie FAILS.
+One-command evaluation of a decoder VARIANT under the paper protocol (BENCHMARK v1.11), with the verdict against BASELINES.md.
 
 Give it a directory of 2048x2048 PNGs named <sample_id>.png (one per manifest row, or per subset500 row) that decode the cached latents
 `latents/<controller>/<condition>/<sid>.pt` at truncation point K. It runs the harness at the matched 512 view (adherence, no-ref, recon,
