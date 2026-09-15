@@ -63,7 +63,7 @@ def ref_paths(row, idx):
 
 def score_pair(view512, nat, cond512, cond2048, src, dagger):
     """view512: 512 view; nat: 2048 image (native or bicubic upsample when dagger)."""
-    r = {}
+    r = {"canny_f1_2048_natcond": np.nan}   # seeded so the column always exists, even where no 2048 condition is available
     s = sc.score(view512, cond512); r["canny_f1_512"] = s["f1"]; r["canny_f1s_512"] = s["f1_strict"]
     s = sc.score(nat, cond512); r["canny_f1_2048"] = s["f1"]; r["canny_f1s_2048"] = s["f1_strict"]
     if cond2048 is not None:
@@ -75,6 +75,7 @@ def score_pair(view512, nat, cond512, cond2048, src, dagger):
     return r
 
 
+missing_ref = []
 rows = []
 for idx in ids:
     src = load(os.path.join(dev, "images", f"{idx}.png"))
@@ -83,6 +84,7 @@ for idx in ids:
     for ref in ["real", "vae_roundtrip", "pid_roundtrip", "pidt_roundtrip"]:
         p512, p2048 = ref_paths(ref, idx)
         if not os.path.exists(p512):
+            missing_ref.append(ref)
             continue
         v = load(p512)
         if p2048 and os.path.exists(p2048):
@@ -119,6 +121,15 @@ for f, key in [("log_01_generate.jsonl", None), ("log_02_pid.jsonl", "pid"), ("l
         for v, gdf in g.groupby("variant"):
             lat[f"omini_{key}" + ("" if v == "final" else f"_{v}")] = (gdf.t_dec_s.mean(), gdf.peak_mem_gb.max())
 
+if missing_ref:
+    miss = sorted(set(missing_ref))
+    print(f"\nNOTE: no images found for the reference row(s) {miss} under CGD_BENCH_ROOT={B}.\n"
+          f"      Those rows are produced on the group server and are not part of the public release, so they are omitted\n"
+          f"      from the table below; every decoder row you generated yourself is still scored. Set CGD_BENCH_ROOT to a\n"
+          f"      tree that contains outputs/ref/ if you need them.\n", flush=True)
+if df.empty:
+    raise SystemExit(f"no rows scored: neither reference images under CGD_BENCH_ROOT={B} nor decoder outputs under {outs} were found")
+
 agg = df.groupby("variant").agg(n=("idx", "count"), native_res=("native_res", "first"), dagger=("dagger", "first"),
                                 canny_f1_512=("canny_f1_512", "mean"), canny_f1_2048=("canny_f1_2048", "mean"),
                                 canny_f1_2048_natcond=("canny_f1_2048_natcond", "mean"), canny_f1s_512=("canny_f1s_512", "mean"),
@@ -134,8 +145,8 @@ names = {"real": "Real image (512; 2048 = bicubic x4 ‡)", "vae_roundtrip": "VA
          "pid_roundtrip": "PiD round trip, student (generative ceiling; 2048 native)", "pidt_roundtrip": "PiD round trip, teacher",
          "omini_vae": "OminiControl + VAE decode (512 native; 2048 = bicubic x4 ‡, the interpolation route)",
          "omini_vae_gen2048": "OminiControl GENERATING at 2048 + VAE decode (the native route)",
-         "omini_pid": "OminiControl + vanilla PiD student, final latent (28/28)", "omini_pid_et24": "OminiControl + vanilla PiD student, K=24 **(gate row)**", "omini_pid_et16": "OminiControl + vanilla PiD student, K=16",
-         "omini_pidt": "OminiControl + vanilla PiD teacher, final latent (28/28)", "omini_pidt_et24": "OminiControl + vanilla PiD teacher, K=24 **(gate row for teacher-based CGD)**", "omini_pidt_et16": "OminiControl + vanilla PiD teacher, K=16"}
+         "omini_pid": "OminiControl + vanilla PiD student, final latent (28/28)", "omini_pid_et24": "OminiControl + vanilla PiD student, K=24", "omini_pid_et16": "OminiControl + vanilla PiD student, K=16 **(gate row)**",
+         "omini_pidt": "OminiControl + vanilla PiD teacher, final latent (28/28)", "omini_pidt_et24": "OminiControl + vanilla PiD teacher, K=24", "omini_pidt_et16": "OminiControl + vanilla PiD teacher, K=16 **(gate row for teacher-based CGD)**"}
 
 
 def f(v, nd=4, dag=False):

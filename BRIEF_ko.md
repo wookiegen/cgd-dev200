@@ -34,7 +34,7 @@
 
 ```
 cd cgd-dev200/bench
-CUDA_VISIBLE_DEVICES=0 python eval_variant.py --name <내이름_v1> --gen-dir <2048 PNG 폴더> --controller omini --condition canny --k 24 [--subset500]
+CUDA_VISIBLE_DEVICES=0 python eval_variant.py --name <내이름_v1> --gen-dir <2048 PNG 폴더> --controller omini --condition canny --k 16 [--subset500]
 ```
 
 이 한 줄이 512 vs c512, 2048 vs c512, 2048 vs c2048 세 열을 모두 채점하고, `BASELINES.md`의 VAE decode / vanilla PiD 행과의 차이, paired

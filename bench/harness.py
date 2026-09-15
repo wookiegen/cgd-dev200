@@ -65,6 +65,19 @@ if a.cond_res != 512:
     file_tag += f".cond{a.cond_res}"
 CANNY_DIR = "canny" if a.cond_res == 512 else f"canny{a.cond_res}"
 
+
+def cond_provenance(split):
+    """Identify the condition map this run scores against, so a record can never be compared with one built on another map."""
+    vf = REPO_BENCH / split / "NATIVE_CONDITION_VERSION.json"
+    if a.cond_res == 512 or not vf.exists():
+        return {"cond_src": f"conditions/{CANNY_DIR}"}
+    v = json.load(open(vf))
+    src = v.get("source", "")
+    seed = "seed7" if "pid_roundtrip_s7" in src or "seed 7" in src else ("seed0" if "seed 0" in src else "unknown")
+    return {"cond_src": f"conditions/{CANNY_DIR}", "cond_ref": seed,
+            "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; "
+                             "records built on different seeds are NOT comparable"}
+
 # probe native resolution
 probe = np.array(Image.open(gen / f"{rows[0]['sample_id']}.png"))
 native = probe.shape[0]
@@ -206,7 +219,8 @@ records = []
 for c in conds:
     adh = {}
     if c == "canny" and "canny" in sc: adh = {"f1": mean("canny_f1"), "f1_strict": mean("canny_f1_strict"), "tol_px": int(max(1, a.res // a.cond_res)), "cond_res": a.cond_res,
-                                              "precision": mean("canny_precision"), "recall": mean("canny_recall"), "edge_density": mean("canny_edge_density")}
+                                              "precision": mean("canny_precision"), "recall": mean("canny_recall"), "edge_density": mean("canny_edge_density"),
+                                              **cond_provenance(a.split)}
     if c == "depth" and "depth" in sc: adh = {"mse": mean("depth_mse"), "rmse": mean("depth_rmse")}
     if c == "seg" and "seg" in sc: adh = {"miou": sc["seg"].dataset_miou(), "miou_img_mean": mean("seg_miou_img")}
     if c == "bbox" and "bbox" in sc:

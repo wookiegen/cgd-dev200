@@ -10,7 +10,10 @@
    "f1": 1.0,
    "f1_strict": 1.0,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed0",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000,

@@ -11,7 +11,10 @@
    "f1": 0.11669838526137735,
    "f1_strict": 0.03719403418613701,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "n": 1000,
   "gen_dir": "/data/wookiekim/cgd/data/bench/outputs/omini_div8k/canny/vae@28"

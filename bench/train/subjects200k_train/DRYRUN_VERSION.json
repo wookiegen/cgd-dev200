@@ -1,0 +1,23 @@
+{
+  "conditions": {
+    "bbox": null,
+    "canny": "cv2.Canny(gray(INTER_AREA 512 view of the target), 100, 200)",
+    "canny2048": "cv2.Canny(gray(target at 2048), 100, 200): the native-condition form (2026-09-12); training samples either form per example",
+    "depth": "Intel/dpt-large on the 512 view of the target; png min-max 8-bit, raw float16 npy",
+    "seg": null
+  },
+  "dry_run": true,
+  "env": {
+    "PIL": "11.3.0",
+    "cv2": "4.11.0",
+    "numpy": "1.26.4",
+    "platform": "Linux-5.15.0-119-generic-x86_64-with-glibc2.35",
+    "pyarrow": "24.0.0",
+    "python": "3.11.10",
+    "torch": "2.5.1+cu121",
+    "transformers": "4.57.1"
+  },
+  "latent": "FLUX.1-dev VAE posterior mean, diffusers scaled space ((z - shift) * scaling), fp16",
+  "set": "subjects200k_train",
+  "targets": "vanilla PiD (n/a, 4 steps, seed 0, cfg 1) decode of the CLEAN FLUX latent of the 512 crop, 2048x2048, JPEG q95"
+}

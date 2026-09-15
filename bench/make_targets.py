@@ -38,7 +38,7 @@ from common import (OUT_ROOT, RAW_ROOT, REPO_BENCH, canny_condition, crop_boxes,
                     render_palette, sha256_bytes, write_json, env_pins)
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--set", required=True, choices=["multigen_train30", "ade20k_train", "coco_train"])
+ap.add_argument("--set", required=True, choices=["multigen_train30", "ade20k_train", "coco_train", "subjects200k_train"])
 ap.add_argument("--split", default="all", choices=["train", "val", "all"])
 ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--shard", type=int, default=0)
@@ -56,9 +56,11 @@ a = ap.parse_args()
 SET = a.set
 out = OUT_ROOT / "train" / SET
 subdirs = ["images512", "latents", "targets", "conditions/canny", "conditions/canny2048", "conditions/depth", "conditions/depth_raw"]
-subdirs += ["conditions/seg"] if SET == "ade20k_train" else ["conditions/bbox"] if SET == "coco_train" else []
+subdirs += ["conditions/seg"] if SET == "ade20k_train" else ["conditions/bbox"] if SET == "coco_train" else ["conditions/subject"] if SET == "subjects200k_train" else []
 for d in subdirs:
     (out / d).mkdir(parents=True, exist_ok=True)
+GT_DIR = {"ade20k_train": "conditions/seg", "coco_train": "conditions/bbox", "subjects200k_train": "conditions/subject"}.get(SET, "conditions/seg")
+SUBJECT = SET == "subjects200k_train"   # the condition is a REFERENCE PHOTO of the same item, not re-extracted from the target
 log_dir = RAW_ROOT / "_logs"; log_dir.mkdir(exist_ok=True)
 log_path = log_dir / f"targets_{SET}_shard{a.shard}of{a.nshards}.jsonl"
 
@@ -97,7 +99,34 @@ if SET == "coco_train":
 def source_iter():
     """Yield (row, PIL image at 512 crop, gt_condition PIL or None) for the selected rows, in manifest order."""
     want = {r["sample_id"]: r for _, r in sel if r["sample_id"] in todo}
-    if SET in ("multigen_train30", "ade20k_train"):
+    if SUBJECT:
+        import pyarrow.parquet as pq
+        by_file = defaultdict(dict)
+        for r in want.values():
+            by_file[r["source_file"]][int(r["source_row"])] = r
+        PAD, SZ = 8, 512
+        LEFT = (PAD, PAD, SZ + PAD, SZ + PAD)                          # OminiControl's crop, verbatim
+        RIGHT = (SZ + 2 * PAD, PAD, 2 * SZ + 2 * PAD, SZ + PAD)
+        for fp in sorted(glob.glob(str(RAW_ROOT / "subjects200k" / "data" / "*.parquet"))):
+            wanted = by_file.get(Path(fp).name)
+            if not wanted:
+                continue
+            pf = pq.ParquetFile(fp); off = 0
+            for batch in pf.iter_batches(batch_size=64, columns=["image"]):
+                n_b = batch.num_rows
+                for i in [j for j in range(off, off + n_b) if j in wanted]:
+                    r = wanted[i]; k = i - off
+                    b = batch.column("image")[k].as_py()["bytes"]
+                    assert sha256_bytes(b) == r["sha256"], (SET, r["sample_id"])
+                    pair = Image.open(io.BytesIO(b)).convert("RGB")
+                    lo, ro = pair.crop(LEFT), pair.crop(RIGHT)
+                    # direction 0: left is the target and right the condition; direction 1 is the reverse
+                    tgt, cond = (lo, ro) if r["direction"] == "0" else (ro, lo)
+                    yield r, tgt, cond
+                off += n_b
+                if off > max(wanted):
+                    break
+    elif SET in ("multigen_train30", "ade20k_train"):
         import pyarrow.parquet as pq
         sub = "multigen_train_subset" if SET == "multigen_train30" else "captioned_ade20k"
         files = sorted(glob.glob(str(RAW_ROOT / sub / "data" / "train-*.parquet")))
@@ -204,8 +233,9 @@ def flush(buf):
             s = r["sample_id"]
             img.save(out / "images512" / f"{s}.png")
             if gt is not None:
-                gt.save(out / ("conditions/seg" if SET == "ade20k_train" else "conditions/bbox") / f"{s}.png")
-            canny_condition(img).save(out / "conditions" / "canny" / f"{s}.png")   # dry-run stand-in: canny of the SOURCE crop
+                gt.save(out / GT_DIR / f"{s}.png")
+            if not SUBJECT:
+                canny_condition(img).save(out / "conditions" / "canny" / f"{s}.png")   # dry-run stand-in: canny of the SOURCE crop
             n += 1
         return
     import cv2
@@ -219,14 +249,15 @@ def flush(buf):
         Image.fromarray(y).save(out / "targets" / f"{s}.jpg", quality=a.jpeg_quality, subsampling=0)
         y512 = cv2.resize(y, (512, 512), interpolation=cv2.INTER_AREA)   # the scorer's matched view
         y512_pil = Image.fromarray(y512)
-        canny_condition(y512_pil).save(out / "conditions" / "canny" / f"{s}.png")            # 512 condition (default track)
-        canny_condition(Image.fromarray(y)).save(out / "conditions" / "canny2048" / f"{s}.png")  # native condition (2026-09-12 track): thin edges of the target at 2048
-        if not a.no_depth:
+        if not SUBJECT:                                                                      # subject: the condition is the reference view, not extracted from the target
+            canny_condition(y512_pil).save(out / "conditions" / "canny" / f"{s}.png")            # 512 condition (default track)
+            canny_condition(Image.fromarray(y)).save(out / "conditions" / "canny2048" / f"{s}.png")  # native condition (2026-09-12 track): thin edges of the target at 2048
+        if not a.no_depth and not SUBJECT:
             d, u8 = depth512(y512_pil)
             np.save(out / "conditions" / "depth_raw" / f"{s}.npy", d.astype(np.float16))
             Image.fromarray(u8).save(out / "conditions" / "depth" / f"{s}.png")
         if gt is not None:
-            gt.save(out / ("conditions/seg" if SET == "ade20k_train" else "conditions/bbox") / f"{s}.png")
+            gt.save(out / GT_DIR / f"{s}.png")
         with open(log_path, "a") as f:
             f.write(json.dumps({"sample_id": s, "t": time.time()}) + "\n")
         n += 1

@@ -1,6 +1,9 @@
 """
-WARNING (2026-09-15): seg and subject pairing is BROKEN — the per-image filter never matches those records, so a seg or
-subject verdict is meaningless; canny and depth only until fixed. The gate is now K = 16 (BENCHMARK v1.17): pass --k 16.
+FIXED 2026-09-15 (was: seg pairing broken and the gate failing OPEN). Three defects, all closed: the per-image filter tested
+for the condition in the filename, which the harness only writes when a split has more than one condition, so seg records
+never matched; the record-mean fallback derived the key "miou_img", which the harness does not write; and a criterion that
+could not be evaluated printed "n/a" and dropped out of the verdict, so a seg variant with NO adherence data was judged by
+LPIPS alone and printed GATE: PASS. Missing criteria now FAIL. The gate is K = 16 (BENCHMARK v1.17), now the default.
 The adherence comparisons are strict > at both resolutions, so a tie FAILS.
 One-command evaluation of a decoder VARIANT under the paper protocol (BENCHMARK v1.11), with the verdict against BASELINES.md.
 
@@ -9,7 +12,7 @@ Give it a directory of 2048x2048 PNGs named <sample_id>.png (one per manifest ro
 FID), at native 2048 (adherence, no-ref), and, for canny, at 2048 against the NATIVE 2048 condition; then prints the deltas and paired
 bootstrap 95% CIs against the VAE decode and vanilla PiD (student; teacher if scored) at the same K, and a PASS / FAIL per gate criterion.
 
-  CUDA_VISIBLE_DEVICES=g python eval_variant.py --name mycgd_v1 --gen-dir /path/to/2048pngs --controller omini --condition canny --k 24 [--subset500] [--gen-dir-512 <dir>] [--skip-noref]
+  CUDA_VISIBLE_DEVICES=g python eval_variant.py --name mycgd_v1 --gen-dir /path/to/2048pngs --controller omini --condition canny --k 16 [--subset500] [--gen-dir-512 <dir>] [--skip-noref]
 
 Records land in results/variants/<name>/ (never in results/bench/, which holds the baselines). Reserved names: vae, pid_k*, pidt_k*, real, *_roundtrip, condvae.
 """
@@ -29,7 +32,7 @@ from common import REPO_BENCH
 ap = argparse.ArgumentParser()
 ap.add_argument("--name", required=True); ap.add_argument("--gen-dir", required=True); ap.add_argument("--gen-dir-512", default=None)
 ap.add_argument("--controller", default="omini"); ap.add_argument("--condition", default="canny", choices=["canny", "depth", "seg", "subject"])
-ap.add_argument("--k", type=int, default=24, help="truncation point of the latents you decoded (28 = full latent)")
+ap.add_argument("--k", type=int, default=16, help="truncation point of the latents you decoded (BENCHMARK v1.17: the operating point and the gate are K = 16; 28 = full latent)")
 ap.add_argument("--subset500", action="store_true"); ap.add_argument("--skip-noref", action="store_true"); ap.add_argument("--teacher", action="store_true", help="also compare with the teacher rows")
 ap.add_argument("--n-boot", type=int, default=5000)
 ap.add_argument("--report-only", action="store_true", help="skip the harness runs and rebuild the report from existing records")
@@ -37,6 +40,10 @@ a = ap.parse_args()
 RESERVED = {"vae", "real", "condvae"}
 assert a.name not in RESERVED and not a.name.startswith(("pid_k", "pidt_k")) and not a.name.endswith("_roundtrip"), "reserved method name"
 split = {"canny": "multigen5k", "depth": "multigen5k", "seg": "ade20k_val2k", "subject": "dreambench750"}[a.condition]
+# harness.py tags the filename with the condition ONLY when the split carries more than one (it runs them together otherwise),
+# so testing for ".seg" / ".subject" in a filename can never match: those splits have exactly one condition. (2026-09-15)
+SPLIT_CONDS = {"multigen5k": ["canny", "depth"], "ade20k_val2k": ["seg"], "coco_val5k": ["bbox"], "dreambench750": ["subject"], "div8k1k": ["canny"]}
+COND_IN_NAME = len(SPLIT_CONDS[split]) > 1
 ROOT = REPO_BENCH.parent; OUT = ROOT / "results" / "variants" / a.name; OUT.mkdir(parents=True, exist_ok=True)
 BASE = ROOT / "results" / "bench"
 PY = sys.executable
@@ -91,6 +98,9 @@ def pick(recs, method, res, cond_res=512, allow_full=True):
 
 
 KEYCOL = {"canny": "canny_f1", "depth": "depth_rmse", "seg": "seg_miou_img", "subject": "subject_dino"}[a.condition]
+# per-image CSV column -> the key the harness writes into the record's adherence dict. Deriving this by splitting on "_"
+# gave "miou_img" for seg, which is not a key of that dict, so the seg fallback always returned None. (2026-09-15)
+RECKEY = {"canny_f1": "f1", "depth_rmse": "rmse", "seg_miou_img": "miou", "subject_dino": "dino"}
 
 
 def per_image(recs_dir, method, res, cond_res=512, subset=sub, col=None):
@@ -98,7 +108,8 @@ def per_image(recs_dir, method, res, cond_res=512, subset=sub, col=None):
     col = col or KEYCOL
     pat = f"{a.controller}.{method}@{res}*_per_image.csv"
     fs = [f for f in glob.glob(str(recs_dir / split / pat))
-          if (".cond2048" in f) == (cond_res == 2048) and ((".subset500" in f) == bool(subset)) and ".vlm" not in f and f".{a.condition}" in Path(f).name]
+          if (".cond2048" in f) == (cond_res == 2048) and ((".subset500" in f) == bool(subset)) and ".vlm" not in f
+          and (f".{a.condition}" in Path(f).name if COND_IN_NAME else True)]
     if not fs and subset:
         return per_image(recs_dir, method, res, cond_res, subset="", col=col)
     if not fs:
@@ -122,6 +133,21 @@ def ci(v, b):
     d = np.array([v[i] - b[i] for i in ids]); rng = np.random.default_rng(0)
     boots = d[rng.integers(0, len(d), size=(a.n_boot, len(d)))].mean(axis=1)
     return d.mean(), *np.percentile(boots, [2.5, 97.5]), len(ids)
+
+
+def guard_same_reference(vrec, brec, where):
+    """Refuse to compare canny records scored against DIFFERENT 2048 condition maps.
+    v1.16 replaced the seed-0 c2048 reference with a seed-7 one and rescored results/bench/ but not results/variants/,
+    which made an identical decoder look 0.028 better. Records written before the stamp carry no cond_ref: treat an
+    absent stamp on one side and a present one on the other as a mismatch, since that is exactly the stale case."""
+    if not vrec or not brec:
+        return
+    vr, br = vrec["adherence"].get("cond_ref"), brec["adherence"].get("cond_ref")
+    if vr == br:
+        return
+    sys.exit(f"ABORT: {where} compares records built on different 2048 condition maps "
+             f"(variant cond_ref={vr!r}, baseline cond_ref={br!r}). A record with no stamp predates BENCHMARK v1.16 and "
+             f"was scored against the retired seed-0 map. Re-score the variant with the current harness before comparing.")
 
 
 keymetric = {"canny": ("f1", "higher"), "depth": ("rmse", "lower"), "seg": ("miou", "higher"), "subject": ("dino", "higher")}[a.condition]
@@ -151,12 +177,16 @@ if a.subset500:
 lines += ["", f"## Verdict against vanilla PiD at the same K = {a.k} (paired on the same images)", ""]
 PB = f"pid_k{a.k}"
 v5, v20 = pick(V, a.name, 512), pick(V, a.name, 2048); b5, b20 = pick(B, PB, 512), pick(B, PB, 2048)
+if a.condition == "canny":
+    guard_same_reference(pick(V, a.name, 2048, 2048), pick(B, PB, 2048, 2048), "the 2048 / c2048 column")
 ok = []
 
 
 def check(name, val, ref, higher=True, tol=0.0, n=None):
     if val is None or ref is None:
-        lines.append(f"- {name}: n/a"); return
+        # fail closed: a criterion we could not evaluate is NOT a criterion the variant passed (2026-09-15)
+        ok.append(False)
+        lines.append(f"- {name}: n/a (no paired data and no record mean) -> FAIL (cannot be evaluated)"); return
     good = (val >= ref - tol) if higher else (val <= ref + tol)
     if tol == 0.0:
         good = (val > ref) if higher else (val < ref)
@@ -170,7 +200,7 @@ def vals(res, col, cond_res=512, quality=False):
         return p
     rv, rb = pick(V, a.name, res, cond_res), pick(B, PB, res, cond_res)
     src = "quality" if quality else "adherence"
-    k = col.split("_", 1)[1] if "_" in col else col
+    k = RECKEY.get(col) or (col.split("_", 1)[1] if "_" in col else col)
     return (rv and rv[src].get(k), rb and rb[src].get(k), None)
 
 

@@ -8,7 +8,9 @@ draft's subsubsection "Scoring Protocol Across Resolutions"; this is the working
 c2048(2048 reference의 Canny, 생성기는 못 봄). 모든 행에 edge 열이 세 개 있습니다: 512 vs c512 (1px), 2048 vs c512 (4px), 2048 vs c2048 (1px).
 tolerance는 항상 "condition 픽셀 1개"입니다. CGD는 c512로 디코딩한 행과 c2048로 디코딩한 행을 둘 다 냅니다. dev-200 게이트는 tolerant F1
 기준으로 바뀌었습니다 (`git pull` 후 `scripts/03_score.py` 재실행). 2048 vs c512 열의 실질적 상한은 PiD round trip의 0.80이고, 2048 vs c2048
-열의 기준은 round trip 1.0입니다.
+열의 기준 맵은 seed 7 round trip입니다 (v1.16). 그 맵을 보지 못하는 행의 실질적 상한은 1.0이 아니라 **0.708**입니다: 같은 latent을 다른
+seed로 한 번 더 디코딩하면 기준 맵과 그만큼만 일치하기 때문입니다. CGD의 c2048 행만 예외로, 채점 대상 맵을 직접 입력으로 받으므로 이 상한에
+묶이지 않으며 반드시 품질 지표와 함께 읽어야 합니다.
 
 ## 1. What changed in the dev loop
 
@@ -117,9 +119,12 @@ generator keeps the 512 map. A latent-space controller cannot consume a 2048 map
 keep, in addition to the default 512-condition protocol above (which remains the headline).
 
 - **Eval conditions**: `multigen5k/conditions/canny2048/<sid>.png` = Canny(100, 200) of the vanilla-PiD round trip of the real image
-  (`bench/build_native_conditions.py`). The controllers' input is unchanged, so every cached latent and decode is reused.
+  (`bench/build_native_conditions.py`, `--src-name pid_roundtrip_s7`: decoder **seed 7**, which no evaluated row uses, so the reference
+  shares no sampler noise with any row). The controllers' input is unchanged, so every cached latent and decode is reused.
 - **Scoring**: `harness.py ... --res 2048 --cond-res 2048` (tolerance one condition pixel = 1 px at 2048; file tag `.cond2048`). The PiD
-  round trip is the reference and scores 1.0 by construction; dagger rows via `tools_upsampled_ref.py --cond-res 2048`. No FID against it.
+  round trip at held-out decoder seed 7 is the reference and scores 1.0 by construction (v1.16); the seed-0 round trip that the paper
+  reports scores 0.708 there, which is the column's attainable maximum for any row that does not see the map. Dagger rows via
+  `tools_upsampled_ref.py --cond-res 2048`. No FID against it.
 - **Caveat (in the paper)**: the reference is synthesized by the blind decoder, so the track measures recovery of decoder-consistent native
   structure that the condition specifies, not agreement with a photograph. A real >= 2048 photo set would lift this; future work.
 - **Training**: `make_targets.py` writes both `conditions/canny` (512 view of the target) and `conditions/canny2048` (target at 2048).
@@ -133,16 +138,20 @@ keep, in addition to the default 512-condition protocol above (which remains the
 
 | row | canny F1 @2048 vs c2048 (1 px) |
 |---|---|
-| PiD round trip (the reference) | 1.000 |
+| PiD round trip at seed 7 (**the reference**) | 1.000 |
+| PiD round trip at seed 0 (**the column's attainable maximum**) | 0.708 |
 | real image, bicubic x4 (dagger) | 0.306 |
 | VAE round trip, bicubic x4 (dagger) | 0.296 |
-| OminiControl: VAE decode x4 (dagger) / PiD K=28 / K=24 / K=16 | 0.114 / 0.547 / 0.514 / 0.435 |
-| EasyControl: VAE decode x4 (dagger) / PiD K=28 / K=24 / K=16 | 0.156 / 0.425 / 0.476 / 0.463 |
-| FLUX ControlNet: VAE decode x4 (dagger) / PiD K=28 / K=24 / K=16 | 0.130 / 0.466 / 0.489 / 0.434 |
+| OminiControl: VAE decode x4 (dagger) / PiD K=28 / K=24 / K=16 | 0.114 / 0.510 / 0.485 / 0.413 |
+| EasyControl: VAE decode x4 (dagger) / PiD K=28 / K=24 / K=16 | 0.156 / 0.405 / 0.450 / 0.438 |
+| FLUX ControlNet: VAE decode x4 (dagger) / PiD K=28 / K=24 / K=16 | 0.130 / 0.433 / 0.459 / 0.412 |
 
-Reading: interpolation routes reach 0.11 to 0.31; the blind decoder recovers about half of the native structure from the truncated latent;
-the reference is 1.0. This is the largest headroom of any setting for a condition-aware decoder. CGD rows: one with the 512 condition, one
-with the 2048 condition (the difference = the value of condition resolution).
+Reading: interpolation routes reach 0.11 to 0.31; the blind decoder recovers about half of the native structure from the truncated latent.
+**Read every row against 0.708, not against 1.0**: only the seed-7 round trip that DEFINES the map scores 1.0, and an independent decode of
+the same latent agrees with it only to 0.708, so that is the ceiling for any row that does not see the map (see the v1.16 note below). This
+is still the largest headroom of any setting for a condition-aware decoder. CGD rows: one with the 512 condition, one with the 2048
+condition (the difference = the value of condition resolution); the 2048-condition row is handed the map it is scored against, so it is NOT
+bounded by 0.708 and must be read beside the quality metrics.
 
 ## 8. Queued / decided the same evening
 

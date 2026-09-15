@@ -60,12 +60,12 @@ Reading: at 4 MP the controllers drift from the condition (FLUX and its adapters
 | additive, frozen decoder (clean-latent training) | x0 | 0.769 | 0.397 | 0.464 | 17.2 | 19.1 | 23.82 | 20.5 | 43.8 |
 | modulated, frozen decoder | x0 | 0.766 | 0.442 | 0.471 | 17.0 | 18.9 | 23.83 | 20.4 | 43.8 |
 | additive, decoder finetuned lr 1e-5 | x0 | 0.770 | 0.387 | 0.460 | 17.3 | 18.5 | 23.83 | 20.5 |  |
-| additive, RE-NOISED training | x0 | 0.783 | 0.436 | 0.427 | 17.8 | 22.0 | 23.78 | 21.2 |  |
-| additive, RE-NOISED training | x_t@24 | 0.805 | 0.440 | 0.333 | 52.5 | 50.1 | 24.91 | 63.0 |  |
-| additive, RE-NOISED training | x_t@16 | 0.675 | 0.328 | 0.230 | 235.0 | 332.1 | 44.21 | 283.1 |  |
-| modulated, RE-NOISED training | x0 | 0.787 | 0.427 | 0.436 | 16.5 | 21.4 | 23.70 | 20.3 |  |
-| modulated, RE-NOISED training | x_t@24 | 0.797 | 0.411 | 0.359 | 46.6 | 49.7 | 23.45 | 47.0 |  |
-| modulated, RE-NOISED training | x_t@16 | 0.848 | 0.353 | 0.242 | 201.9 | 251.8 | 33.62 | 263.0 |  |
+| additive, RE-NOISED training | x0 | 0.783 | 0.436 | 0.427 | 17.8 | 22.0 | 23.78 | 21.2 | 43.9 |
+| additive, RE-NOISED training | x_t@24 | 0.805 | 0.440 | 0.333 | 52.5 | 50.1 | 24.91 | 63.0 | 42.2 |
+| additive, RE-NOISED training | x_t@16 | 0.675 | 0.328 | 0.230 | 235.0 | 332.1 | 44.21 | 283.1 | 8.7 |
+| modulated, RE-NOISED training | x0 | 0.787 | 0.427 | 0.436 | 16.5 | 21.4 | 23.70 | 20.3 | 44.2 |
+| modulated, RE-NOISED training | x_t@24 | 0.797 | 0.411 | 0.359 | 46.6 | 49.7 | 23.45 | 47.0 | 43.0 |
+| modulated, RE-NOISED training | x_t@16 | 0.848 | 0.353 | 0.242 | 201.9 | 251.8 | 33.62 | 263.0 | 15.9 |
 
 Reading: on clean latents the condition is redundant (no adherence gain, any injection). Trained on re-noised latents and fed the truncated x_t, the deterministic decoder beats vanilla PiD on adherence but its FID / MANIQA collapse (it blurs and traces the condition): adherence traded for detail, never both (the paper's second pillar).
 
@@ -80,16 +80,16 @@ Reading: on clean latents the condition is redundant (no adherence gain, any inj
 
 ## D. Condition-scale sweep (canny dev-200, OminiControl; fig:ceiling)
 
-| scale | n | vae@512 | pid_k28@512 | pid_k28@2048 | pid_k24@512 | pid_k24@2048 |
-|---|---|---|---|---|---|---|
-| 0 | 200 | 0.246 | 0.255 | 0.277 | 0.272 | 0.302 |
-| 0.25 | 200 | 0.246 | 0.259 | 0.299 | 0.283 | 0.322 |
-| 0.5 | 200 | 0.402 | 0.425 | 0.482 | 0.447 | 0.478 |
-| 0.75 | 200 | 0.670 | 0.688 | 0.666 | 0.648 | 0.618 |
-| 1 | 200 | 0.767 | 0.778 | 0.725 | 0.713 | 0.662 |
-| 1.5 | 200 | 0.836 | 0.841 | 0.775 | 0.762 | 0.700 |
-| 2 | 200 | 0.864 | 0.864 | 0.799 | 0.781 | 0.720 |
-| 4 | 200 | 0.838 | 0.831 | 0.771 | 0.750 | 0.715 |
+| scale | n | vae@512 | pid_k28@512 | pid_k28@2048 | pid_k24@512 | pid_k24@2048 | pid_k16@512 | pid_k16@2048 |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 200 | 0.246 | 0.255 | 0.277 | 0.272 | 0.302 | 0.288 | 0.321 |
+| 0.25 | 200 | 0.246 | 0.259 | 0.299 | 0.283 | 0.322 | 0.300 | 0.337 |
+| 0.5 | 200 | 0.402 | 0.425 | 0.482 | 0.447 | 0.478 | 0.405 | 0.440 |
+| 0.75 | 200 | 0.670 | 0.688 | 0.666 | 0.648 | 0.618 | 0.501 | 0.525 |
+| 1 | 200 | 0.766 | 0.778 | 0.725 | 0.713 | 0.662 | 0.538 | 0.556 |
+| 1.5 | 200 | 0.836 | 0.841 | 0.775 | 0.762 | 0.700 | 0.568 | 0.583 |
+| 2 | 200 | 0.864 | 0.864 | 0.799 | 0.781 | 0.720 | 0.585 | 0.597 |
+| 4 | 200 | 0.838 | 0.831 | 0.771 | 0.750 | 0.715 | 0.578 | 0.596 |
 
 Ceilings on the same 200 real images (round trips): vae_roundtrip@512 0.943, pid_roundtrip@512 0.916, pid_roundtrip@2048 0.793
 
@@ -179,7 +179,7 @@ Reading: on multigen5k the c2048 map is synthesized by a PiD round trip at the h
 ## H. What "beating the baseline" means
 
 1. Decode the SAME cached latents (`latents/<controller>/<condition>/<sid>.pt`, x_0 + x_t@24 + x_t@16) at the same truncation point K as the row you compare with.
-2. Score with `python bench/eval_variant.py --name <yourname> --gen-dir <dir of 2048 PNGs> --controller omini --condition canny --k 24` (runs the harness at the 512 view and at native 2048, both condition definitions, and prints the deltas and paired CIs against this file).
+2. Score with `python bench/eval_variant.py --name <yourname> --gen-dir <dir of 2048 PNGs> --controller omini --condition canny --k 16` (runs the harness at the 512 view and at native 2048, both condition definitions, and prints the deltas and paired CIs against this file).
 3. Pass = tolerant canny F1 higher than vanilla PiD at the same K at BOTH the 512 view and native 2048 (vs c512), with MUSIQ not lower and LPIPS not worse; depth RMSE not worse. The third edge column (2048 vs c2048, 1 px) is where a 2048-condition decode shows its extra headroom.
 4. Compare a teacher-based CGD against the TEACHER rows (Section F) for the exact ablation; the student rows are the deployed decoder.
 5. Never report dev-200 numbers as paper numbers; the paper uses the full sets (Sections A-C).

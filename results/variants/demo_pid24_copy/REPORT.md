@@ -3,8 +3,8 @@
 | row | f1 @512 | @2048 | @2048 vs 2048 cond | MUSIQ @512 | MANIQA @512 | LPIPS | FID | pFID |
 |---|---|---|---|---|---|---|---|---|
 | VAE decode | 0.771 |  |  | 71.8 | 0.503 | 0.509 | 17.18 | 20.39 |
-| vanilla PiD, K=24 | 0.719 | 0.669 | 0.514 | 73.0 | 0.650 | 0.521 | 18.09 | 19.33 |
-| **demo_pid24_copy** | 0.716 | 0.669 | 0.510 | 73.1 | 0.647 | 0.521 | 79.53 | 83.96 |
+| vanilla PiD, K=24 | 0.716 | 0.669 | 0.482 | 73.1 | 0.647 | 0.521 | 79.53 | 83.96 |
+| **demo_pid24_copy** | 0.716 | 0.669 | 0.482 | 73.1 | 0.647 | 0.521 | 79.53 | 83.96 |
 
 Baseline rows above are the full-set records (n = 5000); the variant is n = 500, so its FID / pFID are NOT comparable with theirs (FID grows with fewer samples). The verdict below uses PAIRED means over the same 500 images.
 

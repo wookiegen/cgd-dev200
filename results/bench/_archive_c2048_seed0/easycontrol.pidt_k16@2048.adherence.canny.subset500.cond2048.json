@@ -14,7 +14,10 @@
    "cond_res": 2048,
    "precision": 0.47801412955857486,
    "recall": 0.3275170887639209,
-   "edge_density": 0.04620702600479126
+   "edge_density": 0.04620702600479126,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed0",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500,

@@ -1,0 +1,106 @@
+{
+ "split": "multigen5k",
+ "view": 512,
+ "cond_res": 512,
+ "tolerances_px": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "n": 5000,
+ "note": "canny F1 at the 512 matched view against conditions/canny; tol 0 = the pixel-exact F1 of the standard protocol (f1_strict), tol 1 = the paper metric (one condition pixel at 512)",
+ "rows": {
+  "real image": {
+   "f1": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "dir": "/data/wookiekim/cgd/data/bench/multigen5k/images"
+  },
+  "VAE round trip": {
+   "f1": [
+    0.7468713078709914,
+    0.9426999009389118,
+    0.9745105801211453,
+    0.9850344425734061,
+    0.9898886911659425
+   ],
+   "dir": "/data/wookiekim/cgd/data/bench/outputs/ref/vae_roundtrip/multigen5k"
+  },
+  "PiD round trip": {
+   "f1": [
+    0.636674256983723,
+    0.916744272201878,
+    0.960900211155408,
+    0.9761742452668303,
+    0.9834093702164933
+   ],
+   "dir": "/data/wookiekim/cgd/data/bench/outputs/ref/pid_roundtrip_512/multigen5k"
+  },
+  "OminiControl + VAE decode": {
+   "f1": [
+    0.35790541717541746,
+    0.7711800602165194,
+    0.855456638836658,
+    0.8898375276543545,
+    0.909807557503914
+   ],
+   "dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/vae@28"
+  },
+  "OminiControl + PiD K=28": {
+   "f1": [
+    0.3570278792212226,
+    0.7852398149569901,
+    0.8718662273832495,
+    0.9054545510127014,
+    0.9240685012297768
+   ],
+   "dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/pid@28_512"
+  },
+  "OminiControl + PiD K=24": {
+   "f1": [
+    0.29530687282185974,
+    0.7185463331257073,
+    0.8279005773631168,
+    0.8763224280253473,
+    0.9037353800510965
+   ],
+   "dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/pid@24_512"
+  },
+  "OminiControl + PiD K=16": {
+   "f1": [
+    0.1944047240202297,
+    0.548255859816125,
+    0.6789375543485842,
+    0.7510955817528742,
+    0.7978634560480745
+   ],
+   "dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/pid@16_512"
+  },
+  "OminiControl + cond. VAE, additive": {
+   "f1": [
+    0.39681786656945844,
+    0.7686590687419843,
+    0.8476560712847204,
+    0.8823721063761277,
+    0.903921503162101
+   ],
+   "dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/condvae"
+  },
+  "OminiControl + cond. VAE, modulated": {
+   "f1": [
+    0.4423735287626356,
+    0.7660437771888523,
+    0.846776835850635,
+    0.8824544805574093,
+    0.9042148971724017
+   ],
+   "dir": "/data/wookiekim/cgd/data/bench/outputs/omini/canny/condvae_mod"
+  }
+ }
+}

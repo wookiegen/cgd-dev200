@@ -199,7 +199,7 @@ if eff.exists():
 # ---------------------------------------------------------------- H. the rule
 L += ["## H. What \"beating the baseline\" means", "",
       "1. Decode the SAME cached latents (`latents/<controller>/<condition>/<sid>.pt`, x_0 + x_t@24 + x_t@16) at the same truncation point K as the row you compare with.",
-      "2. Score with `python bench/eval_variant.py --name <yourname> --gen-dir <dir of 2048 PNGs> --controller omini --condition canny --k 24` "
+      "2. Score with `python bench/eval_variant.py --name <yourname> --gen-dir <dir of 2048 PNGs> --controller omini --condition canny --k 16` "
       "(runs the harness at the 512 view and at native 2048, both condition definitions, and prints the deltas and paired CIs against this file).",
       "3. Pass = tolerant canny F1 higher than vanilla PiD at the same K at BOTH the 512 view and native 2048 (vs c512), with MUSIQ not lower and LPIPS not worse; "
       "depth RMSE not worse. The third edge column (2048 vs c2048, 1 px) is where a 2048-condition decode shows its extra headroom.",

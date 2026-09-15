@@ -90,6 +90,15 @@ bash cgd-dev200/scripts/env_pid.sh      # PiD's python deps (once)
 ```
 Note: PiD pins `diffusers==0.37.1`, `transformers==4.57.1`, `numpy==1.26.4`; `env_pid.sh` installs them and therefore changes your environment's versions (see "Caveats"). Generation and scoring are verified under these versions.
 
+Eval data (downloaded once; not redistributed). `scripts/00_select_dev200.py` rebuilds the 200 images and their canny
+conditions from this dataset, so the quick start cannot run without it:
+```
+hf download limingcv/MultiGen-20M_canny_eval --repo-type dataset --local-dir $CGD_ROOT/data/multigen_canny_eval
+```
+The 200 rows are then selected by `sha256` from `bench/multigen5k/manifest.csv`, so you can verify you have exactly the same
+images as us regardless of which revision you pulled; step 00 fails loudly if a sha does not match. Point
+`MULTIGEN_DIR` at the `data/` subdirectory if you put it elsewhere.
+
 Weights (downloaded once; not redistributed):
 ```
 hf download black-forest-labs/FLUX.1-dev                                  # generator (gated: accept the license on HF first)

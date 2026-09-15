@@ -113,6 +113,96 @@
   },
   "n": 2000
  },
+ "ade20k_val2k|seg|omini|condvae_rn|512|512||": {
+  "adherence": {
+   "miou": 43.91306661902021,
+   "miou_img_mean": 40.58545251157829
+  },
+  "quality": {
+   "psnr": 10.754769621133804,
+   "ssim": 0.40760635876945445,
+   "lpips": 0.5896305500045419,
+   "dists": 0.26622411689162256,
+   "fid": 31.493950637423154,
+   "pfid": 33.86366994173818
+  },
+  "n": 2000
+ },
+ "ade20k_val2k|seg|omini|condvae_rn_k16|512|512||": {
+  "adherence": {
+   "miou": 8.669545905755513,
+   "miou_img_mean": 11.91167971992959
+  },
+  "quality": {
+   "psnr": 11.398249697685241,
+   "ssim": 0.26761527152179876,
+   "lpips": 0.6951762383282185,
+   "dists": 0.43709549388289454,
+   "fid": 270.19483232057837,
+   "pfid": 339.41327549035236
+  },
+  "n": 2000
+ },
+ "ade20k_val2k|seg|omini|condvae_rn_k24|512|512||": {
+  "adherence": {
+   "miou": 42.192880666342525,
+   "miou_img_mean": 40.77088432889251
+  },
+  "quality": {
+   "psnr": 11.041734072208405,
+   "ssim": 0.40793374762092194,
+   "lpips": 0.5937812663018703,
+   "dists": 0.2922080523967743,
+   "fid": 43.53516787664421,
+   "pfid": 49.4671197152569
+  },
+  "n": 2000
+ },
+ "ade20k_val2k|seg|omini|condvae_rn_mod|512|512||": {
+  "adherence": {
+   "miou": 44.17917935699896,
+   "miou_img_mean": 41.18085171212404
+  },
+  "quality": {
+   "psnr": 10.81592248415947,
+   "ssim": 0.4062502022210352,
+   "lpips": 0.5816017665416002,
+   "dists": 0.2592492572665214,
+   "fid": 30.59665605484423,
+   "pfid": 32.83841357973074
+  },
+  "n": 2000
+ },
+ "ade20k_val2k|seg|omini|condvae_rn_mod_k16|512|512||": {
+  "adherence": {
+   "miou": 15.898073045144514,
+   "miou_img_mean": 21.98945126626732
+  },
+  "quality": {
+   "psnr": 11.207025089025498,
+   "ssim": 0.39012390957734744,
+   "lpips": 0.6278787969201803,
+   "dists": 0.3602659573853016,
+   "fid": 165.138017669823,
+   "pfid": 218.45561009536993
+  },
+  "n": 2000
+ },
+ "ade20k_val2k|seg|omini|condvae_rn_mod_k24|512|512||": {
+  "adherence": {
+   "miou": 42.9809592991994,
+   "miou_img_mean": 41.33719716985141
+  },
+  "quality": {
+   "psnr": 10.906402654647827,
+   "ssim": 0.4103152223022965,
+   "lpips": 0.580362704642117,
+   "dists": 0.2674133857786655,
+   "fid": 31.946050541658906,
+   "pfid": 35.56764112556573
+  },
+  "n": 2000
+ },
  "ade20k_val2k|seg|omini|pid_k16|2048|512||": {
   "adherence": {
    "miou": 37.098851854923616,
@@ -305,7 +395,10 @@
    "cond_res": 2048,
    "precision": 0.4317389295564256,
    "recall": 0.5980574663386625,
-   "edge_density": 0.1249624629020691
+   "edge_density": 0.1249624629020691,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 1000
@@ -360,7 +453,10 @@
    "cond_res": 2048,
    "precision": 0.475544455317541,
    "recall": 0.6753021166205647,
-   "edge_density": 0.13144735717773437
+   "edge_density": 0.13144735717773437,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 1000
@@ -415,7 +511,10 @@
    "cond_res": 2048,
    "precision": 0.5090465112519665,
    "recall": 0.6731219967310844,
-   "edge_density": 0.12278993511199951
+   "edge_density": 0.12278993511199951,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 1000
@@ -477,7 +576,10 @@
    "f1": 0.11669838526137735,
    "f1_strict": 0.03719403418613701,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 1000
@@ -514,7 +616,10 @@
    "cond_res": 2048,
    "precision": 0.6488131029086113,
    "recall": 0.7869634910446192,
-   "edge_density": 0.10944922375679016
+   "edge_density": 0.10944922375679016,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 1000
@@ -569,7 +674,10 @@
    "cond_res": 2048,
    "precision": 1.0,
    "recall": 1.0,
-   "edge_density": 0.09310223054885865
+   "edge_density": 0.09310223054885865,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 1000
@@ -607,7 +715,10 @@
    "f1": 0.35061138707553313,
    "f1_strict": 0.16303032678234433,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 1000
@@ -649,7 +760,10 @@
    "f1": 0.3151308495330132,
    "f1_strict": 0.12817650698313124,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 1000
@@ -742,7 +856,10 @@
    "cond_res": 2048,
    "precision": 0.4615778839498107,
    "recall": 0.4526697554892531,
-   "edge_density": 0.0675114245891571
+   "edge_density": 0.0675114245891571,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -755,7 +872,10 @@
    "cond_res": 2048,
    "precision": 0.45064684171012054,
    "recall": 0.4541848621444434,
-   "edge_density": 0.06708382701873779
+   "edge_density": 0.06708382701873779,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -903,7 +1023,10 @@
    "cond_res": 2048,
    "precision": 0.5503796231468013,
    "recall": 0.40459340199487354,
-   "edge_density": 0.050444360256195066
+   "edge_density": 0.050444360256195066,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -916,7 +1039,10 @@
    "cond_res": 2048,
    "precision": 0.5417204137475715,
    "recall": 0.4064269658515884,
-   "edge_density": 0.050101409912109374
+   "edge_density": 0.050101409912109374,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -1064,7 +1190,10 @@
    "cond_res": 2048,
    "precision": 0.5829052501447173,
    "recall": 0.3274226336734062,
-   "edge_density": 0.037779077339172365
+   "edge_density": 0.037779077339172365,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -1077,7 +1206,10 @@
    "cond_res": 2048,
    "precision": 0.5747657512681371,
    "recall": 0.3312344861340887,
-   "edge_density": 0.03784482431411743
+   "edge_density": 0.03784482431411743,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -1225,7 +1357,10 @@
    "cond_res": 2048,
    "precision": 0.47745256101883365,
    "recall": 0.32660387849318645,
-   "edge_density": 0.04620702600479126
+   "edge_density": 0.04620702600479126,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -1312,7 +1447,10 @@
    "cond_res": 2048,
    "precision": 0.5668482690494396,
    "recall": 0.2637525159952819,
-   "edge_density": 0.030216666221618654
+   "edge_density": 0.030216666221618654,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -1399,7 +1537,10 @@
    "cond_res": 2048,
    "precision": 0.5832826418724535,
    "recall": 0.24786915472407656,
-   "edge_density": 0.027653104782104494
+   "edge_density": 0.027653104782104494,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -1492,7 +1633,10 @@
    "f1": 0.15608348814323095,
    "f1_strict": 0.04951726590914397,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -1512,7 +1656,10 @@
    "f1": 0.15966450272132932,
    "f1_strict": 0.050498810375143664,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -1618,7 +1765,10 @@
    "f1": 0.31835779368357975,
    "f1_strict": 0.10362757844409903,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -1674,7 +1824,10 @@
    "cond_res": 2048,
    "precision": 0.3773554267781987,
    "recall": 0.07471413629289499,
-   "edge_density": 0.012264791011810303
+   "edge_density": 0.012264791011810303,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -1761,7 +1914,10 @@
    "cond_res": 2048,
    "precision": 0.3804654177554583,
    "recall": 0.5012646050696914,
-   "edge_density": 0.09148730425834656
+   "edge_density": 0.09148730425834656,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -1774,7 +1930,10 @@
    "cond_res": 2048,
    "precision": 0.3732213110992499,
    "recall": 0.4998776416817778,
-   "edge_density": 0.08989664030075073
+   "edge_density": 0.08989664030075073,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -1922,7 +2081,10 @@
    "cond_res": 2048,
    "precision": 0.43572637357148325,
    "recall": 0.5242177165328777,
-   "edge_density": 0.08698680419921875
+   "edge_density": 0.08698680419921875,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -1935,7 +2097,10 @@
    "cond_res": 2048,
    "precision": 0.42730166676024384,
    "recall": 0.5206405343047364,
-   "edge_density": 0.08524754714965821
+   "edge_density": 0.08524754714965821,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -2083,7 +2248,10 @@
    "cond_res": 2048,
    "precision": 0.48099551007171215,
    "recall": 0.41943469191662164,
-   "edge_density": 0.06375973811149598
+   "edge_density": 0.06375973811149598,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -2096,7 +2264,10 @@
    "cond_res": 2048,
    "precision": 0.46956886644012213,
    "recall": 0.414875782536222,
-   "edge_density": 0.06228311538696289
+   "edge_density": 0.06228311538696289,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -2244,7 +2415,10 @@
    "cond_res": 2048,
    "precision": 0.39181018926392597,
    "recall": 0.40815336937753977,
-   "edge_density": 0.07213548374176025
+   "edge_density": 0.07213548374176025,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -2331,7 +2505,10 @@
    "cond_res": 2048,
    "precision": 0.4854500107581614,
    "recall": 0.33322015812389155,
-   "edge_density": 0.04798591947555542
+   "edge_density": 0.04798591947555542,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -2418,7 +2595,10 @@
    "cond_res": 2048,
    "precision": 0.5238029916767687,
    "recall": 0.2624430835484964,
-   "edge_density": 0.03571211719512939
+   "edge_density": 0.03571211719512939,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -2511,7 +2691,10 @@
    "f1": 0.12980052740681067,
    "f1_strict": 0.04101628917245897,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -2531,7 +2714,10 @@
    "f1": 0.12622141369253254,
    "f1_strict": 0.03984044169780171,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -2637,7 +2823,10 @@
    "f1": 0.0878389878590793,
    "f1_strict": 0.02804488041423825,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -2693,7 +2882,10 @@
    "cond_res": 2048,
    "precision": 0.28599697382345357,
    "recall": 0.0490121284200621,
-   "edge_density": 0.0077835693359375
+   "edge_density": 0.0077835693359375,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -3164,7 +3356,10 @@
    "cond_res": 2048,
    "precision": 0.3688349984243417,
    "recall": 0.5391850447760136,
-   "edge_density": 0.10343274331092835
+   "edge_density": 0.10343274331092835,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -3177,7 +3372,10 @@
    "cond_res": 2048,
    "precision": 0.36217442548182854,
    "recall": 0.5436651384601403,
-   "edge_density": 0.10238312673568725
+   "edge_density": 0.10238312673568725,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -3338,7 +3536,10 @@
    "cond_res": 2048,
    "precision": 0.42395550801859555,
    "recall": 0.6380607628007455,
-   "edge_density": 0.11077243299484253
+   "edge_density": 0.11077243299484253,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -3351,7 +3552,10 @@
    "cond_res": 2048,
    "precision": 0.4179864678661519,
    "recall": 0.6376881960170268,
-   "edge_density": 0.10892044544219971
+   "edge_density": 0.10892044544219971,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -3512,7 +3716,10 @@
    "cond_res": 2048,
    "precision": 0.4752520470871593,
    "recall": 0.6062076002165601,
-   "edge_density": 0.09318171076774596
+   "edge_density": 0.09318171076774596,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -3525,7 +3732,10 @@
    "cond_res": 2048,
    "precision": 0.4675564135007585,
    "recall": 0.6066377858476537,
-   "edge_density": 0.0917512035369873
+   "edge_density": 0.0917512035369873,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -3686,7 +3896,10 @@
    "cond_res": 2048,
    "precision": 0.41755860492905095,
    "recall": 0.6423233972484528,
-   "edge_density": 0.10981650495529174
+   "edge_density": 0.10981650495529174,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -3760,7 +3973,10 @@
    "cond_res": 2048,
    "precision": 0.41783016615762486,
    "recall": 0.6349638677134685,
-   "edge_density": 0.10818487405776978
+   "edge_density": 0.10818487405776978,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -3834,7 +4050,10 @@
    "cond_res": 2048,
    "precision": 0.38631411180983377,
    "recall": 0.39683882051286584,
-   "edge_density": 0.07149175262451171
+   "edge_density": 0.07149175262451171,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -3921,7 +4140,10 @@
    "cond_res": 2048,
    "precision": 0.4649574651602496,
    "recall": 0.5021905865569066,
-   "edge_density": 0.07548347663879394
+   "edge_density": 0.07548347663879394,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -4008,7 +4230,10 @@
    "cond_res": 2048,
    "precision": 0.49173808270479485,
    "recall": 0.5622939355363898,
-   "edge_density": 0.08374863243103027
+   "edge_density": 0.08374863243103027,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -4101,7 +4326,10 @@
    "f1": 0.11428242918898693,
    "f1_strict": 0.03714485694266358,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -4157,7 +4385,10 @@
    "cond_res": 2048,
    "precision": 0.5631737235149785,
    "recall": 0.028597171766160275,
-   "edge_density": 0.009090831756591797
+   "edge_density": 0.009090831756591797,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -4244,7 +4475,10 @@
    "cond_res": 2048,
    "precision": 0.7088204189840059,
    "recall": 0.7081190662946597,
-   "edge_density": 0.0728210009098053
+   "edge_density": 0.0728210009098053,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -4257,7 +4491,10 @@
    "cond_res": 2048,
    "precision": 0.707818043079842,
    "recall": 0.7062867827257533,
-   "edge_density": 0.0708372859954834
+   "edge_density": 0.0708372859954834,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -4418,7 +4655,10 @@
    "cond_res": 2048,
    "precision": 1.0,
    "recall": 1.0,
-   "edge_density": 0.07288834733963012
+   "edge_density": 0.07288834733963012,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -4457,7 +4697,10 @@
    "cond_res": 2048,
    "precision": 0.769356907918062,
    "recall": 0.5380638338839326,
-   "edge_density": 0.05331724739074707
+   "edge_density": 0.05331724739074707,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 500
@@ -4550,7 +4793,10 @@
    "f1": 0.3061042287162105,
    "f1_strict": 0.12115057883357995,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
@@ -4600,7 +4846,10 @@
    "f1": 0.2963982864414497,
    "f1_strict": 0.11899254835807992,
    "tol_px": 1,
-   "cond_res": 2048
+   "cond_res": 2048,
+   "cond_src": "conditions/canny2048",
+   "cond_ref": "seed7",
+   "cond_ref_note": "BENCHMARK v1.16: the 2048 reference is a PiD round trip at a held-out decoder seed; records built on different seeds are NOT comparable"
   },
   "quality": {},
   "n": 5000
