@@ -52,16 +52,23 @@ for res, title, ax in panels:
             continue
         xs = [xpos[s] for s, y in zip(scales, ys) if y is not None]; ys = [y for y in ys if y is not None]
         (h,) = ax.plot(xs, ys, color=color, lw=lw, marker=mk, ms=3, label=label); handles.setdefault(label, h)
-    if a.mock_cgd and key_rt in ceil and all(per[s].get(f"pid_k{a.k}@{res}_f1") is not None for s in scales):
-        # PROJECTED placeholder: closes a scale-dependent fraction of PiD's gap to the round-trip ceiling (correction at low scale, preservation at high scale)
-        # The round trip bounds CONDITION-BLIND decoders only; a decoder that reads the condition can pass it (user, 2026-09-14). The projection
-        # closes PiD's gap to the ceiling as the scale grows (about none of it at scale 0, all of it from scale 1) and then rises above the ceiling by up
-        # to 0.04 at 512 and 0.03 at 2048, which at 2048 is the level of a real photograph against c512 (0.82 on DIV8K).
+    if a.mock_cgd and key_rt in ceil and all(per[sc].get(f"pid_k{a.k}@{res}_f1") is not None for sc in scales):
+        # PROJECTED placeholder (user request; OPEN_QUESTIONS 18). Anchored on the FULL-LATENT curve, not on the operating
+        # curve: the claim CGD makes at K = 16 is that it recovers what truncation destroyed, so the projection starts at the
+        # operating curve where the condition is absent (scale 0, nothing to correct toward), rises to the full-latent blind
+        # level as control strength grows, and passes the round-trip ceiling slightly at high strength, since that ceiling
+        # bounds decoders that do not read the condition. Replace with the measured sweep (keys cgd_k<K>@<res>_f1).
         c = ceil[key_rt]["f1"]
-        alpha = lambda s: 0.03 + 0.97 * min(s, 1.0) ** 1.5  # noqa: E731   (near PiD at scale 0: nothing to correct toward when the generator saw no condition; user, 2026-09-14)
-        bonus = lambda s: (0.04 if res == "512" else 0.03) * min(max((s - 0.5) / 1.5, 0.0), 1.0)  # noqa: E731
-        ys = [per[s][f"pid_k{a.k}@{res}_f1"] + alpha(s) * (c - per[s][f"pid_k{a.k}@{res}_f1"]) + bonus(s) for s in scales]
-        (h,) = ax.plot([xpos[s] for s in scales], ys, color="tab:blue", lw=1.6, ls="--", marker="^", ms=4, mfc="white")
+        base_ref = [per[sc].get(f"pid_k{a.k_ref}@{res}_f1") for sc in scales]
+        base_op = [per[sc][f"pid_k{a.k}@{res}_f1"] for sc in scales]
+        ys = []
+        for sc, bref, bop in zip(scales, base_ref, base_op):
+            w = min(sc, 1.0) ** 0.7                                   # how much of the truncation loss the condition recovers
+            anchor = bop + w * ((bref if bref is not None else bop) - bop)
+            beta = 0.55 * min(sc, 1.0)                                # then part of the remaining gap to the ceiling
+            over = (0.035 if res == "512" else 0.025) * min(max((sc - 1.0) / 1.0, 0.0), 1.0)
+            ys.append(anchor + beta * (c - anchor) + over)
+        (h,) = ax.plot([xpos[sc] for sc in scales], ys, color="tab:blue", lw=1.6, ls="--", marker="^", ms=4, mfc="white")
         handles.setdefault(f"CGD, $K={a.k}$ (projected, not measured)", h)
         ax.text(xpos[scales[-1]], ys[-1] + 0.025, "projected", fontsize=6, color="tab:blue", ha="right")
     ax.set_xscale("log")
